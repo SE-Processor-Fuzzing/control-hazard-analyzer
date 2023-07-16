@@ -9,6 +9,7 @@
 
 ## Rules for adding commits
 
+Create a new branch, if you want to add something new. Naming branch is `<type>/<name of stuff>`. \
 Commits are added according to conventional commits. Those
 `<type>(<scope>): <body>`.
 
