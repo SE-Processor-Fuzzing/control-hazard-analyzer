@@ -1,5 +1,5 @@
 from builders.builder import Builder
-from configurator import *
+from src.configurator import Configurator
 
 
 class Controller:
@@ -15,10 +15,9 @@ class Controller:
         self.build()
         self.profile()
         self.pack()
+
     def configurate(self):
         self.configurator.configurate(self.glb_settings)
-
-
 
     def generate_test(self):
         pass
