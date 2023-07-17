@@ -1,4 +1,3 @@
-import os
 import subprocess
 from typing import Dict
 
@@ -11,7 +10,7 @@ class Builder:
         # print(os.name)
         # print(os.getcwd())
         execute_line = [self.settings["compiler"], self.settings["test_file"]] + self.settings["compiler_args"]
-        output = subprocess.run(
+        subprocess.run(
             execute_line,
             check=True,
         )

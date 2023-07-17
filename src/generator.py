@@ -1,2 +1,2 @@
-class Generator():
+class Generator:
     pass

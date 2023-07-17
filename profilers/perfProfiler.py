@@ -1,6 +1,7 @@
-import sys
-from profile import *
+from profile import Profile
+
 
 class PerfProfiler(Profile):
+
     def __init__(self):
-        pass
+        super().__init__()
