@@ -5,9 +5,9 @@ from src.configurator import Configurator
 class Controller:
 
     def __init__(self):
-        self.glb_settings = dict()
+        self.builder = None
         self.configurator = Configurator()
-        self.builder = Builder(self.glb_settings)
+        self.glb_settings = dict()
 
     def run(self):
         self.configurate()
@@ -17,12 +17,13 @@ class Controller:
         self.pack()
 
     def configurate(self):
-        self.configurator.configurate(self.glb_settings)
+        self.glb_settings = self.configurator.configurate(self.glb_settings)
 
     def generate_test(self):
         pass
 
     def build(self):
+        self.builder = Builder(self.glb_settings)
         self.builder.build()
 
     def profile(self):
