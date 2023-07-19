@@ -7,7 +7,11 @@ class Controller:
     def __init__(self):
         self.builder = None
         self.configurator = Configurator()
-        self.glb_settings = dict()
+        self.glb_settings = {
+            "compiled_folder": "compiled",
+            "source_folder": "src",
+            "analyse_folder": "analyse",
+        }
 
     def run(self):
         self.configurate()
@@ -18,6 +22,8 @@ class Controller:
 
     def configurate(self):
         self.glb_settings = self.configurator.configurate(self.glb_settings)
+        self.configurator.clean_output_folder(self.glb_settings["dest_folder"])
+        self.configurator.create_folders(self.glb_settings)
 
     def generate_test(self):
         pass
