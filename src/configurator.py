@@ -1,8 +1,8 @@
 import argparse
 import configparser
 import os
+from pathlib import Path
 import shutil
-import stat
 from typing import Dict
 
 
@@ -15,14 +15,26 @@ class Configurator:
             description="This script generate and test code on some platforms",
         )
 
-        self.parser.add_argument("--test_file", default="test.c", help="Path to test file")
+        self.parser.add_argument(
+            "--test_file", default="test.c", help="Path to test file"
+        )
         self.parser.add_argument("--compiler", default="gcc", help="Path to C compiler")
-        self.parser.add_argument("--config_file", default="config.cfg", help="Path to .cfg file")
-        self.parser.add_argument("--section_in_config", default="DEFAULT",
-                                 help="Set the custom section in config file (DEFAULT by default)")
-        self.parser.add_argument("--dest_folder", default="out",
-                                 help="Path to dist folder, if not exit it will be created")
-        self.parser.add_argument("--repeats", default="1", help="Count of generated tests", type=int)
+        self.parser.add_argument(
+            "--config_file", default="config.cfg", help="Path to .cfg file"
+        )
+        self.parser.add_argument(
+            "--section_in_config",
+            default="DEFAULT",
+            help="Set the custom section in config file (DEFAULT by default)",
+        )
+        self.parser.add_argument(
+            "--dest_folder",
+            default="out",
+            help="Path to dist folder, if not exit it will be created",
+        )
+        self.parser.add_argument(
+            "--repeats", default="1", help="Count of generated tests", type=int
+        )
 
     def configurate(self, settings: Dict) -> Dict:
         result = dict()
@@ -38,25 +50,38 @@ class Configurator:
         result["compiler_args"] = self.compiler_args
         # just for debug
         # print(self.compiler_args)
-        config_settings = self.read_cfg_file(result["config_file"], self.args.section_in_config)
+        config_settings = self.read_cfg_file(
+            Path(result["config_file"]), self.args.section_in_config
+        )
         result = {**settings, **config_settings, **result}
         return result
 
-    def read_cfg_file(self, config_file: str, section: str) -> Dict:
+    def read_cfg_file(self, config_file: Path, section: str) -> Dict:
         parser = configparser.ConfigParser()
         parser.read(config_file)
         return dict(parser[section])
 
     def get_compiler(self):
-        return self.args.compiler if (compiler := os.environ.get(
-            "CC")) is None or self.args.compiler != self.parser.get_default("compiler") else compiler
+        compiler = os.environ.get("CC")
+        if compiler is None:
+            return self.args.compiler
+        if self.args.compiler != self.parser.get_default("compiler"):
+            return self.args.compiler
+        else:
+            return compiler
 
     def create_folders(self, settings: dict):
         os.makedirs(settings["dest_folder"], exist_ok=True)
-        os.makedirs(f"{settings['dest_folder']}/{settings['source_folder']}", exist_ok=True)
-        os.makedirs(f"{settings['dest_folder']}/{settings['compiled_folder']}", exist_ok=True)
-        os.makedirs(f"{settings['dest_folder']}/{settings['analyse_folder']}", exist_ok=True)
-        os.chmod(settings['dest_folder'], stat.S_IWRITE)
+        os.makedirs(
+            f"{settings['dest_folder']}/{settings['source_folder']}", exist_ok=True
+        )
+        os.makedirs(
+            f"{settings['dest_folder']}/{settings['compiled_folder']}", exist_ok=True
+        )
+        os.makedirs(
+            f"{settings['dest_folder']}/{settings['analyse_folder']}", exist_ok=True
+        )
 
-    def clean_output_folder(self, dest_folder: str):
-        shutil.rmtree(dest_folder)
+    def clean_output_folder(self, dest_folder: Path):
+        if dest_folder.exists():
+            shutil.rmtree(dest_folder)
