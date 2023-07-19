@@ -1,5 +1,6 @@
 [flake8]
-ignore = D203,E741
+ignore = D203,E741,W503
+# W503 inore - https://peps.python.org/pep-0008/#should-a-line-break-before-or-after-a-binary-operator 
 exclude =
     # No need to traverse our git directory
     .git,
