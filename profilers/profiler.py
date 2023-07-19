@@ -1,5 +1,7 @@
-from abc import ABC
+from typing import Protocol
+from pathlib import Path
 
 
-class ABCProfiler(ABC):
-    pass
+class IProfiler(Protocol):
+    def profile(self, dir: Path) -> bool:
+        ...
