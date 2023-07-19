@@ -1,5 +1,6 @@
 from pathlib import Path
 from builders.builder import Builder
+from profilers.perfProfiler import PerfProfiler
 from src.configurator import Configurator
 from src.generator import Generator
 
@@ -18,7 +19,6 @@ class Controller:
 
     def run(self):
         self.generate_test()
-        self.build()
         self.profile()
         self.pack()
 
@@ -41,7 +41,8 @@ class Controller:
         self.builder.build(Path(source_folder), Path(destination_folder))
 
     def profile(self):
-        pass
+        p = PerfProfiler(self.builder)
+        p.profile(Path("./"), Path("out"))
 
     def pack(self):
         pass
