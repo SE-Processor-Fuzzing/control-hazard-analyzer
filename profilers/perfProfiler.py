@@ -1,6 +1,5 @@
 import os.path
 from pathlib import Path
-from profile import Profile
 import subprocess
 from tempfile import mkdtemp
 import glob
@@ -18,7 +17,9 @@ class PerfData:
         return f"PerfData(branches: {self.branches}, missed: {self.missed_branches}, cache_bpu {self.cache_bpu})"
 
 
-class PerfProfiler(Profile):
+class PerfProfiler:
+    empty_test_name = "empty.c"
+
     def __init__(self, builder: Builder):
         self.builder: Builder = builder
         self.temp_dir: Path = Path(mkdtemp())
@@ -33,6 +34,17 @@ class PerfProfiler(Profile):
                 writter.write(self.template)
                 return True
         return False
+
+    def add_empty_test(self, destination_file: Path):
+        destination_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(destination_file, "wt") as writter:
+            writter.write("void test_fun() {}\n")
+
+    def add_empty_patched_test(self, destination_file: Path):
+        buffer_file = self.temp_dir.joinpath(self.empty_test_name)
+        destination_file.parent.mkdir(parents=True, exist_ok=True)
+        self.add_empty_test(buffer_file)
+        self.patch_test(buffer_file, destination_file)
 
     def patch_tests_in_dir(self, src_dir: Path, dst_dir: Path):
         dst_dir.mkdir(parents=True, exist_ok=True)
@@ -64,15 +76,17 @@ class PerfProfiler(Profile):
         data_dict: Dict[str, PerfData] = {}
         for binary in os.listdir(dir):
             data = self.get_stat(dir.joinpath(binary))
-            data_dict[binary] = data
+            data_dict[binary.] = data
         return data_dict
 
-    def profile(self, test_dir: Path, analyze_dir: Path):
+    def profile(self, test_dir: Path, analyze_dir: Path) -> bool:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
 
         self.patch_tests_in_dir(test_dir, src_dir)
+        self.add_empty_patched_test(src_dir.joinpath(self.empty_test_name))
         self.builder.build(src_dir, build_dir)
         analized = self.get_stats_dir(build_dir)
         for key in analized:
-            print(analized[key])
+            print(f"{key}: {analized[key]}")
+        return True
