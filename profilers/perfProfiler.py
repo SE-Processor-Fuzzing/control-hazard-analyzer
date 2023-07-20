@@ -23,15 +23,13 @@ class PerfProfiler:
     def __init__(self, builder: Builder):
         self.builder: Builder = builder
         self.temp_dir: Path = Path(mkdtemp())
-        with open(Path("profilers/perfProfiler/template.c"), "rt") as reader:
-            strings = reader.read().split("\n")
-            self.template: str = "\n".join(strings[1:])
+        self.template_path = Path("profilers/perfProfiler/template.c")
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
             with open(dest_test, "wt") as writter:
-                writter.write(f'#include "{os.path.abspath(src_test)}"\n')
-                writter.write(self.template)
+                writter.write(f'#include "{src_test.absolute()}"\n')
+                writter.write(f'#include "{self.template_path.absolute()}"\n')
                 return True
         return False
 
