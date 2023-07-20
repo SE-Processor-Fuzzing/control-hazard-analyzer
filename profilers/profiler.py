@@ -3,5 +3,5 @@ from pathlib import Path
 
 
 class IProfiler(Protocol):
-    def profile(self, dir: Path) -> Dict[str, Dict]:
+    def profile(self, test_dir: Path) -> Dict[str, Dict]:
         ...
