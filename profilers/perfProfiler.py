@@ -23,7 +23,8 @@ class PerfProfiler:
     def __init__(self, builder: Builder):
         self.builder: Builder = builder
         self.temp_dir: Path = Path(mkdtemp())
-        self.template_path = Path("profilers/perfProfiler/template.c")
+        self.template_path = Path("profilers/attachments/perfTemplate.c")
+        self.empty_test_path = Path("profilers/attachments/empty.c")
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
@@ -33,16 +34,9 @@ class PerfProfiler:
                 return True
         return False
 
-    def add_empty_test(self, destination_file: Path):
-        destination_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(destination_file, "wt") as writter:
-            writter.write("void test_fun() {}\n")
-
     def add_empty_patched_test(self, destination_file: Path):
-        buffer_file = self.temp_dir.joinpath(self.empty_test_name)
         destination_file.parent.mkdir(parents=True, exist_ok=True)
-        self.add_empty_test(buffer_file)
-        self.patch_test(buffer_file, destination_file)
+        self.patch_test(self.empty_test_path, destination_file)
 
     def patch_tests_in_dir(self, src_dir: Path, dst_dir: Path):
         dst_dir.mkdir(parents=True, exist_ok=True)
@@ -74,7 +68,7 @@ class PerfProfiler:
         data_dict: Dict[str, PerfData] = {}
         for binary in os.listdir(dir):
             data = self.get_stat(dir.joinpath(binary))
-            data_dict[binary.] = data
+            data_dict[binary] = data
         return data_dict
 
     def profile(self, test_dir: Path, analyze_dir: Path) -> bool:
