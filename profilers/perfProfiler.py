@@ -16,6 +16,14 @@ class PerfData:
     def __str__(self) -> str:
         return f"PerfData(branches: {self.branches}, missed: {self.missed_branches}, cache_bpu {self.cache_bpu})"
 
+    def to_dict(self) -> Dict:
+        data_dict: Dict = {}
+        # need to unify with gem5
+        data_dict["bracnches"] = self.branches
+        data_dict["missed"] = self.missed_branches
+        data_dict["cache_BPU"] = self.cache_bpu
+        return data_dict
+
 
 class PerfProfiler:
     empty_test_name = "empty.c"
@@ -71,7 +79,7 @@ class PerfProfiler:
             data_dict[binary] = data
         return data_dict
 
-    def profile(self, test_dir: Path, analyze_dir: Path) -> bool:
+    def profile(self, test_dir: Path, analyze_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
 
@@ -81,4 +89,8 @@ class PerfProfiler:
         analized = self.get_stats_dir(build_dir)
         for key in analized:
             print(f"{key}: {analized[key]}")
-        return True
+        res: Dict[str, Dict] = {}
+        for key in analized:
+            res.update({key: analized[key].to_dict()})
+
+        return res
