@@ -1,5 +1,7 @@
-from abc import ABC
+from typing import Dict, Protocol
+from pathlib import Path
 
 
-class Controller(ABC):
-    pass
+class IPacker(Protocol):
+    def pack(self, out_dir: Path, analyzed_data: Dict[str, Dict]):
+        ...
