@@ -29,10 +29,9 @@ class PerfData:
 
     def to_dict(self) -> Dict:
         data_dict: Dict = {}
-        # need to unify with gem5
-        data_dict["bracnches"] = self.branches
-        data_dict["missed"] = self.missed_branches
-        data_dict["cache_BPU"] = self.cache_bpu
+        data_dict["branchPred.lookups"] = self.branches
+        data_dict["branchPred.condIncorrect"] = self.missed_branches
+        data_dict["branchPred.BTBUpdates"] = self.cache_bpu
         return data_dict
 
 
