@@ -64,6 +64,6 @@ perf_branch_data_t fullTraceFunction(traced_fun_t traced) {
 int main() {
     perf_branch_data_t res = fullTraceFunction(test_fun);
     printf("branches: %llu\n", res.branches);
-    printf("mised: %llu\n", res.missed_branches);
+    printf("missed_branches: %llu\n", res.missed_branches);
     printf("cache_BPU: %llu\n", res.bpu);
 }
