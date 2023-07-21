@@ -11,7 +11,7 @@ from builders.builder import Builder
 class PerfData:
     def __init__(self, data_dict: Dict[str, str] = {}):
         self.branches = int(data_dict.get("branches", -1))
-        self.missed_branches = int(data_dict.get("mised", -1))
+        self.missed_branches = int(data_dict.get("missed_branches", -1))
         self.cache_bpu = int(data_dict.get("cache_BPU", -1))
 
     def __str__(self) -> str:
@@ -97,12 +97,12 @@ class PerfProfiler:
         self.patch_tests_in_dir(test_dir, src_dir)
         self.add_empty_patched_test(src_dir.joinpath(self.empty_test_name))
         self.builder.build(src_dir, build_dir)
-        analized = self.get_stats_dir(build_dir)
+        analyzed = self.get_stats_dir(build_dir)
 
         res: Dict[str, Dict] = {}
-        for key in analized:
+        for key in analyzed:
             if key != "empty":
-                analized[key] = analized[key] - analized["empty"]
-                res.update({key: analized[key].to_dict()})
+                analyzed[key] = analyzed[key] - analyzed["empty"]
+                res.update({key: analyzed[key].to_dict()})
 
         return res

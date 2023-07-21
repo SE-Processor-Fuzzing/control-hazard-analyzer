@@ -45,10 +45,10 @@ class Controller:
         src_dir = (
             f'{self.glb_settings["dest_folder"]}/{self.glb_settings["source_folder"]}'
         )
-        analize_dir = (
+        analyze_dir = (
             f"{self.glb_settings['dest_folder']}/{self.glb_settings['analyse_folder']}"
         )
-        p.profile(Path(src_dir), Path(analize_dir))
+        p.profile(Path(src_dir), Path(analyze_dir))
 
     def pack(self):
         pass
