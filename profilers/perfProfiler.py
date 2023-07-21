@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os.path
 from pathlib import Path
 import subprocess
@@ -8,13 +9,23 @@ from builders.builder import Builder
 
 
 class PerfData:
-    def __init__(self, data_dict: Dict[str, str]):
-        self.branches = int(data_dict["branches"])
-        self.missed_branches = int(data_dict["mised"])
-        self.cache_bpu = int(data_dict["cache_BPU"])
+    def __init__(self, data_dict: Dict[str, str] = {}):
+        self.branches = int(data_dict.get("branches", -1))
+        self.missed_branches = int(data_dict.get("mised", -1))
+        self.cache_bpu = int(data_dict.get("cache_BPU", -1))
 
     def __str__(self) -> str:
         return f"PerfData(branches: {self.branches}, missed: {self.missed_branches}, cache_bpu {self.cache_bpu})"
+
+    def __sub__(self, other) -> PerfData:
+        if isinstance(other, PerfData):
+            res: PerfData = PerfData()
+            res.branches = self.branches - other.branches
+            res.missed_branches = self.missed_branches - other.missed_branches
+            res.cache_bpu = self.cache_bpu - other.cache_bpu
+            return res
+        else:
+            raise TypeError
 
     def to_dict(self) -> Dict:
         data_dict: Dict = {}
@@ -76,7 +87,7 @@ class PerfProfiler:
         data_dict: Dict[str, PerfData] = {}
         for binary in os.listdir(dir):
             data = self.get_stat(dir.joinpath(binary))
-            data_dict[binary] = data
+            data_dict[binary.split(".")[0]] = data
         return data_dict
 
     def profile(self, test_dir: Path, analyze_dir: Path) -> Dict[str, Dict]:
@@ -87,10 +98,11 @@ class PerfProfiler:
         self.add_empty_patched_test(src_dir.joinpath(self.empty_test_name))
         self.builder.build(src_dir, build_dir)
         analized = self.get_stats_dir(build_dir)
-        for key in analized:
-            print(f"{key}: {analized[key]}")
+
         res: Dict[str, Dict] = {}
         for key in analized:
-            res.update({key: analized[key].to_dict()})
+            if key != "empty":
+                analized[key] = analized[key] - analized["empty"]
+                res.update({key: analized[key].to_dict()})
 
         return res
