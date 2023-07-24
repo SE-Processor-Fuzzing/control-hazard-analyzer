@@ -18,7 +18,7 @@ class Builder:
                 + ["-o", destination_folder.joinpath(f"{test_file}.out")]
             )
 
-            print(" ".join(execute_line))
+            # print(" ".join(execute_line))
 
             subprocess.run(
                 execute_line,
