@@ -38,8 +38,6 @@ class PerfData:
 
 
 class PerfProfiler:
-    empty_test_name = "empty.c"
-
     def __init__(self, builder: Builder):
         self.builder: Builder = builder
         self.temp_dir: Path = Path(mkdtemp())
@@ -96,14 +94,14 @@ class PerfProfiler:
         build_dir = self.temp_dir.joinpath("bins/")
 
         self.patch_tests_in_dir(test_dir, src_dir)
-        self.add_empty_patched_test(src_dir.joinpath(self.empty_test_name))
+        self.add_empty_patched_test(src_dir.joinpath(self.empty_test_path.name))
         self.builder.build(src_dir, build_dir)
         analyzed = self.get_stats_dir(build_dir)
 
         res: Dict[str, Dict] = {}
         for key in analyzed:
             if key != "empty":
-                analyzed[key] = analyzed[key] - analyzed["empty"]
+                analyzed[key] = analyzed[key] - analyzed[self.empty_test_path.name.split(".")[0]]
                 res.update({key: analyzed[key].to_dict()})
 
         return res
