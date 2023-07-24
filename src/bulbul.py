@@ -1,4 +1,13 @@
 from argparse import Namespace, ArgumentParser
+from pathlib import Path
+import shlex
+import shutil
+from typing import Dict
+from profilers.perfProfiler import PerfProfiler
+from profilers.profiler import IProfiler
+
+from src.builder import Builder
+from src.packer import Packer
 
 
 class Bulbul:
@@ -8,10 +17,38 @@ class Bulbul:
 
     def configurate(self, settings: Namespace):
         self.settings = settings
+        self.src_dir: Path = Path(settings.dest_folder).joinpath("src")
+        self.analyze_dir: Path = Path(settings.dest_folder).joinpath("analyze")
+        self.settings.compiler_args = shlex.split(settings.compiler_args)
+        self.builder: Builder = Builder(self.settings)
+        self.packer = Packer()
+        self.profiler: IProfiler
+        if (settings.choice == "perf"):
+            self.profiler = PerfProfiler(self.builder)
+        elif (settings.choice == "gem5"):
+            ...
+        else:
+            raise Exception(f'"{settings.choice}" is unknown profiler')
 
     def run(self):
         print("bulbul is running. Settings:")
         print(self.settings)
+        self.generate_tests()
+        data = self.profile()
+        self.pack(data)
+
+    def generate_tests(self):
+        for i in range(self.settings.repeats):
+            shutil.copy(
+                "test.c",
+                self.src_dir.joinpath(f'test_{i}.c')
+            )
+
+    def profile(self) -> Dict[str, Dict]:
+        return self.profiler.profile(self.src_dir)
+
+    def pack(self, analyzed_data: Dict[str, Dict]):
+        self.packer.pack(self.analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.bul_parser: ArgumentParser = sub_parsers.add_parser("bulbul", prog="bulbul")
