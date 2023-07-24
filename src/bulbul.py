@@ -16,13 +16,12 @@ class Bulbul:
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.bul_parser: ArgumentParser = sub_parsers.add_parser("bulbul", prog="bulbul")
         self.bul_parser.add_argument("--config_file", help="Path to config file")
-        self.bul_parser.add_argument("--repeats", type=int, help="Count of repeats to generated test", default=1)
+        self.bul_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
+        self.bul_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
         self.bul_parser.add_argument(
-            "--arch",
-            choices=["X86", "ARM", "RISCV"],
-            help="Type of architecture (X86, ARM, RISCV)",
+            "--sub_folder",
             default="X86",
+            help="Sub-folder in destination folder (usually the same as name of the architecture)",
         )
-        self.bul_parser.add_argument("--dest_folder", help="Path to output folder", default="out")
-        self.bul_parser.add_argument("--compiler", help="Path to compiler", default="gcc")
+        self.bul_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
         return self.bul_parser
