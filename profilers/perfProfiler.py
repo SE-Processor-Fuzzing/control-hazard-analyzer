@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Dict
 
-from builders.builder import Builder
+from builder import Builder
 
 
 class PerfData:
