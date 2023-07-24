@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Dict
 
-from builder import Builder
+from src.builder import Builder
 
 
 class PerfData:
@@ -91,7 +91,7 @@ class PerfProfiler:
             data_dict[binary.split(".")[0]] = data
         return data_dict
 
-    def profile(self, test_dir: Path, analyze_dir: Path) -> Dict[str, Dict]:
+    def profile(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
 
