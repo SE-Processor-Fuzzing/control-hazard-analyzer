@@ -31,8 +31,6 @@ class Bulbul:
             raise Exception(f'"{settings.choice}" is unknown profiler')
 
     def run(self):
-        print("bulbul is running. Settings:")
-        print(self.settings)
         self.generate_tests(self.src_dir, self.settings.repeats, verbose=True)
         data = self.profile(self.src_dir, verbose=True)
         self.pack(self.analyze_dir, data, verbose=True)
