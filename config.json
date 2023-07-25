@@ -1,8 +1,6 @@
 {
   "DEFAULT": {
-    "path_to_configs": "./configs",
-    "configs": [
-      "test.json"
-    ]
+    "path_to_configs": "./",
+    "configs": [{"aggregate" : "", "analyze" : "", "summarize" : ""}]
   }
 }
