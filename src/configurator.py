@@ -19,17 +19,17 @@ class Configurator:
 
         self.sub_parser = self.parser.add_subparsers(
             required=True,
-            title="bulbul and ckrasota",
-            help="aggregate is shell above: bulbul (code generator), ckrasota (agregator)",
+            title="analyze and ckrasota",
+            help="aggregate is shell above: analyze (code generator + profiler), ckrasota (agregator)",
             dest="name_of_subparsers",
-            metavar="utility {aggregate, bulbul, ckrasota}",
+            metavar="utility {aggregate, analyze, ckrasota}",
         )
 
     def parse_sub_parsers(self, settings: Mapping[str, Any]):
-        self.bul_parser = settings["bulbul"].add_sub_parser(self.sub_parser)
+        self.bul_parser = settings["analyze"].add_sub_parser(self.sub_parser)
         self.ck_parser = settings["ckrasota"].add_sub_parser(self.sub_parser)
         self.shell_parser = settings["aggregate"].add_sub_parser(self.sub_parser)
-        self.bul_parser.set_defaults(utility=settings["bulbul"])
+        self.bul_parser.set_defaults(utility=settings["analyze"])
         self.ck_parser.set_defaults(utility=settings["ckrasota"])
         self.shell_parser.set_defaults(utility=settings["aggregate"])
         return self.parser.parse_known_args()

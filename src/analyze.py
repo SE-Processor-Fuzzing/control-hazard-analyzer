@@ -10,7 +10,7 @@ from src.builder import Builder
 from src.packer import Packer
 
 
-class Bulbul:
+class Analyzer:
     def __init__(self):
         self.bul_parser = None
         self.settings = None
@@ -56,7 +56,7 @@ class Bulbul:
         return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.bul_parser: ArgumentParser = sub_parsers.add_parser("bulbul", prog="bulbul")
+        self.bul_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
         self.bul_parser.add_argument("--config_file", help="Path to config file")
         self.bul_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
         self.bul_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
