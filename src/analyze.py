@@ -12,7 +12,7 @@ from src.packer import Packer
 
 class Analyzer:
     def __init__(self):
-        self.bul_parser = None
+        self.analyze_parser = None
         self.settings = None
 
     def configurate(self, settings: Namespace):
@@ -56,14 +56,14 @@ class Analyzer:
         return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.bul_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
-        self.bul_parser.add_argument("--config_file", help="Path to config file")
-        self.bul_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
-        self.bul_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
-        self.bul_parser.add_argument(
+        self.analyze_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
+        self.analyze_parser.add_argument("--config_file", help="Path to config file")
+        self.analyze_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
+        self.analyze_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
+        self.analyze_parser.add_argument(
             "--sub_folder",
             default="X86",
             help="Sub-folder in destination folder (usually the same as name of the architecture)",
         )
-        self.bul_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
-        return self.bul_parser
+        self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
+        return self.analyze_parser
