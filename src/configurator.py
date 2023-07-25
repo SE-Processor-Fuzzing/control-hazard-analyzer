@@ -13,25 +13,25 @@ class Configurator:
         self.compiler_args = None
 
         self.parser = argparse.ArgumentParser(
-            prog="BIOHazard",
+            prog="aggregate",
             description="This script generate and test code on some platforms",
         )
 
         self.sub_parser = self.parser.add_subparsers(
             required=True,
             title="bulbul and ckrasota",
-            help="BIOhazard is shell above: bulbul (code generator), ckrasota (agregator)",
+            help="aggregate is shell above: bulbul (code generator), ckrasota (agregator)",
             dest="name_of_subparsers",
-            metavar="utility {BIOhazard, bulbul, ckrasota}",
+            metavar="utility {aggregate, bulbul, ckrasota}",
         )
 
     def parse_sub_parsers(self, settings: Mapping[str, Any]):
         self.bul_parser = settings["bulbul"].add_sub_parser(self.sub_parser)
         self.ck_parser = settings["ckrasota"].add_sub_parser(self.sub_parser)
-        self.shell_parser = settings["biohazard"].add_sub_parser(self.sub_parser)
+        self.shell_parser = settings["aggregate"].add_sub_parser(self.sub_parser)
         self.bul_parser.set_defaults(utility=settings["bulbul"])
         self.ck_parser.set_defaults(utility=settings["ckrasota"])
-        self.shell_parser.set_defaults(utility=settings["biohazard"])
+        self.shell_parser.set_defaults(utility=settings["aggregate"])
         return self.parser.parse_known_args()
 
     def configurate(self, settings: Mapping[str, Any] = None) -> Namespace:
