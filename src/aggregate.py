@@ -42,5 +42,5 @@ class Aggregator:
             help="Path to dist folder, if not exit it will be created",
         )
         self.shell_parser.add_argument("--Wz", help="Parse arguments for analyze")
-        self.shell_parser.add_argument("--Wc", help="Parse arguments for ckrasota")
+        self.shell_parser.add_argument("--Ws", help="Parse arguments for summarize")
         return self.shell_parser
