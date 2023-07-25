@@ -33,21 +33,28 @@ class Bulbul:
     def run(self):
         print("bulbul is running. Settings:")
         print(self.settings)
-        self.generate_tests(self.src_dir, self.settings.repeats)
-        data = self.profile(self.src_dir)
-        self.pack(self.analyze_dir, data)
+        self.generate_tests(self.src_dir, self.settings.repeats, verbose=True)
+        data = self.profile(self.src_dir, verbose=True)
+        self.pack(self.analyze_dir, data, verbose=True)
 
-    def generate_tests(self, target_dir: Path, count: int):
+    def generate_tests(self, target_dir: Path, count: int, verbose: bool = False):
+        if (verbose):
+            print(f"Generate tests to '{target_dir.absolute()}'")
+
         for i in range(count):
             shutil.copy(
                 "test.c",
                 target_dir.joinpath(f'test_{i}.c')
             )
 
-    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+    def profile(self, test_dir: Path, verbose: bool = False) -> Dict[str, Dict]:
+        if (verbose):
+            print(f"Execute and analyze tests from '{test_dir.absolute()}'")
         return self.profiler.profile(test_dir)
 
-    def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict]):
+    def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict], verbose: bool = False):
+        if (verbose):
+            print(f"Save analysis' results to '{analyze_dir.absolute()}'")
         return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
