@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from BIOhazard import BIOhazard
+from src.BIOhazard import BIOhazard
 from src.bulbul import Bulbul
 from src.ckrasota import Ckrasota
 from src.configurator import Configurator
