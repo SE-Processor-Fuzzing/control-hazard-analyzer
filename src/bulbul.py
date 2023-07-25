@@ -33,22 +33,22 @@ class Bulbul:
     def run(self):
         print("bulbul is running. Settings:")
         print(self.settings)
-        self.generate_tests()
-        data = self.profile()
-        self.pack(data)
+        self.generate_tests(self.src_dir, self.settings.repeats)
+        data = self.profile(self.src_dir)
+        self.pack(self.analyze_dir, data)
 
-    def generate_tests(self):
-        for i in range(self.settings.repeats):
+    def generate_tests(self, target_dir: Path, count: int):
+        for i in range(count):
             shutil.copy(
                 "test.c",
-                self.src_dir.joinpath(f'test_{i}.c')
+                target_dir.joinpath(f'test_{i}.c')
             )
 
-    def profile(self) -> Dict[str, Dict]:
-        return self.profiler.profile(self.src_dir)
+    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+        return self.profiler.profile(test_dir)
 
-    def pack(self, analyzed_data: Dict[str, Dict]):
-        self.packer.pack(self.analyze_dir, analyzed_data)
+    def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict]):
+        return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.bul_parser: ArgumentParser = sub_parsers.add_parser("bulbul", prog="bulbul")
