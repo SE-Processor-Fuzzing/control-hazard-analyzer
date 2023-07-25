@@ -4,7 +4,7 @@ import stat
 from argparse import ArgumentParser, Namespace
 
 
-class BIOhazard:
+class Aggregator:
     def __init__(self):
         self.settings = {"source_folder": "source", "compiled_folder": "dest", "analyse_folder": "analyse"}
         self.settings = Namespace(**self.settings)
@@ -21,14 +21,14 @@ class BIOhazard:
         shutil.rmtree(self.settings.dest_folder)
 
     def run(self):
-        print("BIOhazard is running. Settings:")
+        print("Aggregate is running. Settings:")
         print(self.settings)
 
     def configurate(self, settings: Namespace):
         self.settings = settings
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.shell_parser: ArgumentParser = sub_parsers.add_parser("BIOhazard", prog="BIOhazard")
+        self.shell_parser: ArgumentParser = sub_parsers.add_parser("aggregate", prog="aggregate")
 
         self.shell_parser.add_argument("--config_file", default="config.json", help="Path to .cfg file")
         self.shell_parser.add_argument(

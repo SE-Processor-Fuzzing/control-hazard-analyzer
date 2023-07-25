@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from src.BIOhazard import BIOhazard
+from src.aggregate import Aggregator
 from src.bulbul import Bulbul
 from src.ckrasota import Ckrasota
 from src.configurator import Configurator
@@ -11,10 +11,10 @@ class Controller:
         self.settings = {}
         self.bulbul = Bulbul()
         self.ckrasota = Ckrasota()
-        self.biohazard = BIOhazard()
+        self.aggregate = Aggregator()
         self.settings["bulbul"] = self.bulbul
         self.settings["ckrasota"] = self.ckrasota
-        self.settings["biohazard"] = self.biohazard
+        self.settings["aggregate"] = self.aggregate
         self.settings = Namespace(**self.settings)
 
     def run(self):
