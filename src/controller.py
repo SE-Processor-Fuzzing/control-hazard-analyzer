@@ -1,7 +1,7 @@
 from argparse import Namespace
 
 from src.aggregate import Aggregator
-from src.bulbul import Bulbul
+from src.analyze import Analyzer
 from src.ckrasota import Ckrasota
 from src.configurator import Configurator
 
@@ -9,10 +9,10 @@ from src.configurator import Configurator
 class Controller:
     def __init__(self):
         self.settings = {}
-        self.bulbul = Bulbul()
+        self.analyze = Analyzer()
         self.ckrasota = Ckrasota()
         self.aggregate = Aggregator()
-        self.settings["bulbul"] = self.bulbul
+        self.settings["analyze"] = self.analyze
         self.settings["ckrasota"] = self.ckrasota
         self.settings["aggregate"] = self.aggregate
         self.settings = Namespace(**self.settings)
