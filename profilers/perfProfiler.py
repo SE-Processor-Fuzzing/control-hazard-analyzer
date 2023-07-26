@@ -51,6 +51,7 @@ class PerfProfiler:
         self.empty_test_path = Path("profilers/attachments/empty.c")
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
+        dest_test.parent.mkdir(parents=True, exist_ok=True)
         if os.path.isfile(src_test):
             with open(dest_test, "wt") as writter:
                 writter.write(f'#include "{src_test.absolute()}"\n')
