@@ -15,9 +15,17 @@ class PerfData:
         self.branches = int(data_dict.get("branches", -1))
         self.missed_branches = int(data_dict.get("missed_branches", -1))
         self.cache_bpu = int(data_dict.get("cache_BPU", -1))
+        self.ticks = int(data_dict.get("cpu_clock", -1))
+        self.instructions = int(data_dict.get("instructions", -1))
 
-    def __str__(self) -> str:
-        return f"PerfData(branches: {self.branches}, missed: {self.missed_branches}, cache_bpu {self.cache_bpu})"
+    def to_dict(self) -> Dict:
+        data_dict: Dict = {}
+        data_dict["branchPred.lookups"] = self.branches
+        data_dict["branchPred.condIncorrect"] = self.missed_branches
+        data_dict["branchPred.BTBUpdates"] = self.cache_bpu
+        data_dict["simTicks"] = self.ticks
+        data_dict["instructions"] = self.instructions
+        return data_dict
 
     def __sub__(self, other) -> PerfData:
         if isinstance(other, PerfData):
@@ -25,16 +33,14 @@ class PerfData:
             res.branches = self.branches - other.branches
             res.missed_branches = self.missed_branches - other.missed_branches
             res.cache_bpu = self.cache_bpu - other.cache_bpu
+            res.ticks = self.ticks - other.ticks
+            res.instructions = self.instructions - other.instructions
             return res
         else:
             raise TypeError
 
-    def to_dict(self) -> Dict:
-        data_dict: Dict = {}
-        data_dict["branchPred.lookups"] = self.branches
-        data_dict["branchPred.condIncorrect"] = self.missed_branches
-        data_dict["branchPred.BTBUpdates"] = self.cache_bpu
-        return data_dict
+    def __str__(self) -> str:
+        return str(self.to_dict())
 
 
 class PerfProfiler:
