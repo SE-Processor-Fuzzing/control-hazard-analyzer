@@ -36,8 +36,14 @@ class Analyzer:
             raise Exception(f'"{settings.choice}" is unknown profiler')
 
     def run(self):
+        self.create_empty_dir(self.analyze_dir)
         data = self.profile(self.test_dir, verbose=True)
         self.pack(self.analyze_dir, data, verbose=True)
+
+    def create_empty_dir(self, dir: Path):
+        if (dir.exists()):
+            shutil.rmtree(dir)
+        dir.mkdir(parents=True)
 
     def profile(self, test_dir: Path, verbose: bool = False) -> Dict[str, Dict]:
         if verbose:
@@ -51,7 +57,7 @@ class Analyzer:
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.analyze_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
-        self.analyze_parser.add_argument("--config_file", default="", help="Path to config file")
+        self.analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
         self.analyze_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
         self.analyze_parser.add_argument("--test_dir", default="./", help="Path to directory with tests")
         self.analyze_parser.add_argument(

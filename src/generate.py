@@ -24,7 +24,13 @@ class Generator:
         ...
 
     def run(self) -> None:
+        self.create_empty_dir(self.src_dir)
         self.generate_tests(self.src_dir, self.repeats, verbose=True)
+
+    def create_empty_dir(self, dir: Path):
+        if (dir.exists()):
+            shutil.rmtree(dir)
+        dir.mkdir(parents=True)
 
     def generate_tests(self, target_dir: Path, count: int, verbose: bool = False):
         if (verbose):
