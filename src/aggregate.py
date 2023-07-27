@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import shlex
 import shutil
 import stat
@@ -33,14 +34,13 @@ class Aggregator:
         self.settings.generate.run()
 
         for config_file in self.settings.configs:
-            os.chdir(self.settings.path_to_configs)
-            if os.access(os.path.join(config_file), mode=os.R_OK):
+            full_conf_path: Path = Path(self.settings.path_to_configs).joinpath(config_file)
+            if os.access(full_conf_path, mode=os.R_OK):
                 args_analyze = shlex.split(self.settings.Wz)
                 settings_analyze = self.settings.analyze.parse_args(args_analyze)
                 self.settings.analyze.configurate(
-                    Namespace(**self.settings.configurator.read_cfg_file(config_file), **vars(settings_analyze))
+                    Namespace(**self.settings.configurator.read_cfg_file(full_conf_path), **vars(settings_analyze))
                 )
-                os.chdir("..")
                 self.settings.analyze.run()
 
     def configurate(self, settings: Namespace):
