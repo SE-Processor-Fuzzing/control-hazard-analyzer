@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from profilers.perfProfiler import PerfProfiler
+from profilers.gemProfiler import GemProfiler
 from profilers.profiler import IProfiler
 from src.builder import Builder
 from src.packer import Packer
@@ -30,8 +31,8 @@ class Analyzer:
         self.profiler: IProfiler
         if settings.profiler == "perf":
             self.profiler = PerfProfiler(self.builder)
-        elif settings.profiler == "gem5":
-            ...
+        elif (settings.choice == "gem5"):
+            self.profiler = GemProfiler(self.builder, settings)
         else:
             raise Exception(f'"{settings.choice}" is unknown profiler')
 
