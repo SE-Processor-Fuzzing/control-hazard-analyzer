@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from typing import List
 
 
 class Summarizer:
@@ -21,5 +22,5 @@ class Summarizer:
         self.summarize_parser.add_argument("--dest_folder", help="Path to destination folder")
         return self.summarize_parser
 
-    def parse_args(self, args: list[str]) -> Namespace:
+    def parse_args(self, args: List[str]) -> Namespace:
         return self.summarize_parser.parse_known_args(args)[0]
