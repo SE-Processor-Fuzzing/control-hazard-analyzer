@@ -2,8 +2,9 @@ from argparse import Namespace
 
 from src.aggregate import Aggregator
 from src.analyze import Analyzer
-from src.summarize import Summarizer
 from src.configurator import Configurator
+from src.summarize import Summarizer
+from src.utility import IUtility
 
 
 class Controller:
@@ -12,13 +13,14 @@ class Controller:
         self.analyze = Analyzer()
         self.summarize = Summarizer()
         self.aggregate = Aggregator()
-        self.settings["analyze"] = self.analyze
-        self.settings["summarize"] = self.summarize
-        self.settings["aggregate"] = self.aggregate
+        self.settings["analyze"]: IUtility = self.analyze
+        self.settings["summarize"]: IUtility = self.summarize
+        self.settings["aggregate"]: IUtility = self.aggregate
         self.settings = Namespace(**self.settings)
 
     def run(self):
         c = Configurator()
+        self.settings.configurator = c
         self.settings = c.configurate(vars(self.settings))
         self.settings.utility.configurate(self.settings)
         self.settings.utility.run()

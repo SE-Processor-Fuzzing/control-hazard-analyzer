@@ -8,7 +8,7 @@ class Configurator:
     def __init__(self):
         self.shell_parser = None
         self.analyze_parser = None
-        self.ck_parser = None
+        self.summarize_parser = None
         self.args = None
         self.compiler_args = None
 
@@ -27,10 +27,10 @@ class Configurator:
 
     def parse_sub_parsers(self, settings: Mapping[str, Any]):
         self.analyze_parser = settings["analyze"].add_sub_parser(self.sub_parser)
-        self.ck_parser = settings["summarize"].add_sub_parser(self.sub_parser)
+        self.summarize_parser = settings["summarize"].add_sub_parser(self.sub_parser)
         self.shell_parser = settings["aggregate"].add_sub_parser(self.sub_parser)
         self.analyze_parser.set_defaults(utility=settings["analyze"])
-        self.ck_parser.set_defaults(utility=settings["summarize"])
+        self.summarize_parser.set_defaults(utility=settings["summarize"])
         self.shell_parser.set_defaults(utility=settings["aggregate"])
         return self.parser.parse_known_args()
 
