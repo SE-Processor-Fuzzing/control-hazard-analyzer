@@ -152,17 +152,19 @@ class ForBlock(BaseBlock):
 
 def generate_test(file, total_blocks, blocks_cap, vars_cap):
 
-    global output_file, VAR_IN_BLOCK_CAP, BLOCKS_IN_BLOCK_CAP, blocks_left
+    global output_file, VAR_IN_BLOCK_CAP, BLOCKS_IN_BLOCK_CAP, blocks_left, var_stack, var_number
     blocks_left = total_blocks
     BLOCKS_IN_BLOCK_CAP = blocks_cap
     VAR_IN_BLOCK_CAP = vars_cap
+    var_stack = []
+    var_number = 0
 
     output_file = open(file, 'w')
     output_file.write('# define D0(x) (x==0) ? 1 : x\n\n'
-                      'int main(){\n')
+                      'void test_fun(){\n')
     program = BaseBlock(2, 0)
     program.render()
-    output_file.write('\treturn 0;\n}')
+    output_file.write('}')
 
     output_file.close()
 
