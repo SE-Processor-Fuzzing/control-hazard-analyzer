@@ -80,11 +80,16 @@ class PerfProfiler:
 
     def get_stat(self, binary: Path) -> PerfData:
         execute_line = ["sudo", binary]
-        proc = subprocess.run(
-            execute_line,
-            stdout=subprocess.PIPE,
-            check=True,
-        )
+        try:
+            proc = subprocess.run(
+                execute_line,
+                stdout=subprocess.PIPE,
+                check=True,
+                timeout=10.0,
+            )
+            # !!! process does not die, it just unhook from python
+        except subprocess.TimeoutExpired:
+            return PerfData()
         output = proc.stdout.decode()
         data = PerfData(self.output_to_dict(output))
         return data
@@ -93,7 +98,8 @@ class PerfProfiler:
         data_dict: Dict[str, PerfData] = {}
         for binary in os.listdir(dir):
             data = self.get_stat(dir.joinpath(binary))
-            data_dict[binary.split(".")[0]] = data
+            if data.ticks >= 0:
+                data_dict[binary.split(".")[0]] = data
         return data_dict
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
