@@ -1,36 +1,47 @@
 import re
 import os
 import subprocess
-
 from typing import Dict
 from pathlib import Path
 from tempfile import mkdtemp
-from builders.builder import Builder
+from argparse import Namespace
+
+from src.builder import Builder
 
 
 class GemProfiler:
-    def __init__(self, builder: Builder):
+    def __init__(self, builder: Builder, settings: Namespace):
+        self.settings = settings
         self.builder: Builder = builder
         self.temp_path = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/gemTemplate.c")
-        self.empty_test_path = Path("/home/joskiy/Projects/BIOHazard/profilers/attachments/empty.c")
+        self.empty_test_path = Path("profilers/attachments/empty.c")
+        self.gem5_home = self.settings.__dict__.get("gem5_home", "")
+        self.target_isa = self.settings.__dict__.get("target_isa", "")
+        self.gem5_bin_path = self.settings.__dict__.get(
+            "gem5_bin_path", f"{self.gem5_home}/build/{self.target_isa}/gem5.opt")
+        self.sim_script_path = self.settings.__dict__.get(
+            "sim_script_path", f"{self.gem5_home}/configs/deprecated/example/se.py")
+        if self.target_isa == "":
+            raise Exception("No target isa provided")
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
             with open(dest_test, 'w+') as file:
-                file.write(f'#include "{src_test.absolute()}\n"')
-                file.write(f'#include "{self.template_path.absolute()}\n"')
+                file.write(f'#include "{src_test.absolute()}"\n')
+                file.write(f'#include "{self.template_path.absolute()}"\n')
             return True
 
         return False
 
     def patch_tests_in_dir(self, src_dir: Path, dest_dir: Path) -> None:
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_dir.mkdir(parents=True, exist_ok=False)
         for src_test in os.listdir(src_dir):
-            src_test = Path(src_test)
-            self.patch_test(src_test, dest_dir.joinpath(src_test.name))
+            src_test = src_dir.joinpath(src_test)
+            dest_test = dest_dir.joinpath(src_test.name)
+            self.patch_test(src_test, dest_test)
 
-    def get_stats_from_file(self, stat_path: Path) -> Dict[str: int]:
+    def get_stats_from_file(self, stat_path: Path) -> Dict[str, int]:
         stats = {}
         with open(stat_path, 'r') as file:
             for line in file.readlines():
@@ -41,36 +52,47 @@ class GemProfiler:
 
         return stats
 
-    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str: Dict]:
+    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str, Dict]:
         stats_dict = {}
         for stat_path in os.listdir(stats_dir):
             test_name = stat_path.split(".")[0]
-            stats_dir[test_name] = self.get_stats(stat_path)
+            stats_dict[test_name] = self.get_stats_from_file(stats_dir.joinpath(stat_path))
 
         return stats_dict
 
-    def run_bins_in_dir(bin_dir: Path, dest_dir: Path) -> None:
+    def run_bins_in_dir(self, bin_dir: Path, dest_dir: Path) -> None:
+        dest_dir.mkdir(parents=True, exist_ok=True)
         for binary in os.listdir(bin_dir):
-            execute_line = ["sudo", binary]
+            bin_path = bin_dir.joinpath(binary)
+            execute_line = ["sudo", self.gem5_bin_path,
+                            f"--outdir={self.temp_path}/m5out",
+                            f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
+                            self.sim_script_path, "--cpu-type=O3CPU",
+                            "--caches", "-c", bin_path]
+
             subprocess.run(execute_line, check=True)
 
-    def correct(analyzed: Dict[str: Dict]) -> Dict[str: Dict]:
+    def correct(self, analyzed: Dict[str, Dict]) -> Dict[str, Dict]:
         for file_name in analyzed.keys():
             if file_name != "empty":
-                analyzed[file_name] -= analyzed["empty"]
+                for key in analyzed["empty"].keys():
+                    analyzed[file_name][key] -= analyzed["empty"][key]
 
         return analyzed
 
-    def profile(self, test_dir: Path) -> Dict[str: Dict]:
-        src_dir = self.temp_path.joinpath("src")
-        build_dir = self.temp_path.joinpath("bins")
-        stats_dir = self.temp_path.joinpath("stats")
-
-        self.patch_test(self.empty_test_path, src_dir)
-        self.patch_tests_in_dir(test_dir, src_dir)
-        self.builder.build(src_dir, build_dir)
+    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+        src_dir = self.temp_path.joinpath("src/")
+        build_dir = self.temp_path.joinpath("bins/")
+        stats_dir = self.temp_path.joinpath("stats/")
+        gem_additional_flags = [f"-I{self.gem5_home}/include", f"-I{self.gem5_home}/util/m5/src", "-fPIE",
+                                f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out", "-Wl,-lm5",
+                                "--static"]
+        self.patch_tests_in_dir(test_dir.absolute(), src_dir)
+        self.patch_test(self.empty_test_path, src_dir.joinpath(self.empty_test_path.name))
+        self.builder.build(src_dir, build_dir, gem_additional_flags)
         self.run_bins_in_dir(build_dir, stats_dir)
-
         analyzed = self.get_stats_from_dir(stats_dir)
+
+        subprocess.call(['sudo', 'rm', '-rf', self.temp_path])
 
         return self.correct(analyzed)
