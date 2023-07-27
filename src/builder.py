@@ -1,7 +1,7 @@
-from argparse import Namespace
 import os
-from pathlib import Path
 import subprocess
+from argparse import Namespace
+from pathlib import Path
 
 
 class Builder:
@@ -13,12 +13,12 @@ class Builder:
         destination_folder.mkdir(parents=True, exist_ok=True)
         for test_file in list_of_src_files:
             execute_line = (
-                [self.settings.compiler, src_folder.joinpath(test_file)]
-                + self.settings.compiler_args
-                + ["-o", destination_folder.joinpath(f"{test_file}.out")]
+                    [self.settings.compiler, src_folder.joinpath(test_file)]
+                    + self.settings.compiler_args
+                    + ["-o", destination_folder.joinpath(f"{test_file}.out")]
             )
 
-            # print(" ".join(execute_line))
+            # print(" ".join(map(lambda x: str(x), execute_line)))
 
             subprocess.run(
                 execute_line,

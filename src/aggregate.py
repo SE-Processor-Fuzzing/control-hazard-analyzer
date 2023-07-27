@@ -1,4 +1,5 @@
 import os
+import shlex
 import shutil
 import stat
 from argparse import ArgumentParser, Namespace
@@ -6,7 +7,7 @@ from argparse import ArgumentParser, Namespace
 
 class Aggregator:
     def __init__(self):
-        self.settings = {"source_folder": "source", "compiled_folder": "dest", "analyse_folder": "analyse"}
+        self.settings = {"source_folder": "source", "compiled_folder": "dest", "analyse_folder": "analyze"}
         self.settings = Namespace(**self.settings)
         self.shell_parser = None
 
@@ -23,6 +24,17 @@ class Aggregator:
     def run(self):
         print("Aggregate is running. Settings:")
         print(self.settings)
+
+        for config_file in self.settings.configs:
+            os.chdir(self.settings.path_to_configs)
+            if os.access(os.path.join(config_file), mode=os.R_OK):
+                args_analyze = shlex.split(self.settings.Wz)
+                settings_analyze = self.settings.analyze.parse_args(args_analyze)
+                self.settings.analyze.configurate(
+                    Namespace(**self.settings.configurator.read_cfg_file(config_file), **vars(settings_analyze))
+                )
+                os.chdir("..")
+                self.settings.analyze.run()
 
     def configurate(self, settings: Namespace):
         self.settings = settings
@@ -41,6 +53,9 @@ class Aggregator:
             default="out",
             help="Path to dist folder, if not exit it will be created",
         )
-        self.shell_parser.add_argument("--Wz", help="Parse arguments for analyze")
-        self.shell_parser.add_argument("--Ws", help="Parse arguments for summarize")
+        self.shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
+        self.shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
         return self.shell_parser
+
+    def parse_args(self, args: list[str]) -> Namespace:
+        return self.shell_parser.parse_known_args(args)[0]

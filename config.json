@@ -1,6 +1,8 @@
 {
   "DEFAULT": {
-    "path_to_configs": "./",
-    "configs": []
+    "path_to_configs": "./configs",
+    "configs": [
+      "test.json"
+    ]
   }
 }
