@@ -1,18 +1,19 @@
-import argparse
 import json
-from argparse import Namespace
-from typing import Any, Mapping, Dict
+from argparse import Namespace, ArgumentParser
+from typing import Any, Mapping, Dict, Optional
+
+from src.utility import IUtility
 
 
 class Configurator:
     def __init__(self):
-        self.shell_parser = None
-        self.analyze_parser = None
-        self.summarize_parser = None
-        self.args = None
-        self.compiler_args = None
+        self.generator_parser: Optional[ArgumentParser] = None
+        self.shell_parser: Optional[ArgumentParser] = None
+        self.analyze_parser: Optional[ArgumentParser] = None
+        self.summarize_parser: Optional[ArgumentParser] = None
+        self.args: Optional[Namespace] = None
 
-        self.parser = argparse.ArgumentParser(
+        self.parser = ArgumentParser(
             prog="aggregate",
             description="This script generate and test code on some platforms",
         )
@@ -22,16 +23,18 @@ class Configurator:
             title="analyze and summarize",
             help="aggregate is shell above: analyze (code generator + profiler), summarize",
             dest="name_of_subparsers",
-            metavar="utility {aggregate, analyze, summarize}",
+            metavar="utility {aggregate, generate, analyze, summarize}",
         )
 
-    def parse_sub_parsers(self, settings: Mapping[str, Any]):
+    def parse_sub_parsers(self, settings: Mapping[str, IUtility]):
         self.analyze_parser = settings["analyze"].add_sub_parser(self.sub_parser)
+        self.generator_parser = settings["generate"].add_sub_parser(self.sub_parser)
         self.summarize_parser = settings["summarize"].add_sub_parser(self.sub_parser)
         self.shell_parser = settings["aggregate"].add_sub_parser(self.sub_parser)
         self.analyze_parser.set_defaults(utility=settings["analyze"])
         self.summarize_parser.set_defaults(utility=settings["summarize"])
         self.shell_parser.set_defaults(utility=settings["aggregate"])
+        self.generator_parser.set_defaults(utility=settings["generate"])
         return self.parser.parse_known_args()
 
     def configurate(self, settings: Mapping[str, Any] = None) -> Namespace:
@@ -39,7 +42,7 @@ class Configurator:
             settings = {}
         self.args = self.parse_sub_parsers(settings)[0]
         config = self.read_cfg_file(
-            self.args.config_file,
+            getattr(self.args, "config_file", None),
             self.args.section_in_config if hasattr(self.args, "section_in_config") else None,
         )
 

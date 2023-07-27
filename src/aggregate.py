@@ -26,6 +26,12 @@ class Aggregator:
         print("Aggregate is running. Settings:")
         print(self.settings)
 
+        args_generate = shlex.split(self.settings.Wg)
+        settings_generate = self.settings.generate.parse_args(args_generate)
+
+        self.settings.generate.configurate(settings_generate)
+        self.settings.generate.run()
+
         for config_file in self.settings.configs:
             os.chdir(self.settings.path_to_configs)
             if os.access(os.path.join(config_file), mode=os.R_OK):
@@ -54,6 +60,7 @@ class Aggregator:
             default="out",
             help="Path to dist folder, if not exit it will be created",
         )
+        self.shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
         self.shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
         self.shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
         return self.shell_parser
