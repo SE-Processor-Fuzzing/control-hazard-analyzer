@@ -2,7 +2,7 @@ import shlex
 import shutil
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from profilers.perfProfiler import PerfProfiler
 from profilers.profiler import IProfiler
@@ -12,13 +12,13 @@ from src.packer import Packer
 
 class Analyzer:
     def __init__(self):
-        self.profiler = None
-        self.packer = None
-        self.builder = None
-        self.test_dir = None
-        self.analyze_dir = None
-        self.analyze_parser = None
-        self.settings = None
+        self.profiler: Optional[IProfiler] = None
+        self.packer: Optional[Packer] = None
+        self.builder: Optional[Builder] = None
+        self.test_dir: Optional[Path] = None
+        self.analyze_dir: Optional[Path] = None
+        self.analyze_parser: Optional[ArgumentParser] = None
+        self.settings: Optional[Namespace] = None
 
     def configurate(self, settings: Namespace):
         self.settings = settings
