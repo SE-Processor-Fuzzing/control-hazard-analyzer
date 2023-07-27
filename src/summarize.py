@@ -25,11 +25,11 @@ class Summarizer:
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.summarize_parser: ArgumentParser = sub_parsers.add_parser("summarize", prog="summarize")
 
-        self.ck_parser.add_argument("--config_file", help="Path to config file")
-        self.ck_parser.add_argument("--src_folders", help="Path to source folders. One or more.", nargs="+",
+        self.summarize_parser.add_argument("--config_file", help="Path to config file")
+        self.summarize_parser.add_argument("--src_folders", help="Path to source folders. One or more.", nargs="+",
                                     required=True)
-        self.ck_parser.add_argument("--output_file", help="Path to output file", required=True)
-        return self.ck_parser
+        self.summarize_parser.add_argument("--output_file", help="Path to output file", required=True)
+        return self.summarize_parser
 
     def parse_args(self, args: List[str]) -> Namespace:
         return self.summarize_parser.parse_known_args(args)[0]
@@ -85,7 +85,6 @@ class Summarizer:
         with open(Path(dest_file), "w") as f:
             # Use pandas to print data to file
             f.write("Summarized data:\n")
-            summarized_by_folder.plot.bar()
             f.write(summarized_by_folder.to_string())
             f.write("\n\n")
             for src_folder, src_files in summarized_data.items():
