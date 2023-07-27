@@ -2,7 +2,7 @@ import shutil
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List, Optional
-import blocks_rendering as br
+import src.blocks_rendering as br
 
 
 class Generator:
@@ -10,17 +10,18 @@ class Generator:
         self.settings: Optional[Namespace] = None
         self.analyze_parser: Optional[ArgumentParser] = None
         self.repeats: Optional[int] = None
+        self.out_dir: Optional[Path] = None
 
     def configurate(self, settings: Namespace) -> None:
-        self.out_dir: Path = Path(settings.out_dir)
+        self.out_dir = Path(settings.out_dir)
         self.repeats = int(settings.repeats)
 
-    def generate_tests(self, target_dir: Path, count: int, total_blocks: int, blocks_cap: int, vars_cap: int, verbose: bool = False):
+    def generate_tests(self, target_dir: Path, count: int, total_blocks: int = 100,
+                       blocks_cap: int = 2, vars_cap: int = 2, verbose: bool = False):
         if (verbose):
             print(f"Generate tests to '{target_dir.absolute()}'")
         for i in range(count):
             br.generate_test(target_dir.joinpath(f'test_{i}.c'), total_blocks, blocks_cap, vars_cap)
-
 
     def create_empty_dir(self, dir: Path):
         if dir.exists():
@@ -29,7 +30,7 @@ class Generator:
 
     def run(self) -> None:
         self.create_empty_dir(self.out_dir)
-        self.generate_tests(self.src_dir, self.repeats, verbose=True)
+        self.generate_tests(self.out_dir, self.repeats, verbose=True)
 
     def add_sub_parser(self, sub_parser) -> ArgumentParser:
         self.analyze_parser: ArgumentParser = sub_parser.add_parser("generate", prog="generate")

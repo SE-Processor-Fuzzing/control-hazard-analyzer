@@ -1,7 +1,5 @@
+from io import TextIOWrapper
 import random as rd
-
-# Стек хранящий переменные которые доступны текущему блоку
-
 
 CONDITION_OPERANDS = ['<', '<=', '>=', '>', '==', '!=']
 
@@ -11,10 +9,11 @@ VAR_IN_BLOCK_CAP = 2
 
 BLOCKS_IN_BLOCK_CAP = 2
 
-output_file = open('test.c', 'w')
+output_file: TextIOWrapper
 
 blocks_left = 100
 
+# Storing variables that are available to the current block
 var_stack = []
 
 var_number = 0
@@ -22,8 +21,8 @@ var_number = 0
 
 class BaseBlock:
     def __init__(self, sp, tabs=0):
-        self.sp = sp  # Количество созданных в блоке переменных
-        self.children = []  # Потомки в дереве блоков
+        self.sp = sp  # Number of variables created in the block
+        self.children = []  # Children in the block tree
         self.tabs = tabs
         if blocks_left > 0:
             self.blocks_generator()
@@ -52,7 +51,7 @@ class BaseBlock:
         blocks_left -= len(blocks)
 
         for block in blocks:
-            self.children.append(block(rd.randint(0, VAR_IN_BLOCK_CAP),self.tabs + 1))
+            self.children.append(block(rd.randint(0, VAR_IN_BLOCK_CAP), self.tabs + 1))
 
     def del_unavlb_vars(self):
         global var_number
@@ -109,7 +108,7 @@ class IfBlock(BaseBlock):
 
     def blocks_generator(self):
         super().blocks_generator()
-        self.children.insert(0, CalculationBlock(rd.randint(2, 8),  self.tabs + 1))
+        self.children.insert(0, CalculationBlock(rd.randint(2, 8), self.tabs + 1))
 
         self.else_children = self.children[::]
         self.children = []
@@ -118,7 +117,8 @@ class IfBlock(BaseBlock):
         self.children.insert(0, CalculationBlock(rd.randint(2, 8), self.tabs + 1))
 
     def render(self):
-        output_file.write('\t' * self.tabs + f'if ({self.statement_generate(rd.choice(var_stack), condition=True)})' + '{\n')
+        output_file.write('\t' * self.tabs
+                          + f'if ({self.statement_generate(rd.choice(var_stack), condition=True)})' + '{\n')
         super().render()
         output_file.write('\t' * self.tabs + '}\n')
         self.del_unavlb_vars()
@@ -171,5 +171,3 @@ probability = {
     ForBlock: [ForBlock] * 5,
     IfBlock: [IfBlock] * 5,
 }
-
-generate_test('test.c', 20, 4, 5)
