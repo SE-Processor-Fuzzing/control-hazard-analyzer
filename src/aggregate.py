@@ -3,6 +3,7 @@ import shlex
 import shutil
 import stat
 from argparse import ArgumentParser, Namespace
+from typing import List
 
 
 class Aggregator:
@@ -57,5 +58,5 @@ class Aggregator:
         self.shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
         return self.shell_parser
 
-    def parse_args(self, args: list[str]) -> Namespace:
+    def parse_args(self, args: List[str]) -> Namespace:
         return self.shell_parser.parse_known_args(args)[0]

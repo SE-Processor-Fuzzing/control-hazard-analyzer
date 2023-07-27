@@ -2,7 +2,7 @@ import shlex
 import shutil
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from profilers.perfProfiler import PerfProfiler
 from profilers.profiler import IProfiler
@@ -66,5 +66,5 @@ class Analyzer:
         )
         return self.analyze_parser
 
-    def parse_args(self, args: list[str]) -> Namespace:
+    def parse_args(self, args: List[str]) -> Namespace:
         return self.analyze_parser.parse_known_args(args)[0]
