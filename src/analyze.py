@@ -23,7 +23,7 @@ class Analyzer:
     def configurate(self, settings: Namespace):
         self.settings = settings
         self.test_dir: Path = Path(settings.test_dir)
-        self.analyze_dir: Path = Path(settings.dest_folder).joinpath("analyze").joinpath(settings.sub_folder)
+        self.analyze_dir: Path = Path(settings.out_dir)
         self.settings.compiler_args = shlex.split(settings.compiler_args)
         self.builder: Builder = Builder(self.settings)
         self.packer = Packer()
@@ -58,13 +58,8 @@ class Analyzer:
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.analyze_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
         self.analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
-        self.analyze_parser.add_argument("--dest_folder", default="out", help="Path to output folder")
-        self.analyze_parser.add_argument("--test_dir", default="./", help="Path to directory with tests")
-        self.analyze_parser.add_argument(
-            "--sub_folder",
-            default="X86",
-            help="Sub-folder in destination folder (usually the same as name of the architecture)",
-        )
+        self.analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output folder")
+        self.analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
         self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
         self.analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
         self.analyze_parser.add_argument(
