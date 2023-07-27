@@ -1,10 +1,10 @@
 import json
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
-from typing import List
 
 
 class Summarizer:
@@ -27,7 +27,7 @@ class Summarizer:
 
         self.summarize_parser.add_argument("--config_file", help="Path to config file")
         self.summarize_parser.add_argument("--src_folders", help="Path to source folders. One or more.", nargs="+",
-                                    required=True)
+                                           required=True)
         self.summarize_parser.add_argument("--output_file", help="Path to output file", required=True)
         return self.summarize_parser
 
@@ -58,13 +58,13 @@ class Summarizer:
                 bp_lookups = src_data.get("branchPred.lookups", np.nan)
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
                 summarized_data[Path(src_folder).stem][Path(src_file).stem] = {
-                    f"Number of ticks": sim_ticks,
-                    f"BP lookups": bp_lookups,
-                    f"Ticks per BP": round(sim_ticks / float(bp_lookups),
-                                           2) if bp_lookups != np.nan and sim_ticks != np.nan else np.nan,
-                    f"BP incorrect": bp_incorrect,
-                    f"BP incorrect %": round(bp_incorrect / float(bp_lookups) * 100,
-                                             2) if bp_lookups != np.nan and bp_incorrect != np.nan else np.nan,
+                    "Number of ticks": sim_ticks,
+                    "BP lookups": bp_lookups,
+                    "Ticks per BP": round(sim_ticks / float(bp_lookups),
+                                          2) if bp_lookups != np.nan and sim_ticks != np.nan else np.nan,
+                    "BP incorrect": bp_incorrect,
+                    "BP incorrect %": round(bp_incorrect / float(bp_lookups) * 100,
+                                            2) if bp_lookups != np.nan and bp_incorrect != np.nan else np.nan,
                 }
         return summarized_data
 
