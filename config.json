@@ -2,6 +2,7 @@
   "DEFAULT": {
     "path_to_configs": "./configs",
     "configs": [
+      "perf.json",
       "test.json"
     ]
   }

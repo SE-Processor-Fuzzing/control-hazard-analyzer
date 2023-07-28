@@ -54,3 +54,14 @@ class Configurator:
         with open(config_file, mode="r") as f:
             config: Dict[str, Any] = json.load(f)
         return config if section is None else {**config["DEFAULT"], **config[section]}
+
+    def get_true_settings(self, parser: ArgumentParser, settings: Dict[str, Any], args: Namespace) -> Dict[str, Any]:
+        result: Dict[str, Any] = settings
+        dct_args = {**vars(args)}
+        for arg in dct_args:
+            if arg in settings:
+                if dct_args[arg] != parser.get_default(arg):
+                    settings[arg] = dct_args[arg]
+            else:
+                settings[arg] = dct_args[arg]
+        return result

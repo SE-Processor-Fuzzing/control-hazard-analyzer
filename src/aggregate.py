@@ -1,9 +1,10 @@
 import os
-from pathlib import Path
 import shlex
 import shutil
 import stat
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
+from pprint import pprint
 from typing import List
 
 
@@ -24,8 +25,9 @@ class Aggregator:
         shutil.rmtree(self.settings.dest_folder)
 
     def run(self):
-        print("Aggregate is running. Settings:")
-        print(self.settings)
+        if self.settings.debug:
+            pprint("Aggregate is running. Settings:")
+            pprint(vars(self.settings))
 
         args_generate = shlex.split(self.settings.Wg)
         settings_generate = self.settings.generate.parse_args(args_generate)
@@ -38,8 +40,13 @@ class Aggregator:
             if os.access(full_conf_path, mode=os.R_OK):
                 args_analyze = shlex.split(self.settings.Wz)
                 settings_analyze = self.settings.analyze.parse_args(args_analyze)
+                cfg_settings = self.settings.configurator.read_cfg_file(full_conf_path)
                 self.settings.analyze.configurate(
-                    Namespace(**self.settings.configurator.read_cfg_file(full_conf_path), **vars(settings_analyze))
+                    Namespace(
+                        **self.settings.configurator.get_true_settings(
+                            self.settings.analyze.analyze_parser, cfg_settings, settings_analyze
+                        )
+                    )
                 )
                 self.settings.analyze.run()
 
@@ -63,6 +70,7 @@ class Aggregator:
         self.shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
         self.shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
         self.shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
+        self.shell_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
         return self.shell_parser
 
     def parse_args(self, args: List[str]) -> Namespace:

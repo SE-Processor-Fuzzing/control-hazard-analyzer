@@ -2,6 +2,7 @@ import shlex
 import shutil
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
+from pprint import pprint
 from typing import Dict, List, Optional
 
 from profilers.gemProfiler import GemProfiler
@@ -37,6 +38,7 @@ class Analyzer:
             raise Exception(f'"{settings.profiler}" is unknown profiler')
 
     def run(self):
+        pprint(vars(self.settings))
         self.create_empty_dir(self.analyze_dir)
         data = self.profile(self.test_dir, verbose=True)
         self.pack(self.analyze_dir, data, verbose=True)
