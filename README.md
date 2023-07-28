@@ -16,6 +16,13 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 ## Requirements
 
 - Python 3.8+
+-
+
+## Installation
+
+```bash
+python3 -m pip install -r requirements.txt
+```
 
 ## Toolchain structure
 
