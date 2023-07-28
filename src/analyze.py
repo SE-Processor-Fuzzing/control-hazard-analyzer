@@ -38,23 +38,25 @@ class Analyzer:
             raise Exception(f'"{settings.profiler}" is unknown profiler')
 
     def run(self):
-        pprint(vars(self.settings))
+        if self.settings.debug:
+            print("Analyze running. Settings:")
+            pprint(vars(self.settings))
         self.create_empty_dir(self.analyze_dir)
-        data = self.profile(self.test_dir, verbose=True)
-        self.pack(self.analyze_dir, data, verbose=True)
+        data = self.profile(self.test_dir)
+        self.pack(self.analyze_dir, data)
 
     def create_empty_dir(self, dir: Path):
         if dir.exists():
             shutil.rmtree(dir)
         dir.mkdir(parents=True)
 
-    def profile(self, test_dir: Path, verbose: bool = False) -> Dict[str, Dict]:
-        if verbose:
+    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+        if self.settings.debug:
             print(f"Execute and analyze tests from '{test_dir.absolute()}'")
         return self.profiler.profile(test_dir)
 
-    def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict], verbose: bool = False):
-        if verbose:
+    def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict]):
+        if self.settings.debug:
             print(f"Save analysis' results to '{analyze_dir.absolute()}'")
         return self.packer.pack(analyze_dir, analyzed_data)
 

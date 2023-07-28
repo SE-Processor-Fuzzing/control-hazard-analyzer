@@ -4,6 +4,7 @@
     "configs": [
       "perf.json",
       "test.json"
-    ]
+    ],
+    "dest_folder": "out"
   }
 }
