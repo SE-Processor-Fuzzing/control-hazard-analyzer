@@ -31,10 +31,10 @@ class Analyzer:
         self.profiler: IProfiler
         if settings.profiler == "perf":
             self.profiler = PerfProfiler(self.builder)
-        elif (settings.choice == "gem5"):
+        elif (settings.profiler == "gem5"):
             self.profiler = GemProfiler(self.builder, settings)
         else:
-            raise Exception(f'"{settings.choice}" is unknown profiler')
+            raise Exception(f'"{settings.profiler}" is unknown profiler')
 
     def run(self):
         self.create_empty_dir(self.analyze_dir)
