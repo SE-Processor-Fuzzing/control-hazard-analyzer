@@ -66,6 +66,11 @@ class Analyzer:
         self.analyze_parser.add_argument(
             "--profiler", choices=["perf", "gem5"], default="perf", help="Type of profiler"
         )
+        self.analyze_parser.add_argument("--gem5_home", default="./", help="Path to home gem5")
+        self.analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
+        self.analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
+        self.analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
+
         return self.analyze_parser
 
     def parse_args(self, args: List[str]) -> Namespace:
