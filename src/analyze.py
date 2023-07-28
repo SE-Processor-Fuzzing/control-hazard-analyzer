@@ -4,8 +4,8 @@ from argparse import Namespace, ArgumentParser
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from profilers.perfProfiler import PerfProfiler
 from profilers.gemProfiler import GemProfiler
+from profilers.perfProfiler import PerfProfiler
 from profilers.profiler import IProfiler
 from src.builder import Builder
 from src.packer import Packer
@@ -31,7 +31,7 @@ class Analyzer:
         self.profiler: IProfiler
         if settings.profiler == "perf":
             self.profiler = PerfProfiler(self.builder)
-        elif (settings.profiler == "gem5"):
+        elif settings.profiler == "gem5":
             self.profiler = GemProfiler(self.builder, settings)
         else:
             raise Exception(f'"{settings.profiler}" is unknown profiler')
@@ -42,7 +42,7 @@ class Analyzer:
         self.pack(self.analyze_dir, data, verbose=True)
 
     def create_empty_dir(self, dir: Path):
-        if (dir.exists()):
+        if dir.exists():
             shutil.rmtree(dir)
         dir.mkdir(parents=True)
 

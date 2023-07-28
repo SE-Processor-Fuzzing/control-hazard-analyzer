@@ -1,10 +1,10 @@
-import re
 import os
+import re
 import subprocess
-from typing import Dict
+from argparse import Namespace
 from pathlib import Path
 from tempfile import mkdtemp
-from argparse import Namespace
+from typing import Dict
 
 from src.builder import Builder
 
@@ -19,15 +19,17 @@ class GemProfiler:
         self.gem5_home = self.settings.__dict__.get("gem5_home", "")
         self.target_isa = self.settings.__dict__.get("target_isa", "")
         self.gem5_bin_path = self.settings.__dict__.get(
-            "gem5_bin_path", f"{self.gem5_home}/build/{self.target_isa.capitalize()}/gem5.opt")
+            "gem5_bin_path", os.path.join(self.gem5_home, "build", self.target_isa, "gem5.ot")
+        )
         self.sim_script_path = self.settings.__dict__.get(
-            "sim_script_path", f"{self.gem5_home}/configs/deprecated/example/se.py")
+            "sim_script_path", os.path.join(self.gem5_home, "configs/deprecated/example/se.py")
+        )
         if self.target_isa == "":
             raise Exception("No target isa provided")
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
-            with open(dest_test, 'w+') as file:
+            with open(dest_test, "w+") as file:
                 file.write(f'#include "{src_test.absolute()}"\n')
                 file.write(f'#include "{self.template_path.absolute()}"\n')
             return True
@@ -43,11 +45,11 @@ class GemProfiler:
 
     def get_stats_from_file(self, stat_path: Path) -> Dict[str, int]:
         stats = {}
-        with open(stat_path, 'r') as file:
+        with open(stat_path, "r") as file:
             for line in file.readlines():
-                if (re.search("branch", line) and not re.search("Ratio", line)):
-                    temp = re.split(r'\s{2,}', line)
-                    temp[0] = re.sub('system.cpu.', '', temp[0])
+                if re.search("branch", line) and not re.search("Ratio", line):
+                    temp = re.split(r"\s{2,}", line)
+                    temp[0] = re.sub("system.cpu.", "", temp[0])
                     stats[temp[0]] = int(temp[1])
 
         return stats
@@ -64,11 +66,17 @@ class GemProfiler:
         dest_dir.mkdir(parents=True, exist_ok=True)
         for binary in os.listdir(bin_dir):
             bin_path = bin_dir.joinpath(binary)
-            execute_line = ["sudo", self.gem5_bin_path,
-                            f"--outdir={self.temp_path}/m5out",
-                            f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
-                            self.sim_script_path, "--cpu-type=O3CPU",
-                            "--caches", "-c", bin_path]
+            execute_line = [
+                "sudo",
+                self.gem5_bin_path,
+                f"--outdir={self.temp_path}/m5out",
+                f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
+                self.sim_script_path,
+                "--cpu-type=O3CPU",
+                "--caches",
+                "-c",
+                bin_path,
+            ]
 
             subprocess.run(execute_line, check=True)
 
@@ -84,15 +92,20 @@ class GemProfiler:
         src_dir = self.temp_path.joinpath("src/")
         build_dir = self.temp_path.joinpath("bins/")
         stats_dir = self.temp_path.joinpath("stats/")
-        gem_additional_flags = [f"-I{self.gem5_home}/include", f"-I{self.gem5_home}/util/m5/src", "-fPIE",
-                                f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out", "-Wl,-lm5",
-                                "--static"]
+        gem_additional_flags = [
+            f"-I{os.path.join(self.gem5_home, 'include')}",
+            f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
+            "-fPIE",
+            f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out",
+            "-Wl,-lm5",
+            "--static",
+        ]
         self.patch_tests_in_dir(test_dir.absolute(), src_dir)
         self.patch_test(self.empty_test_path, src_dir.joinpath(self.empty_test_path.name))
         self.builder.build(src_dir, build_dir, gem_additional_flags)
         self.run_bins_in_dir(build_dir, stats_dir)
         analyzed = self.get_stats_from_dir(stats_dir)
 
-        subprocess.call(['sudo', 'rm', '-rf', self.temp_path])
+        subprocess.call(["sudo", "rm", "-rf", self.temp_path])
 
         return self.correct(analyzed)
