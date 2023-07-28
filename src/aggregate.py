@@ -1,4 +1,5 @@
 import os
+import random
 import shlex
 import shutil
 import stat
@@ -10,6 +11,7 @@ from typing import List
 
 class Aggregator:
     def __init__(self):
+        self.output_analyze = None
         self.settings = {"source_folder": "source", "compiled_folder": "dest", "analyse_folder": "analyze"}
         self.settings = Namespace(**self.settings)
         self.shell_parser = None
@@ -31,9 +33,11 @@ class Aggregator:
 
         args_generate = shlex.split(self.settings.Wg)
         settings_generate = self.settings.generate.parse_args(args_generate)
+        settings_generate.debug = self.settings.debug
 
         self.settings.generate.configurate(settings_generate)
         self.settings.generate.run()
+        self.output_analyze = {}
 
         for config_file in self.settings.configs:
             full_conf_path: Path = Path(self.settings.path_to_configs).joinpath(config_file)
@@ -41,13 +45,20 @@ class Aggregator:
                 args_analyze = shlex.split(self.settings.Wz)
                 settings_analyze = self.settings.analyze.parse_args(args_analyze)
                 cfg_settings = self.settings.configurator.read_cfg_file(full_conf_path)
-                self.settings.analyze.configurate(
-                    Namespace(
-                        **self.settings.configurator.get_true_settings(
-                            self.settings.analyze.analyze_parser, cfg_settings, settings_analyze
-                        )
+                settings_analyze = Namespace(
+                    **self.settings.configurator.get_true_settings(
+                        self.settings.analyze.analyze_parser, cfg_settings, settings_analyze
                     )
                 )
+                if not os.path.isabs(settings_analyze.out_dir):
+                    settings_analyze.out_dir = os.path.join(self.settings.dest_folder, settings_analyze.out_dir)
+                os.makedirs(settings_analyze.out_dir, exist_ok=True)
+                if os.listdir(settings_analyze.out_dir):
+                    settings_analyze.out_dir = (
+                        f"{settings_analyze.out_dir}-{settings_analyze.profiler}-{random.getrandbits(16)}"
+                    )
+                settings_analyze.debug = self.settings.debug
+                self.settings.analyze.configurate(settings_analyze)
                 self.settings.analyze.run()
 
     def configurate(self, settings: Namespace):
