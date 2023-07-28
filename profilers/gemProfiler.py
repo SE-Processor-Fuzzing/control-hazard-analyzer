@@ -19,7 +19,7 @@ class GemProfiler:
         self.gem5_home = self.settings.__dict__.get("gem5_home", "")
         self.target_isa = self.settings.__dict__.get("target_isa", "")
         self.gem5_bin_path = self.settings.__dict__.get(
-            "gem5_bin_path", f"{self.gem5_home}/build/{self.target_isa}/gem5.opt")
+            "gem5_bin_path", f"{self.gem5_home}/build/{self.target_isa.capitalize()}/gem5.opt")
         self.sim_script_path = self.settings.__dict__.get(
             "sim_script_path", f"{self.gem5_home}/configs/deprecated/example/se.py")
         if self.target_isa == "":
