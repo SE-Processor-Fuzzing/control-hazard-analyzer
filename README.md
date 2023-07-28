@@ -24,6 +24,8 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 python3 -m pip install -r requirements.txt
 ```
 
+For using profilers you need to have perf or/and gem5 (and library M5ops)
+
 ## Toolchain structure
 
 - [aggregate](#aggregate) - toolchain driver
