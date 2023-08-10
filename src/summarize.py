@@ -3,6 +3,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -18,9 +19,14 @@ class Summarizer:
     def run(self):
         print("Summarize is running. Settings:")
         data = self.get_data_from_sources(self.settings.src_folders)
+        plt.close("all")
+        if len(data) == 0:
+            print("No data to summarize")
+            return
         summarized_data = self.convert_to_pandas(self.summarize_data(data))
         summarized_by_folder = self.summarize_by_folder(summarized_data)
         self.save_data(summarized_data, summarized_by_folder, self.settings.output_file)
+        self.show_plots(summarized_data, summarized_by_folder)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.summarize_parser: ArgumentParser = sub_parsers.add_parser("summarize", prog="summarize")
@@ -42,7 +48,7 @@ class Summarizer:
                 print(f"Folder {src_folder} does not exist")
             else:
                 data[src_folder] = {}
-                for src_file in Path(src_folder).glob("*.json"):
+                for src_file in Path(src_folder).glob("*"):
                     with open(src_file, "r") as f:
                         data[src_folder][src_file.stem] = json.loads(f.read())
                     for key, val in data[src_folder][src_file.stem].items():
@@ -91,3 +97,11 @@ class Summarizer:
                 f.write(f"Folder: {src_folder}\n")
                 f.write(pd.DataFrame(src_files).to_string())
                 f.write("\n\n")
+
+    def show_plots(self, summarized_data: dict, summarized_by_folder):
+        summarized_by_folder.plot.bar()
+        plt.show()
+        for src_folder, src_files in summarized_data.items():
+            pd.DataFrame(src_files).loc['BP incorrect %'].plot.bar()
+            plt.title("BP incorrect %")
+            plt.show()
