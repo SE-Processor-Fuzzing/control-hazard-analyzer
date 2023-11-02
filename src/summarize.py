@@ -32,8 +32,9 @@ class Summarizer:
         self.summarize_parser: ArgumentParser = sub_parsers.add_parser("summarize", prog="summarize")
 
         self.summarize_parser.add_argument("--config_file", help="Path to config file")
-        self.summarize_parser.add_argument("--src_folders", help="Path to source folders. One or more.", nargs="+",
-                                           required=True)
+        self.summarize_parser.add_argument(
+            "--src_folders", help="Path to source folders. One or more.", nargs="+", required=True
+        )
         self.summarize_parser.add_argument("--output_file", help="Path to output file", required=True)
         return self.summarize_parser
 
@@ -66,11 +67,13 @@ class Summarizer:
                 summarized_data[Path(src_folder).stem][Path(src_file).stem] = {
                     "Number of ticks": sim_ticks,
                     "BP lookups": bp_lookups,
-                    "Ticks per BP": round(sim_ticks / float(bp_lookups),
-                                          2) if bp_lookups != np.nan and sim_ticks != np.nan else np.nan,
+                    "Ticks per BP": round(sim_ticks / float(bp_lookups), 2)
+                    if bp_lookups != np.nan and sim_ticks != np.nan
+                    else np.nan,
                     "BP incorrect": bp_incorrect,
-                    "BP incorrect %": round(bp_incorrect / float(bp_lookups) * 100,
-                                            2) if bp_lookups != np.nan and bp_incorrect != np.nan else np.nan,
+                    "BP incorrect %": round(bp_incorrect / float(bp_lookups) * 100, 2)
+                    if bp_lookups != np.nan and bp_incorrect != np.nan
+                    else np.nan,
                 }
         return summarized_data
 
@@ -79,7 +82,8 @@ class Summarizer:
         for src_folder, data_frame in summarized_data.items():
             summarized_by_folder[src_folder] = {}
             summarized_by_folder[src_folder]["BP incorrect %"] = round(
-                data_frame.loc['BP incorrect'].sum() / data_frame.loc['BP lookups'].sum() * 100, 2)
+                data_frame.loc["BP incorrect"].sum() / data_frame.loc["BP lookups"].sum() * 100, 2
+            )
         return pd.DataFrame(summarized_by_folder)
 
     def convert_to_pandas(self, summarized_data: dict):
@@ -102,6 +106,6 @@ class Summarizer:
         summarized_by_folder.plot.bar()
         plt.show()
         for src_folder, src_files in summarized_data.items():
-            pd.DataFrame(src_files).loc['BP incorrect %'].plot.bar()
+            pd.DataFrame(src_files).loc["BP incorrect %"].plot.bar()
             plt.title("BP incorrect %")
             plt.show()

@@ -41,7 +41,7 @@ class Analyzer:
         self.pack(self.analyze_dir, data, verbose=True)
 
     def create_empty_dir(self, dir: Path):
-        if (dir.exists()):
+        if dir.exists():
             shutil.rmtree(dir)
         dir.mkdir(parents=True)
 

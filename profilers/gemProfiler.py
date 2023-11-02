@@ -17,7 +17,7 @@ class GemProfiler:
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
-            with open(dest_test, 'w+') as file:
+            with open(dest_test, "w+") as file:
                 file.write(f'#include "{src_test.absolute()}\n"')
                 file.write(f'#include "{self.template_path.absolute()}\n"')
             return True
@@ -30,18 +30,18 @@ class GemProfiler:
             src_test = Path(src_test)
             self.patch_test(src_test, dest_dir.joinpath(src_test.name))
 
-    def get_stats_from_file(self, stat_path: Path) -> Dict[str: int]:
+    def get_stats_from_file(self, stat_path: Path) -> Dict[str:int]:
         stats = {}
-        with open(stat_path, 'r') as file:
+        with open(stat_path, "r") as file:
             for line in file.readlines():
-                if (re.search("branch", line) and not re.search("Ratio", line)):
-                    temp = re.split(r'\s{2,}', line)
-                    temp[0] = re.sub('system.cpu.', '', temp[0])
+                if re.search("branch", line) and not re.search("Ratio", line):
+                    temp = re.split(r"\s{2,}", line)
+                    temp[0] = re.sub("system.cpu.", "", temp[0])
                     stats[temp[0]] = int(temp[1])
 
         return stats
 
-    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str: Dict]:
+    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str:Dict]:
         stats_dict = {}
         for stat_path in os.listdir(stats_dir):
             test_name = stat_path.split(".")[0]
@@ -54,14 +54,14 @@ class GemProfiler:
             execute_line = ["sudo", binary]
             subprocess.run(execute_line, check=True)
 
-    def correct(analyzed: Dict[str: Dict]) -> Dict[str: Dict]:
+    def correct(analyzed: Dict[str:Dict]) -> Dict[str:Dict]:
         for file_name in analyzed.keys():
             if file_name != "empty":
                 analyzed[file_name] -= analyzed["empty"]
 
         return analyzed
 
-    def profile(self, test_dir: Path) -> Dict[str: Dict]:
+    def profile(self, test_dir: Path) -> Dict[str:Dict]:
         src_dir = self.temp_path.joinpath("src")
         build_dir = self.temp_path.joinpath("bins")
         stats_dir = self.temp_path.joinpath("stats")
