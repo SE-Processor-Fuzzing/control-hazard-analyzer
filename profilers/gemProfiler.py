@@ -70,6 +70,8 @@ class GemProfiler:
             bin_path = bin_dir.joinpath(binary)
             execute_line = [
                 "sudo",
+                self.settings.timeout_tool,
+                self.settings.timeout_duration,
                 self.gem5_bin_path,
                 f"--outdir={self.temp_path}/m5out",
                 f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
@@ -79,8 +81,13 @@ class GemProfiler:
                 "-c",
                 bin_path,
             ]
-
-            subprocess.run(execute_line, check=True)
+            if self.settings.debug:
+                print(f"gemProfiler is running. Executed line: {execute_line}")
+            proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, check=True)
+            try:
+                proc.wait(self.builder.settings.timeout)
+            except subprocess.TimeoutExpired:
+                proc.kill()
 
     def correct(self, analyzed: Dict[str, Dict]) -> Dict[str, Dict]:
         for file_name in analyzed.keys():
