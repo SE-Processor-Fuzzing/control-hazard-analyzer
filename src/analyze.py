@@ -77,6 +77,7 @@ class Analyzer:
         self.analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
         self.analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
         self.analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
+        self.analyze_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
 
         return self.analyze_parser
 

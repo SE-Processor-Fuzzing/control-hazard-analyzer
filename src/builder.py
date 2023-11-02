@@ -23,5 +23,8 @@ class Builder:
                 + ["-o", destination_folder.joinpath(f"{test_file}.out")]
                 + additional_flags
             )
+            if self.settings.debug:
+                print("Builder(Analyze) is running. Executed command:")
+                print(execute_line)
 
             subprocess.run(execute_line, check=True)
