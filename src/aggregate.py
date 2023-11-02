@@ -16,24 +16,17 @@ class Aggregator:
             "source_folder": "source",
             "compiled_folder": "dest",
             "analyse_folder": "analyze",
+            "timeout_tool": "timeout",
+            "timeout_duration": "30s",
         }
         self.settings = Namespace(**self.settings)
         self.shell_parser = None
 
     def create_folders(self):
         os.makedirs(self.settings.dest_folder, exist_ok=True)
-        os.makedirs(
-            os.path.join(self.settings.dest_folder, self.settings.source_folder),
-            exist_ok=True,
-        )
-        os.makedirs(
-            os.path.join(self.settings.dest_folder, self.settings.compiled_folder),
-            exist_ok=True,
-        )
-        os.makedirs(
-            os.path.join(self.settings.dest_folder, self.settings.analyse_folder),
-            exist_ok=True,
-        )
+        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.source_folder), exist_ok=True)
+        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.compiled_folder), exist_ok=True)
+        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.analyse_folder), exist_ok=True)
         os.chmod(self.settings.dest_folder, stat.S_IWRITE)
 
     def clean_output_folder(self):
@@ -60,9 +53,7 @@ class Aggregator:
                 cfg_settings = self.settings.configurator.read_cfg_file(full_conf_path)
                 settings_analyze = Namespace(
                     **self.settings.configurator.get_true_settings(
-                        self.settings.analyze.analyze_parser,
-                        cfg_settings,
-                        settings_analyze,
+                        self.settings.analyze.analyze_parser, cfg_settings, settings_analyze
                     )
                 )
                 if not os.path.isabs(settings_analyze.out_dir):
@@ -77,7 +68,7 @@ class Aggregator:
                 self.settings.analyze.run()
 
     def configurate(self, settings: Namespace):
-        self.settings = settings
+        self.settings = Namespace(**{**vars(settings), **vars(self.settings)})
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.shell_parser: ArgumentParser = sub_parsers.add_parser("aggregate", prog="aggregate")

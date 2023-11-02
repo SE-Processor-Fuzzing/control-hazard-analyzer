@@ -79,14 +79,16 @@ class PerfProfiler:
         return data_dict
 
     def get_stat(self, binary: Path) -> PerfData:
-        execute_line = ["sudo", binary]
+        execute_line = [
+            "sudo",
+            self.builder.settings.timeout_tool,
+            self.builder.settings.timeout_duration,
+            binary,
+        ]
         try:
-            proc = subprocess.run(
-                execute_line,
-                stdout=subprocess.PIPE,
-                check=True,
-                timeout=10.0,
-            )
+            if self.builder.settings.debug:
+                print(f"perfProfiler is running. Executed command: {execute_line}")
+            proc = subprocess.run(execute_line, stdout=subprocess.PIPE, check=True)
             # !!! process does not die, it just unhook from python
         except subprocess.TimeoutExpired:
             return PerfData()
