@@ -12,7 +12,13 @@ from typing import List
 class Aggregator:
     def __init__(self):
         self.output_analyze = None
-        self.settings = {"source_folder": "source", "compiled_folder": "dest", "analyse_folder": "analyze"}
+        self.settings = {
+            "source_folder": "source",
+            "compiled_folder": "dest",
+            "analyse_folder": "analyze",
+            "timeout_tool": "timeout",
+            "timeout_duration": "30s",
+        }
         self.settings = Namespace(**self.settings)
         self.shell_parser = None
 
@@ -62,7 +68,7 @@ class Aggregator:
                 self.settings.analyze.run()
 
     def configurate(self, settings: Namespace):
-        self.settings = settings
+        self.settings = Namespace(**{**vars(settings), **vars(self.settings)})
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
         self.shell_parser: ArgumentParser = sub_parsers.add_parser("aggregate", prog="aggregate")
