@@ -1,3 +1,4 @@
 {
-  "out_dir": "analyze"
+  "out_dir": "analyze",
+  "timeout": 30
 }

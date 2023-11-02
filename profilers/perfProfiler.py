@@ -89,7 +89,6 @@ class PerfProfiler:
             if self.builder.settings.debug:
                 print(f"perfProfiler is running. Executed command: {execute_line}")
             proc = subprocess.run(execute_line, stdout=subprocess.PIPE, check=True)
-            # !!! process does not die, it just unhook from python
         except subprocess.TimeoutExpired:
             return PerfData()
         output = proc.stdout.decode()

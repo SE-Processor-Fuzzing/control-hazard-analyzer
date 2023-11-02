@@ -2,5 +2,6 @@
   "profiler": "gem5",
   "target_isa": "X86",
   "gem5_home": "/mnt/c/Users/Roket_Flame/gem5",
-  "out_dir": "analyze"
+  "out_dir": "analyze",
+  "timeout": 30
 }
