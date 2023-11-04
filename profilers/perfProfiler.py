@@ -5,6 +5,7 @@ import signal
 import os.path
 import subprocess
 from pathlib import Path
+import sys
 from tempfile import mkdtemp
 from typing import Dict
 
@@ -91,10 +92,7 @@ class PerfProfiler:
 
     def get_stat(self, binary: Path) -> PerfData:
         execute_line = [binary]
-        proc = subprocess.Popen(
-            execute_line,
-            stdout=subprocess.PIPE,
-        )
+        proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         is_full = True
         try:
@@ -104,11 +102,21 @@ class PerfProfiler:
             is_full = False
 
         if proc.stdout is not None:
-            output = proc.stdout.readlines()
-            output = "".join([bt.decode() for bt in output])
+            output = proc.stdout.read().decode()
             data = PerfData(self.output_to_dict(output), is_full)
         else:
             data = PerfData()
+
+        if proc.stderr is not None:
+            errors = proc.stderr.readlines()
+            if len(errors) != 0:
+                print(f"[-]: Some error occured during launching {binary}:", file=sys.stderr)
+                for ln in errors:
+                    print(f"\t{ln.decode()[:-1]}", file=sys.stderr)
+                print(
+                    "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
+                    file=sys.stderr,
+                )
         return data
 
     def get_stats_dir(self, dir: Path) -> Dict[str, PerfData]:
