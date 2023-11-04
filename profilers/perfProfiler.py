@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import glob
+import shutil
 import signal
 import os.path
 import subprocess
@@ -61,6 +62,9 @@ class PerfProfiler:
         self.temp_dir: Path = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/perfTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
+
+    def __del__(self):
+        shutil.rmtree(self.temp_dir)
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         dest_test.parent.mkdir(parents=True, exist_ok=True)
