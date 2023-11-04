@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import glob
+import signal
 import os.path
 import subprocess
 from pathlib import Path
@@ -11,12 +12,13 @@ from src.builder import Builder
 
 
 class PerfData:
-    def __init__(self, data_dict: Dict[str, str] = {}):
+    def __init__(self, data_dict: Dict[str, str] = {}, is_full: bool = True):
         self.branches = int(data_dict.get("branches", -1))
         self.missed_branches = int(data_dict.get("missed_branches", -1))
         self.cache_bpu = int(data_dict.get("cache_BPU", -1))
         self.ticks = int(data_dict.get("cpu_clock", -1))
         self.instructions = int(data_dict.get("instructions", -1))
+        self.is_full = is_full
 
     def to_dict(self) -> Dict:
         data_dict: Dict = {}
@@ -25,6 +27,7 @@ class PerfData:
         data_dict["branchPred.BTBUpdates"] = self.cache_bpu
         data_dict["simTicks"] = self.ticks
         data_dict["instructions"] = self.instructions
+        data_dict["isFull"] = self.is_full
         return data_dict
 
     def __sub__(self, other) -> PerfData:
@@ -35,6 +38,7 @@ class PerfData:
             res.cache_bpu = self.cache_bpu - other.cache_bpu
             res.ticks = self.ticks - other.ticks
             res.instructions = self.instructions - other.instructions
+            res.is_full = self.is_full
             return res
         else:
             raise TypeError
@@ -86,29 +90,32 @@ class PerfProfiler:
         return data_dict
 
     def get_stat(self, binary: Path) -> PerfData:
-        execute_line = [
-            "sudo",
-            self.builder.settings.timeout_tool,
-            self.builder.settings.timeout_duration,
-            binary,
-        ]
+        execute_line = [binary]
+        proc = subprocess.Popen(
+            execute_line,
+            stdout=subprocess.PIPE,
+        )
+
+        is_full = True
         try:
-            if self.builder.settings.debug:
-                print(f"perfProfiler is running. Executed command: {execute_line}")
-            proc = subprocess.run(execute_line, stdout=subprocess.PIPE, check=True)
-        except subprocess.TimeoutExpired and KeyboardInterrupt and subprocess.CalledProcessError as er:
-            print(er)
-            return PerfData()
-        output = proc.stdout.decode()
-        data = PerfData(self.output_to_dict(output))
+            proc.wait(self.builder.settings.timeout)
+        except subprocess.TimeoutExpired:
+            proc.send_signal(signal.SIGINT)
+            is_full = False
+
+        if proc.stdout is not None:
+            output = proc.stdout.readlines()
+            output = "".join([bt.decode() for bt in output])
+            data = PerfData(self.output_to_dict(output), is_full)
+        else:
+            data = PerfData()
         return data
 
     def get_stats_dir(self, dir: Path) -> Dict[str, PerfData]:
         data_dict: Dict[str, PerfData] = {}
         for binary in os.listdir(dir):
             data = self.get_stat(dir.joinpath(binary))
-            if data.ticks >= 0:
-                data_dict[binary.split(".")[0]] = data
+            data_dict[binary.split(".")[0]] = data
         return data_dict
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
