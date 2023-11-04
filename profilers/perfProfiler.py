@@ -42,6 +42,13 @@ class PerfData:
     def __str__(self) -> str:
         return str(self.to_dict())
 
+    def max(self, const: int):
+        self.branches = max(self.branches, const)
+        self.missed_branches = max(self.missed_branches, const)
+        self.cache_bpu = max(self.cache_bpu, const)
+        self.ticks = max(self.ticks, const)
+        self.instructions = max(self.instructions, const)
+
 
 class PerfProfiler:
     def __init__(self, builder: Builder):
@@ -141,10 +148,12 @@ class PerfProfiler:
         self.update_capabilities_dir(build_dir)
         analyzed = self.get_stats_dir(build_dir)
 
+        key_empty_test = self.empty_test_path.name.split(".")[0]
+        analyzed[key_empty_test].max(0)
         res: Dict[str, Dict] = {}
         for key in analyzed:
-            if key != "empty":
-                analyzed[key] = analyzed[key] - analyzed[self.empty_test_path.name.split(".")[0]]
+            if key != key_empty_test:
+                analyzed[key] = analyzed[key] - analyzed[key_empty_test]
                 res.update({key: analyzed[key].to_dict()})
 
         return res
