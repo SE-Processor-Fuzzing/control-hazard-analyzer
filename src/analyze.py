@@ -24,6 +24,8 @@ class Analyzer:
 
     def configurate(self, settings: Namespace):
         self.settings = settings
+        if not self.settings.__contains__("debug"):
+            self.settings.debug = False
         self.test_dir: Path = Path(settings.test_dir)
         self.analyze_dir: Path = Path(settings.out_dir)
         self.settings.compiler_args = shlex.split(settings.compiler_args)
