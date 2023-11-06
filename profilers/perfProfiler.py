@@ -102,6 +102,12 @@ class PerfProfiler:
                 data_dict[binary.split(".")[0]] = data
         return data_dict
 
+    def update_capabilities_dir(self, dir: Path):
+        for binary in os.listdir(dir):
+            pth = dir.joinpath(binary)
+            execute_line = ["sudo", "setcap", "cap_sys_admin=ep", pth]
+            subprocess.run(execute_line)
+
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
@@ -109,6 +115,7 @@ class PerfProfiler:
         self.patch_tests_in_dir(test_dir, src_dir)
         self.add_empty_patched_test(src_dir.joinpath(self.empty_test_path.name))
         self.builder.build(src_dir, build_dir)
+        self.update_capabilities_dir(build_dir)
         analyzed = self.get_stats_dir(build_dir)
 
         res: Dict[str, Dict] = {}
