@@ -76,12 +76,17 @@ static void fin() {
             printf("%s: %lld\n", value_names[i], value_result);
         }
     }
+}
+
+static void sigint_handler() {
+    fin();
     exit(0);
 }
 
 int main() {
-    signal(SIGINT, fin);
+    signal(SIGINT, sigint_handler);
     init();
     test_fun();
     fin();
+    return 0;
 }
