@@ -77,9 +77,9 @@ class Aggregator:
             help="Set the custom section in config file (DEFAULT by default)",
         )
         self.shell_parser.add_argument(
-            "--dest_folder",
+            "--dest_dir",
             default="out",
-            help="Path to dist folder, if not exit it will be created",
+            help="Path to dist dir, if not exit it will be created",
         )
         self.shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
         self.shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
