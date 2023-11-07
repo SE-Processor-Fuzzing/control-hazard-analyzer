@@ -14,21 +14,24 @@ class Aggregator:
         self.settings = Namespace()
         self.shell_parser = None
 
-    def clean_output_folder(self):
-        shutil.rmtree(self.settings.dest_folder)
+    def clean_output_dir(self):
+        shutil.rmtree(self.settings.dest_dir)
 
     def run(self):
         if self.settings.debug:
             pprint("Aggregate is running. Settings:")
             pprint(vars(self.settings))
 
+        # configure and run generator
         args_generate = shlex.split(self.settings.Wg)
         settings_generate = self.settings.generate.parse_args(args_generate)
         settings_generate.debug = self.settings.debug
 
         self.settings.generate.configurate(settings_generate)
         self.settings.generate.run()
-        self.output_analyze = {}
+
+        # configure and run analyzer
+        self.output_analyze_dirs: List[str] = []
 
         for config_file in self.settings.configs:
             full_conf_path: Path = Path(self.settings.path_to_configs).joinpath(config_file)
@@ -41,16 +44,25 @@ class Aggregator:
                         self.settings.analyze.analyze_parser, cfg_settings, settings_analyze
                     )
                 )
+                sub_dir = f"{settings_analyze.profiler}-{random.getrandbits(16)}"
                 if not os.path.isabs(settings_analyze.out_dir):
-                    settings_analyze.out_dir = os.path.join(self.settings.dest_folder, settings_analyze.out_dir)
-                os.makedirs(settings_analyze.out_dir, exist_ok=True)
-                if os.listdir(settings_analyze.out_dir):
-                    settings_analyze.out_dir = (
-                        f"{settings_analyze.out_dir}-{settings_analyze.profiler}-{random.getrandbits(16)}"
-                    )
+                    sub_dir = os.path.join(self.settings.dest_dir, sub_dir)
+                settings_analyze.out_dir = os.path.join(sub_dir, settings_analyze.out_dir)
                 settings_analyze.debug = self.settings.debug
                 self.settings.analyze.configurate(settings_analyze)
                 self.settings.analyze.run()
+
+                self.output_analyze_dirs.append(settings_analyze.out_dir)
+
+        # configure and run summarizer
+        args_summarize = shlex.split(self.settings.Ws)
+        settings_summarize = self.settings.summarize.parse_args(args_summarize)
+        settings_summarize.src_dirs = self.output_analyze_dirs
+        settings_summarize.debug = self.settings.debug
+        settings_summarize.out_dir = os.path.join(self.settings.dest_dir, settings_summarize.out_dir)
+
+        self.settings.summarize.configurate(settings_summarize)
+        self.settings.summarize.run()
 
     def configurate(self, settings: Namespace):
         self.settings = Namespace(**{**vars(settings), **vars(self.settings)})
