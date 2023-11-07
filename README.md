@@ -53,7 +53,7 @@ python3 cha.py aggregate --help
 **Usage example:**
 
 ```bash
-python3 cha.py generate --repeats=100 --dest_folder="out"
+python3 cha.py generate --repeats=100 --dest_dir="out"
 ```
 
 ### analyze
