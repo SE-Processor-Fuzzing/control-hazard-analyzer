@@ -42,7 +42,7 @@ class Generator:
 
     def add_sub_parser(self, sub_parser) -> ArgumentParser:
         self.analyze_parser: ArgumentParser = sub_parser.add_parser("generate", prog="generate")
-        self.analyze_parser.add_argument("--out_dir", default="tests", help="Path to output folder")
+        self.analyze_parser.add_argument("--out_dir", default="tests", help="Path to output dir")
         self.analyze_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
         self.analyze_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
         return self.analyze_parser
