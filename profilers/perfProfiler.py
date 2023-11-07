@@ -89,7 +89,8 @@ class PerfProfiler:
             if self.builder.settings.debug:
                 print(f"perfProfiler is running. Executed command: {execute_line}")
             proc = subprocess.run(execute_line, stdout=subprocess.PIPE, check=True)
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired and KeyboardInterrupt and subprocess.CalledProcessError as er:
+            print(er)
             return PerfData()
         output = proc.stdout.decode()
         data = PerfData(self.output_to_dict(output))
