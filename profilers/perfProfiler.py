@@ -103,10 +103,30 @@ class PerfProfiler:
         return data_dict
 
     def update_capabilities_dir(self, dir: Path):
+        sudo_hint = True
+        use_sudo = False
         for binary in os.listdir(dir):
+            suc_launch = False
+            used_max_perm = False
+
             pth = dir.joinpath(binary)
-            execute_line = ["sudo", "setcap", "cap_sys_admin=ep", pth]
-            subprocess.run(execute_line)
+            execute_line = ["setcap", "cap_sys_admin=ep", pth]
+            while (not suc_launch) and (not used_max_perm):
+                if use_sudo:
+                    if sudo_hint:
+                        print("[+]: Try using sudo to set capabilities for tests executables")
+                        sudo_hint = False
+                    execute_line = ["sudo"] + execute_line
+                    used_max_perm = True
+
+                proc = subprocess.run(execute_line, stderr=subprocess.PIPE)
+
+                if proc.returncode == 0:
+                    suc_launch = True
+                else:
+                    if used_max_perm:
+                        print(f"[-]: Error during seting capability:\n\t {proc.stderr.decode().replace("\n", "\n\t")}")
+                    use_sudo = True
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
