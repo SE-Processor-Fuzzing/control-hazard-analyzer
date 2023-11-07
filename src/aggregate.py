@@ -11,23 +11,8 @@ from typing import List
 
 class Aggregator:
     def __init__(self):
-        self.output_analyze = None
-        self.settings = {
-            "source_folder": "source",
-            "compiled_folder": "dest",
-            "analyse_folder": "analyze",
-            "timeout_tool": "timeout",
-            "timeout_duration": "30s",
-        }
-        self.settings = Namespace(**self.settings)
+        self.settings = Namespace()
         self.shell_parser = None
-
-    def create_folders(self):
-        os.makedirs(self.settings.dest_folder, exist_ok=True)
-        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.source_folder), exist_ok=True)
-        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.compiled_folder), exist_ok=True)
-        os.makedirs(os.path.join(self.settings.dest_folder, self.settings.analyse_folder), exist_ok=True)
-        os.chmod(self.settings.dest_folder, stat.S_IWRITE)
 
     def clean_output_folder(self):
         shutil.rmtree(self.settings.dest_folder)
