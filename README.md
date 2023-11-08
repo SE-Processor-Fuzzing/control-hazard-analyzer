@@ -71,6 +71,27 @@ python3 cha.py analyze --test_dir="out/src" --profiler="perf"
 ```bash
 python3 cha.py summarize
 ```
+## Development
+
+### Requirements
+
+```bash
+python3 -m pip install -r requirements.dev.txt
+```
+
+### Pre-commit
+
+#### Install pre-commit-hooks
+
+```bash
+pre-commit install
+```
+
+#### Run manually
+
+```bash
+pre-commit run --all-files --color always --verbose
+```
 
 ## Contributing
 
