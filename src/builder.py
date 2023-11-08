@@ -8,7 +8,12 @@ class Builder:
     def __init__(self, settings: Namespace):
         self.settings = settings
 
-    def build(self, src_folder: Path, destination_folder: Path, additional_flags: list[str] = []):
+    def build(
+        self,
+        src_folder: Path,
+        destination_folder: Path,
+        additional_flags: list[str] = [],
+    ):
         list_of_src_files = os.listdir(src_folder)
         destination_folder.mkdir(parents=True, exist_ok=True)
         for test_file in list_of_src_files:
@@ -19,7 +24,4 @@ class Builder:
                 + additional_flags
             )
 
-            subprocess.run(
-                execute_line,
-                check=True
-            )
+            subprocess.run(execute_line, check=True)

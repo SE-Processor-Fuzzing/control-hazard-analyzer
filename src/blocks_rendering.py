@@ -1,9 +1,9 @@
 from io import TextIOWrapper
 import random as rd
 
-CONDITION_OPERANDS = ['<', '<=', '>=', '>', '==', '!=']
+CONDITION_OPERANDS = ["<", "<=", ">=", ">", "==", "!="]
 
-ARITHMETICAL_OPERANDS = ['+=', '-=', '*=', '/=']
+ARITHMETICAL_OPERANDS = ["+=", "-=", "*=", "/="]
 
 VAR_IN_BLOCK_CAP = 2
 
@@ -29,14 +29,18 @@ class BaseBlock:
         else:
             if type(self) == IfBlock:
                 self.children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
-                self.else_children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
+                self.else_children.append(
+                    CalculationBlock(rd.randint(2, 8), self.tabs + 1)
+                )
             else:
                 if rd.choice((0, 1)):
-                    self.children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
+                    self.children.append(
+                        CalculationBlock(rd.randint(2, 8), self.tabs + 1)
+                    )
 
     def render(self):
         for i in range(self.sp):
-            output_file.write('\t' * (self.tabs + 1) + self.var_create() + '\n')
+            output_file.write("\t" * (self.tabs + 1) + self.var_create() + "\n")
 
         for block in self.children:
             block.render()
@@ -45,8 +49,10 @@ class BaseBlock:
 
     def blocks_generator(self):
         global blocks_left
-        blocks = rd.sample([block for key in probability for block in probability[key]],
-                           rd.randint(1, BLOCKS_IN_BLOCK_CAP))
+        blocks = rd.sample(
+            [block for key in probability for block in probability[key]],
+            rd.randint(1, BLOCKS_IN_BLOCK_CAP),
+        )
 
         blocks_left -= len(blocks)
 
@@ -60,13 +66,13 @@ class BaseBlock:
             var_number -= 1
 
     @staticmethod
-    def var_create(liter='a', value=1):
+    def var_create(liter="a", value=1):
         global var_number
         var_number += 1
-        var_stack.append(f'{liter}{var_number}')
+        var_stack.append(f"{liter}{var_number}")
         if value:
-            return f'int {liter}{var_number} = {rd.randint(0, 100)};'
-        return f'int {liter}{var_number} = {value};'
+            return f"int {liter}{var_number} = {rd.randint(0, 100)};"
+        return f"int {liter}{var_number} = {value};"
 
     @staticmethod
     def statement_generate(var, condition=False, cycle=False):
@@ -78,10 +84,10 @@ class BaseBlock:
             operand = rd.choice(ARITHMETICAL_OPERANDS)
 
         term = rd.choice((rd.randint(0, 100), rd.choice(var_stack)))
-        if operand == '/=':
-            return f'{var} {operand} D0({term})'
+        if operand == "/=":
+            return f"{var} {operand} D0({term})"
 
-        return f'{var} {operand} {term}'
+        return f"{var} {operand} {term}"
 
 
 class CalculationBlock(BaseBlock):
@@ -95,10 +101,10 @@ class CalculationBlock(BaseBlock):
     def render(self):
         for _ in range(self.expr):
             var_ = rd.choice(var_stack)
-            while var_[0] == 'f':
+            while var_[0] == "f":
                 var_ = rd.choice(var_stack)
 
-            output_file.write('\t' * self.tabs + f'{self.statement_generate(var_)};\n')
+            output_file.write("\t" * self.tabs + f"{self.statement_generate(var_)};\n")
 
 
 class IfBlock(BaseBlock):
@@ -117,30 +123,35 @@ class IfBlock(BaseBlock):
         self.children.insert(0, CalculationBlock(rd.randint(2, 8), self.tabs + 1))
 
     def render(self):
-        output_file.write('\t' * self.tabs
-                          + f'if ({self.statement_generate(rd.choice(var_stack), condition=True)})' + '{\n')
+        output_file.write(
+            "\t" * self.tabs
+            + f"if ({self.statement_generate(rd.choice(var_stack), condition=True)})"
+            + "{\n"
+        )
         super().render()
-        output_file.write('\t' * self.tabs + '}\n')
+        output_file.write("\t" * self.tabs + "}\n")
         self.del_unavlb_vars()
 
         self.children = self.else_children
 
-        output_file.write('\t' * self.tabs + 'else{\n')
+        output_file.write("\t" * self.tabs + "else{\n")
         super().render()
-        output_file.write('\t' * self.tabs + '}\n')
+        output_file.write("\t" * self.tabs + "}\n")
         self.del_unavlb_vars()
 
 
 class ForBlock(BaseBlock):
     def render(self):
-        output_file.write('\t' * self.tabs + f'for ({self.var_create("f", 0)}'
-                                             f'{self.statement_generate(var_stack[-1], cycle=True)};'
-                                             f'{var_stack[-1]}++)' + '{\n')
+        output_file.write(
+            "\t" * self.tabs + f'for ({self.var_create("f", 0)}'
+            f"{self.statement_generate(var_stack[-1], cycle=True)};"
+            f"{var_stack[-1]}++)" + "{\n"
+        )
 
         super().render()
         self.sp += 1
 
-        output_file.write('\t' * self.tabs + '}\n')
+        output_file.write("\t" * self.tabs + "}\n")
 
         self.del_unavlb_vars()
 
@@ -151,7 +162,6 @@ class ForBlock(BaseBlock):
 
 
 def generate_test(file, total_blocks, blocks_cap, vars_cap):
-
     global output_file, VAR_IN_BLOCK_CAP, BLOCKS_IN_BLOCK_CAP, blocks_left, var_stack, var_number
     blocks_left = total_blocks
     BLOCKS_IN_BLOCK_CAP = blocks_cap
@@ -159,12 +169,11 @@ def generate_test(file, total_blocks, blocks_cap, vars_cap):
     var_stack = []
     var_number = 0
 
-    output_file = open(file, 'w')
-    output_file.write('# define D0(x) (x==0) ? 1 : x\n\n'
-                      'void test_fun(){\n')
+    output_file = open(file, "w")
+    output_file.write("# define D0(x) (x==0) ? 1 : x\n\n" "void test_fun(){\n")
     program = BaseBlock(2, 0)
     program.render()
-    output_file.write('}')
+    output_file.write("}")
 
     output_file.close()
 

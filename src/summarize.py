@@ -16,12 +16,18 @@ class Summarizer:
             print(self.settings)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.summarize_parser: ArgumentParser = sub_parsers.add_parser("summarize", prog="summarize")
+        self.summarize_parser: ArgumentParser = sub_parsers.add_parser(
+            "summarize", prog="summarize"
+        )
 
         self.summarize_parser.add_argument("--config_file", help="Path to config file")
         self.summarize_parser.add_argument("--src_folder", help="Path to source folder")
-        self.summarize_parser.add_argument("--dest_folder", help="Path to destination folder")
-        self.summarize_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
+        self.summarize_parser.add_argument(
+            "--dest_folder", help="Path to destination folder"
+        )
+        self.summarize_parser.add_argument(
+            "--debug", action="store_true", help="Turn on helping prints"
+        )
         return self.summarize_parser
 
     def parse_args(self, args: List[str]) -> Namespace:

@@ -43,7 +43,9 @@ class Configurator:
         self.args = self.parse_sub_parsers(settings)[0]
         config = self.read_cfg_file(
             getattr(self.args, "config_file", None),
-            self.args.section_in_config if hasattr(self.args, "section_in_config") else None,
+            self.args.section_in_config
+            if hasattr(self.args, "section_in_config")
+            else None,
         )
 
         return Namespace(**{**vars(self.args), **settings, **config})
@@ -55,7 +57,9 @@ class Configurator:
             config: Dict[str, Any] = json.load(f)
         return config if section is None else {**config["DEFAULT"], **config[section]}
 
-    def get_true_settings(self, parser: ArgumentParser, settings: Dict[str, Any], args: Namespace) -> Dict[str, Any]:
+    def get_true_settings(
+        self, parser: ArgumentParser, settings: Dict[str, Any], args: Namespace
+    ) -> Dict[str, Any]:
         result: Dict[str, Any] = settings
         dct_args = {**vars(args)}
         for arg in dct_args:
