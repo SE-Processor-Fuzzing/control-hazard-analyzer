@@ -20,9 +20,7 @@ class GemProfiler:
         self.target_isa = self.settings.__dict__.get("target_isa", "")
         self.gem5_bin_path = self.settings.__dict__.get(
             "gem5_bin_path",
-            os.path.join(
-                self.gem5_home, "build", self.target_isa.capitalize(), "gem5.opt"
-            ),
+            os.path.join(self.gem5_home, "build", self.target_isa.capitalize(), "gem5.opt"),
         )
         self.sim_script_path = self.settings.__dict__.get(
             "sim_script_path",
@@ -62,9 +60,7 @@ class GemProfiler:
         stats_dict = {}
         for stat_path in os.listdir(stats_dir):
             test_name = stat_path.split(".")[0]
-            stats_dict[test_name] = self.get_stats_from_file(
-                stats_dir.joinpath(stat_path)
-            )
+            stats_dict[test_name] = self.get_stats_from_file(stats_dir.joinpath(stat_path))
 
         return stats_dict
 
@@ -107,9 +103,7 @@ class GemProfiler:
             "--static",
         ]
         self.patch_tests_in_dir(test_dir.absolute(), src_dir)
-        self.patch_test(
-            self.empty_test_path, src_dir.joinpath(self.empty_test_path.name)
-        )
+        self.patch_test(self.empty_test_path, src_dir.joinpath(self.empty_test_path.name))
         self.builder.build(src_dir, build_dir, gem_additional_flags)
         self.run_bins_in_dir(build_dir, stats_dir)
         analyzed = self.get_stats_from_dir(stats_dir)
