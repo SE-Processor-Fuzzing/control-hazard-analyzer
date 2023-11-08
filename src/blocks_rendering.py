@@ -29,14 +29,10 @@ class BaseBlock:
         else:
             if type(self) == IfBlock:
                 self.children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
-                self.else_children.append(
-                    CalculationBlock(rd.randint(2, 8), self.tabs + 1)
-                )
+                self.else_children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
             else:
                 if rd.choice((0, 1)):
-                    self.children.append(
-                        CalculationBlock(rd.randint(2, 8), self.tabs + 1)
-                    )
+                    self.children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
 
     def render(self):
         for i in range(self.sp):
@@ -124,9 +120,7 @@ class IfBlock(BaseBlock):
 
     def render(self):
         output_file.write(
-            "\t" * self.tabs
-            + f"if ({self.statement_generate(rd.choice(var_stack), condition=True)})"
-            + "{\n"
+            "\t" * self.tabs + f"if ({self.statement_generate(rd.choice(var_stack), condition=True)})" + "{\n"
         )
         super().render()
         output_file.write("\t" * self.tabs + "}\n")
