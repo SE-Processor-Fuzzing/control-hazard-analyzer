@@ -61,19 +61,42 @@ class Analyzer:
         return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.analyze_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
-        self.analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
-        self.analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output folder")
-        self.analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
-        self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
-        self.analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
-        self.analyze_parser.add_argument(
-            "--profiler", choices=["perf", "gem5"], default="perf", help="Type of profiler"
+        self.analyze_parser: ArgumentParser = sub_parsers.add_parser(
+            "analyze", prog="analyze"
         )
-        self.analyze_parser.add_argument("--gem5_home", default="./", help="Path to home gem5")
-        self.analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
-        self.analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
-        self.analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
+        self.analyze_parser.add_argument(
+            "--config_file", default=None, help="Path to config file"
+        )
+        self.analyze_parser.add_argument(
+            "--out_dir", default="analyze", help="Path to output folder"
+        )
+        self.analyze_parser.add_argument(
+            "--test_dir", default="tests", help="Path to directory with tests"
+        )
+        self.analyze_parser.add_argument(
+            "--compiler", default="gcc", help="Path to compiler"
+        )
+        self.analyze_parser.add_argument(
+            "--compiler_args", default="", help="Pass arguments on to the compiler"
+        )
+        self.analyze_parser.add_argument(
+            "--profiler",
+            choices=["perf", "gem5"],
+            default="perf",
+            help="Type of profiler",
+        )
+        self.analyze_parser.add_argument(
+            "--gem5_home", default="./", help="Path to home gem5"
+        )
+        self.analyze_parser.add_argument(
+            "--gem5_bin", default="./", help="Path to execute gem5"
+        )
+        self.analyze_parser.add_argument(
+            "--target_isa", default="", help="Type of architecture being simulated"
+        )
+        self.analyze_parser.add_argument(
+            "--sim_script", default="./", help="Path to simulation Script"
+        )
 
         return self.analyze_parser
 

@@ -114,7 +114,9 @@ class PerfProfiler:
             while (not suc_launch) and (not used_max_perm):
                 if use_sudo:
                     if sudo_hint:
-                        print("[+]: Try using sudo to set capabilities for tests executables")
+                        print(
+                            "[+]: Try using sudo to set capabilities for tests executables"
+                        )
                         sudo_hint = False
                     execute_line = ["sudo"] + execute_line
                     used_max_perm = True
@@ -125,7 +127,8 @@ class PerfProfiler:
                     suc_launch = True
                 else:
                     if used_max_perm:
-                        print(f"[-]: Error during seting capability:\n\t {proc.stderr.decode().replace("\n", "\n\t")}")
+                        proc_err = proc.stderr.decode().replace("\n", "\n\t")
+                        print(f"[-]: Error during seting capability:\n\t {proc_err}")
                     use_sudo = True
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
@@ -141,7 +144,9 @@ class PerfProfiler:
         res: Dict[str, Dict] = {}
         for key in analyzed:
             if key != "empty":
-                analyzed[key] = analyzed[key] - analyzed[self.empty_test_path.name.split(".")[0]]
+                analyzed[key] = (
+                    analyzed[key] - analyzed[self.empty_test_path.name.split(".")[0]]
+                )
                 res.update({key: analyzed[key].to_dict()})
 
         return res
