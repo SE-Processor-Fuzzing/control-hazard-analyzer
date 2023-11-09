@@ -27,7 +27,7 @@ class BaseBlock:
         if blocks_left > 0:
             self.blocks_generator()
         else:
-            if type(self) == IfBlock:
+            if self is IfBlock:
                 self.children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
                 self.else_children.append(CalculationBlock(rd.randint(2, 8), self.tabs + 1))
             else:
