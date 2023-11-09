@@ -1,5 +1,6 @@
 import json
 from argparse import ArgumentParser, Namespace
+import os
 from pathlib import Path
 from pprint import pprint
 from typing import Dict, List
@@ -117,20 +118,23 @@ class Summarizer:
             path = Path(src_dir)
             if not path.exists():
                 print(f"dir {src_dir} does not exist")
-            else:
-                path.parent.joinpath(out_dir).mkdir(parents=True, exist_ok=True)
-                with open(path.parent.joinpath(out_dir, self.filename_out_data), "w") as f:
-                    data_frame = summarized_data.get(src_dir)
-                    summarized_by_dir_data_frame = summarized_by_dir.get(src_dir)
-                    if data_frame is None:
-                        f.write("No provided data")
-                    else:
-                        f.write(f"dir: {src_dir}\n")
-                        f.write("\n")
-                        f.write(data_frame.to_string())
-                        f.write("\n\n")
-                        f.write("Average % of BP incorrect: ")
-                        f.write(str(summarized_by_dir_data_frame.get("BP incorrect %")))
+                continue
+
+            path.parent.joinpath(os.path.basename(out_dir)).mkdir(parents=True, exist_ok=True)
+            with open(path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data), "w") as f:
+                data_frame = summarized_data.get(src_dir)
+
+                if data_frame is None:
+                    f.write("No provided data")
+                    continue
+                
+                summarized_by_dir_data_frame = summarized_by_dir.get(src_dir)
+                f.write(f"dir: {src_dir}\n")
+                f.write("\n")
+                f.write(data_frame.to_string())
+                f.write("\n\n")
+                f.write("Average % of BP incorrect: ")
+                f.write(str(summarized_by_dir_data_frame.get("BP incorrect %")))
 
     def construct_plot(self, summarized_data: Dict[str, pd.DataFrame]):
         pd.DataFrame({k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}).plot.bar()
