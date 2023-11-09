@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 int* perf_fd;
-size_t perf_fd_len;
+size_t perf_fd_len = 0;
 unsigned long long configs[] = {PERF_COUNT_HW_BRANCH_INSTRUCTIONS, PERF_COUNT_HW_BRANCH_MISSES, PERF_COUNT_HW_CACHE_BPU,
                                 PERF_COUNT_SW_CPU_CLOCK, PERF_COUNT_HW_INSTRUCTIONS};
 char* value_names[] = {"branches", "missed_branches", "cache_BPU", "cpu_clock", "instructions"};
@@ -33,7 +33,6 @@ int set_up_perf_event(unsigned long long config) {
     fd = perf_event_open(pe, 0, -1, -1, 0);
     if (fd == -1) {
         fprintf(stderr, "Error opening leader %llx\n", pe->config);
-        // exit(EXIT_FAILURE);
     }
     free(pe);
     return fd;
@@ -59,6 +58,7 @@ static void init() {
 }
 
 static void fin() {
+    signal(SIGINT, SIG_IGN);
     if (perf_fd != NULL) {
         for (int i = 0; i < perf_fd_len; i++) {
             if (perf_fd[i] != -1)
@@ -78,15 +78,12 @@ static void fin() {
     }
 }
 
-static void sigint_handler() {
-    fin();
-    exit(0);
-}
+static void sigint_handler() { exit(0); }
 
 int main() {
+    atexit(fin);
     signal(SIGINT, sigint_handler);
     init();
     test_fun();
-    fin();
     return 0;
 }
