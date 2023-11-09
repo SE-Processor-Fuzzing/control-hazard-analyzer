@@ -127,7 +127,7 @@ class Summarizer:
                 if data_frame is None:
                     f.write("No provided data")
                     continue
-                
+
                 summarized_by_dir_data_frame = summarized_by_dir.get(src_dir)
                 f.write(f"dir: {src_dir}\n")
                 f.write("\n")
