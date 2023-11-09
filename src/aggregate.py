@@ -2,7 +2,6 @@ import os
 import random
 import shlex
 import shutil
-import stat
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pprint
