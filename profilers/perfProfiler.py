@@ -156,6 +156,16 @@ class PerfProfiler:
                         print(f"[-]: Error during seting capability:\n\t {proc_err}")
                     use_sudo = True
 
+    def correct(self, analyzed: Dict[str, PerfData]) -> Dict[str, Dict]:
+        key_empty_test = self.empty_test_path.name.split(".")[0]
+        analyzed[key_empty_test].max(0)
+        corrected: Dict[str, Dict] = {}
+        for key in analyzed:
+            if key != key_empty_test:
+                analyzed[key] = analyzed[key] - analyzed[key_empty_test]
+                corrected.update({key: analyzed[key].to_dict()})
+        return corrected
+
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
@@ -166,12 +176,4 @@ class PerfProfiler:
         self.update_capabilities_dir(build_dir)
         analyzed = self.get_stats_dir(build_dir)
 
-        key_empty_test = self.empty_test_path.name.split(".")[0]
-        analyzed[key_empty_test].max(0)
-        res: Dict[str, Dict] = {}
-        for key in analyzed:
-            if key != key_empty_test:
-                analyzed[key] = analyzed[key] - analyzed[key_empty_test]
-                res.update({key: analyzed[key].to_dict()})
-
-        return res
+        return self.correct(analyzed)
