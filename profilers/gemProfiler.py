@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 from argparse import Namespace
 from pathlib import Path
@@ -28,6 +29,9 @@ class GemProfiler:
         )
         if self.target_isa == "":
             raise Exception("No target isa provided")
+
+    def __del__(self):
+        shutil.rmtree(self.temp_path)
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
@@ -69,9 +73,6 @@ class GemProfiler:
         for binary in os.listdir(bin_dir):
             bin_path = bin_dir.joinpath(binary)
             execute_line = [
-                "sudo",
-                self.settings.timeout_tool,
-                self.settings.timeout_duration,
                 self.gem5_bin_path,
                 f"--outdir={self.temp_path}/m5out",
                 f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
@@ -83,7 +84,7 @@ class GemProfiler:
             ]
             if self.settings.debug:
                 print(f"gemProfiler is running. Executed line: {execute_line}")
-            proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, check=True)
+            proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE)
             try:
                 proc.wait(self.builder.settings.timeout)
             except subprocess.TimeoutExpired:
@@ -114,7 +115,5 @@ class GemProfiler:
         self.builder.build(src_dir, build_dir, gem_additional_flags)
         self.run_bins_in_dir(build_dir, stats_dir)
         analyzed = self.get_stats_from_dir(stats_dir)
-
-        subprocess.call(["sudo", "rm", "-rf", self.temp_path])
 
         return self.correct(analyzed)
