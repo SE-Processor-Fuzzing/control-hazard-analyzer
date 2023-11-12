@@ -3,7 +3,6 @@ from __future__ import annotations
 import glob
 import shutil
 import signal
-import os.path
 import subprocess
 from pathlib import Path
 import sys
@@ -68,7 +67,7 @@ class PerfProfiler:
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         dest_test.parent.mkdir(parents=True, exist_ok=True)
-        if os.path.isfile(src_test):
+        if src_test.is_file():
             with open(dest_test, "wt") as writter:
                 writter.write(f'#include "{src_test.absolute()}"\n')
                 writter.write(f'#include "{self.template_path.absolute()}"\n')
@@ -125,15 +124,15 @@ class PerfProfiler:
 
     def get_stats_dir(self, dir: Path) -> Dict[str, PerfData]:
         data_dict: Dict[str, PerfData] = {}
-        for binary in os.listdir(dir):
+        for binary in dir.iterdir():
             data = self.get_stat(dir.joinpath(binary))
-            data_dict[binary.split(".")[0]] = data
+            data_dict[binary.name.split(".")[0]] = data
         return data_dict
 
     def update_capabilities_dir(self, dir: Path):
         sudo_hint = True
         use_sudo = False
-        for binary in os.listdir(dir):
+        for binary in dir.iterdir():
             suc_launch = False
             used_max_perm = False
 
