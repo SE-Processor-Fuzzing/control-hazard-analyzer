@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -12,6 +13,8 @@ from src.builder import Builder
 
 
 class GemProfiler:
+    BINARY_PLACEHOLDER = "{{GEM5_TARGET_BINARY}}"
+
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
         self.builder: Builder = builder
@@ -20,14 +23,22 @@ class GemProfiler:
         self.empty_test_path = Path("profilers/attachments/empty.c")
         self.gem5_home = self.settings.__dict__.get("gem5_home", "")
         self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
+
         self.gem5_bin_path = self.settings.__dict__.get(
             "gem5_bin_path",
             os.path.join(self.gem5_home, "build", self.target_isa.capitalize(), "gem5.opt"),
         )
+
         self.sim_script_path = self.settings.__dict__.get(
             "sim_script_path",
             os.path.join(self.gem5_home, "configs/deprecated/example/se.py"),
         )
+
+        self.sim_script_args = self.settings.__dict__.get(
+            "sim_script_args", f"--cpu-type=O3CPU --caches -c {self.BINARY_PLACEHOLDER}"
+        )
+        self.sim_script_args = shlex.split(self.sim_script_args)
+
         self.build_additional_flags = [
             f"-I{os.path.join(self.gem5_home, 'include')}",
             f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
@@ -36,6 +47,7 @@ class GemProfiler:
             "-Wl,-lm5",
             "--static",
         ]
+
         if self.target_isa == "":
             raise Exception("No target isa provided")
 
@@ -81,18 +93,17 @@ class GemProfiler:
         dest_dir.mkdir(parents=True, exist_ok=True)
         for binary in os.listdir(bin_dir):
             bin_path = bin_dir.joinpath(binary)
+            script_args = list(map(lambda x: x.replace(self.BINARY_PLACEHOLDER, str(bin_path)), self.sim_script_args))
             execute_line = [
                 self.gem5_bin_path,
                 f"--outdir={self.temp_dir}/m5out",
                 f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
                 self.sim_script_path,
-                "--cpu-type=O3CPU",
-                "--caches",
-                "-c",
-                bin_path,
-            ]
+            ] + script_args
+
             if self.settings.debug:
                 print(f"gemProfiler is running. Executed line: {execute_line}")
+
             proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE)
             try:
                 proc.wait(self.builder.settings.timeout)
