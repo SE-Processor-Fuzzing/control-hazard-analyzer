@@ -109,6 +109,8 @@ class PerfProfiler:
         except subprocess.TimeoutExpired:
             proc.send_signal(signal.SIGINT)
             is_full = False
+            if proc.returncode is not int:  # some bug: if send signal to proc, it ret code will be one
+                proc.returncode = 0
 
         if proc.stdout is not None:
             output = proc.stdout.read().decode()
@@ -116,16 +118,14 @@ class PerfProfiler:
         else:
             data = PerfData()
 
-        if proc.stderr is not None:
-            errors = proc.stderr.readlines()
-            if len(errors) != 0:
-                print(f"[-]: Some error occured during launching {binary}:", file=sys.stderr)
-                for ln in errors:
-                    print(f"\t{ln.decode()[:-1]}", file=sys.stderr)
-                print(
-                    "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
-                    file=sys.stderr,
-                )
+        if proc.returncode != 0:
+            print(f"[-]: Some error occured during launching {binary}:", file=sys.stderr)
+            if proc.stderr is not None:
+                print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
+            print(
+                "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
+                file=sys.stderr,
+            )
         return data
 
     def get_stats_dir(self, dir: Path) -> Dict[str, PerfData]:
@@ -159,7 +159,7 @@ class PerfProfiler:
                 else:
                     if used_max_perm:
                         proc_err = proc.stderr.decode().replace("\n", "\n\t")
-                        print(f"[-]: Error during seting capability:\n\t {proc_err}")
+                        print(f"[-]: Error during seting capability:\n\t {proc_err}", file=sys.stderr)
                     use_sudo = True
 
     def correct(self, analyzed: Dict[str, PerfData]) -> Dict[str, Dict]:
