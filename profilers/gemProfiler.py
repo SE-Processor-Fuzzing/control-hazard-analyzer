@@ -28,6 +28,14 @@ class GemProfiler:
             "sim_script_path",
             os.path.join(self.gem5_home, "configs/deprecated/example/se.py"),
         )
+        self.build_additional_flags = [
+            f"-I{os.path.join(self.gem5_home, 'include')}",
+            f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
+            "-fPIE",
+            f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out",
+            "-Wl,-lm5",
+            "--static",
+        ]
         if self.target_isa == "":
             raise Exception("No target isa provided")
 
@@ -103,17 +111,10 @@ class GemProfiler:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
         stats_dir = self.temp_dir.joinpath("stats/")
-        gem_additional_flags = [
-            f"-I{os.path.join(self.gem5_home, 'include')}",
-            f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
-            "-fPIE",
-            f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out",
-            "-Wl,-lm5",
-            "--static",
-        ]
+
         self.patch_tests_in_dir(test_dir.absolute(), src_dir)
         self.patch_test(self.empty_test_path, src_dir.joinpath(self.empty_test_path.name))
-        self.builder.build(src_dir, build_dir, gem_additional_flags)
+        self.builder.build(src_dir, build_dir, self.build_additional_flags)
         self.run_bins_in_dir(build_dir, stats_dir)
         analyzed = self.get_stats_from_dir(stats_dir)
 
