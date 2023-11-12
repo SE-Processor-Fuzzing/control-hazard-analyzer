@@ -33,7 +33,7 @@ class Analyzer:
         self.packer = Packer()
         self.profiler: IProfiler
         if settings.profiler == "perf":
-            self.profiler = PerfProfiler(self.builder)
+            self.profiler = PerfProfiler(self.builder, settings)
         elif settings.profiler == "gem5":
             self.profiler = GemProfiler(self.builder, settings)
         else:

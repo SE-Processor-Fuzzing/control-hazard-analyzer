@@ -1,4 +1,5 @@
 from __future__ import annotations
+from argparse import Namespace
 
 import glob
 import shutil
@@ -56,7 +57,8 @@ class PerfData:
 
 
 class PerfProfiler:
-    def __init__(self, builder: Builder):
+    def __init__(self, builder: Builder, settings: Namespace):
+        self.settings = settings
         self.builder: Builder = builder
         self.temp_dir: Path = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/perfTemplate.c")
@@ -95,6 +97,10 @@ class PerfProfiler:
 
     def get_stat(self, binary: Path) -> PerfData:
         execute_line = [binary]
+        if self.settings.debug:
+            execute_string = " ".join(map(str, execute_line))
+            print(f"[perfProfiler]: Executing: {execute_string}")
+
         proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         is_full = True
