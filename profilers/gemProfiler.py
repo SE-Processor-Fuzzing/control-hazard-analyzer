@@ -1,4 +1,3 @@
-import os
 import re
 import shlex
 import shutil
@@ -7,7 +6,7 @@ import subprocess
 from argparse import Namespace
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict
+from typing import Dict, Set
 
 from src.builder import Builder
 
@@ -21,17 +20,17 @@ class GemProfiler:
         self.temp_dir = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/gemTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
-        self.gem5_home = self.settings.__dict__.get("gem5_home", "")
+        self.gem5_home = Path(self.settings.__dict__.get("gem5_home", ""))
         self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
 
         self.gem5_bin_path = self.settings.__dict__.get(
             "gem5_bin_path",
-            os.path.join(self.gem5_home, "build", self.target_isa.capitalize(), "gem5.opt"),
+            self.gem5_home.joinpath("build", self.target_isa.capitalize(), "gem5.opt"),
         )
 
         self.sim_script_path = self.settings.__dict__.get(
             "sim_script_path",
-            os.path.join(self.gem5_home, "configs/deprecated/example/se.py"),
+            self.gem5_home.joinpath("configs/deprecated/example/se.py"),
         )
 
         self.sim_script_args = self.settings.__dict__.get(
@@ -40,8 +39,8 @@ class GemProfiler:
         self.sim_script_args = shlex.split(self.sim_script_args)
 
         self.build_additional_flags = [
-            f"-I{os.path.join(self.gem5_home, 'include')}",
-            f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
+            f"-I{self.gem5_home.joinpath('include')}",
+            f"-I{self.gem5_home.joinpath('util/m5/src')}",
             "-fPIE",
             f"-Wl,-L{self.gem5_home}/util/m5/build/{self.target_isa}/out",
             "-Wl,-lm5",
@@ -55,7 +54,7 @@ class GemProfiler:
         shutil.rmtree(self.temp_dir)
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
-        if os.path.isfile(src_test):
+        if src_test.is_file():
             with open(dest_test, "w+") as file:
                 file.write(f'#include "{src_test.absolute()}"\n')
                 file.write(f'#include "{self.template_path.absolute()}"\n')
@@ -65,7 +64,7 @@ class GemProfiler:
 
     def patch_tests_in_dir(self, src_dir: Path, dest_dir: Path) -> None:
         dest_dir.mkdir(parents=True, exist_ok=False)
-        for src_test in os.listdir(src_dir):
+        for src_test in src_dir.iterdir():
             src_test = src_dir.joinpath(src_test)
             dest_test = dest_dir.joinpath(src_test.name)
             self.patch_test(src_test, dest_test)
@@ -83,15 +82,17 @@ class GemProfiler:
 
     def get_stats_from_dir(self, stats_dir: Path) -> Dict[str, Dict]:
         stats_dict = {}
-        for stat_path in os.listdir(stats_dir):
-            test_name = stat_path.split(".")[0]
+        for stat_path in stats_dir.iterdir():
+            test_name = stat_path.name.split(".")[0]
             stats_dict[test_name] = self.get_stats_from_file(stats_dir.joinpath(stat_path))
 
         return stats_dict
 
-    def run_bins_in_dir(self, bin_dir: Path, dest_dir: Path) -> None:
+    def run_bins_in_dir(self, bin_dir: Path, dest_dir: Path) -> Set[str]:
+        fully_runned = set()
         dest_dir.mkdir(parents=True, exist_ok=True)
-        for binary in os.listdir(bin_dir):
+        for binary in bin_dir.iterdir():
+            is_full_run = True
             bin_path = bin_dir.joinpath(binary)
             script_args = list(map(lambda x: x.replace(self.BINARY_PLACEHOLDER, str(bin_path)), self.sim_script_args))
             execute_line = [
@@ -109,12 +110,20 @@ class GemProfiler:
                 proc.wait(self.builder.settings.timeout)
             except subprocess.TimeoutExpired:
                 proc.send_signal(signal.SIGINT)
+                is_full_run = False
 
-    def correct(self, analyzed: Dict[str, Dict]) -> Dict[str, Dict]:
+            if is_full_run:
+                fully_runned.add(bin_path.name.split(".")[0])
+
+        return fully_runned
+
+    def correct(self, analyzed: Dict[str, Dict], full_runned: Set[str]) -> Dict[str, Dict]:
         for file_name in analyzed.keys():
             if file_name != "empty":
                 for key in analyzed["empty"].keys():
                     analyzed[file_name][key] -= analyzed["empty"][key]
+                analyzed[file_name]["isFull"] = file_name in full_runned
+
         analyzed.pop("empty")
         return analyzed
 
@@ -126,7 +135,7 @@ class GemProfiler:
         self.patch_tests_in_dir(test_dir.absolute(), src_dir)
         self.patch_test(self.empty_test_path, src_dir.joinpath(self.empty_test_path.name))
         self.builder.build(src_dir, build_dir, self.build_additional_flags)
-        self.run_bins_in_dir(build_dir, stats_dir)
+        full_runned = self.run_bins_in_dir(build_dir, stats_dir)
         analyzed = self.get_stats_from_dir(stats_dir)
 
-        return self.correct(analyzed)
+        return self.correct(analyzed, full_runned)
