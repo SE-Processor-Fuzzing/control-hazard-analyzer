@@ -89,7 +89,7 @@ class GemProfiler:
             try:
                 proc.wait(self.builder.settings.timeout)
             except subprocess.TimeoutExpired:
-                proc.kill()
+                proc.send_signal(signal.SIGINT)
 
     def correct(self, analyzed: Dict[str, Dict]) -> Dict[str, Dict]:
         for file_name in analyzed.keys():
