@@ -105,7 +105,7 @@ class GemProfiler:
             if self.settings.debug:
                 print(f"gemProfiler is running. Executed line: {execute_line}")
 
-            proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
                 proc.wait(self.builder.settings.timeout)
             except subprocess.TimeoutExpired:
