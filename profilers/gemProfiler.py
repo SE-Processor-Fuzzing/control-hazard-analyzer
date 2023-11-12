@@ -19,7 +19,7 @@ class GemProfiler:
         self.template_path = Path("profilers/attachments/gemTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
         self.gem5_home = self.settings.__dict__.get("gem5_home", "")
-        self.target_isa = self.settings.__dict__.get("target_isa", "")
+        self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
         self.gem5_bin_path = self.settings.__dict__.get(
             "gem5_bin_path",
             os.path.join(self.gem5_home, "build", self.target_isa.capitalize(), "gem5.opt"),
