@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import signal
 import subprocess
 from argparse import Namespace
 from pathlib import Path
@@ -14,7 +15,7 @@ class GemProfiler:
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
         self.builder: Builder = builder
-        self.temp_path = Path(mkdtemp())
+        self.temp_dir = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/gemTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
         self.gem5_home = self.settings.__dict__.get("gem5_home", "")
@@ -31,7 +32,7 @@ class GemProfiler:
             raise Exception("No target isa provided")
 
     def __del__(self):
-        shutil.rmtree(self.temp_path)
+        shutil.rmtree(self.temp_dir)
 
     def patch_test(self, src_test: Path, dest_test: Path) -> bool:
         if os.path.isfile(src_test):
@@ -74,7 +75,7 @@ class GemProfiler:
             bin_path = bin_dir.joinpath(binary)
             execute_line = [
                 self.gem5_bin_path,
-                f"--outdir={self.temp_path}/m5out",
+                f"--outdir={self.temp_dir}/m5out",
                 f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
                 self.sim_script_path,
                 "--cpu-type=O3CPU",
@@ -99,9 +100,9 @@ class GemProfiler:
         return analyzed
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
-        src_dir = self.temp_path.joinpath("src/")
-        build_dir = self.temp_path.joinpath("bins/")
-        stats_dir = self.temp_path.joinpath("stats/")
+        src_dir = self.temp_dir.joinpath("src/")
+        build_dir = self.temp_dir.joinpath("bins/")
+        stats_dir = self.temp_dir.joinpath("stats/")
         gem_additional_flags = [
             f"-I{os.path.join(self.gem5_home, 'include')}",
             f"-I{os.path.join(self.gem5_home, 'util/m5/src')}",
