@@ -42,16 +42,16 @@ static void init() {
     size_t configs_len = sizeof(configs) / sizeof(*configs);
     perf_fd_len = configs_len;
     perf_fd = calloc(configs_len, sizeof(*perf_fd));
-    for (int i = 0; i < configs_len; i++) {
+    for (size_t i = 0; i < configs_len; i++) {
         perf_fd[i] = set_up_perf_event(configs[i]);
     }
 
-    for (int i = 0; i < configs_len; i++) {
+    for (size_t i = 0; i < configs_len; i++) {
         if (perf_fd[i] != -1)
             ioctl(perf_fd[i], PERF_EVENT_IOC_RESET, 0);
     }
 
-    for (int i = 0; i < configs_len; i++) {
+    for (size_t i = 0; i < configs_len; i++) {
         if (perf_fd[i] != -1)
             ioctl(perf_fd[i], PERF_EVENT_IOC_ENABLE, 0);
     }
@@ -60,15 +60,17 @@ static void init() {
 static void fin() {
     signal(SIGINT, SIG_IGN);
     if (perf_fd != NULL) {
-        for (int i = 0; i < perf_fd_len; i++) {
+        for (size_t i = 0; i < perf_fd_len; i++) {
             if (perf_fd[i] != -1)
                 ioctl(perf_fd[i], PERF_EVENT_IOC_DISABLE, 0);
         }
 
         long long value_result = -1;
-        for (int i = 0; i < perf_fd_len; i++) {
+        for (size_t i = 0; i < perf_fd_len; i++) {
             if (perf_fd[i] != -1) {
-                read(perf_fd[i], &value_result, sizeof(long long));
+                if (read(perf_fd[i], &value_result, sizeof(long long)) <= 0) {
+                    fprintf(stderr, "Can't read value of '%s'\n", value_names[i]);
+                }
                 close(perf_fd[i]);
             } else {
                 value_result = -1;
