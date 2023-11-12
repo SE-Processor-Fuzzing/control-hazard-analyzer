@@ -104,7 +104,7 @@ class GemProfiler:
             if file_name != "empty":
                 for key in analyzed["empty"].keys():
                     analyzed[file_name][key] -= analyzed["empty"][key]
-
+        analyzed.pop("empty")
         return analyzed
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
