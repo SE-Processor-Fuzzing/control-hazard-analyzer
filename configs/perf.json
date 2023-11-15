@@ -1,4 +1,5 @@
 {
+  "profiler": "perf",
   "out_dir": "analyze",
-  "timeout": 30
+  "timeout": 10
 }
