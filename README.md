@@ -15,9 +15,8 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.9+
 - gem5
-- perf
 
 ## Installation
 
@@ -25,7 +24,9 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 python3 -m pip install -r requirements.txt
 ```
 
-For using profilers you need to have perf or/and gem5 (and library M5ops)
+For using gemProofiler you need to have gem5 and library M5ops:
+- [gem5 installation](https://www.gem5.org/getting_started/)
+- [M5ops installation](https://www.gem5.org/documentation/general_docs/m5ops/)
 
 ## Toolchain structure
 
@@ -42,6 +43,10 @@ For using profilers you need to have perf or/and gem5 (and library M5ops)
 python3 cha.py aggregate
 ```
 
+Example result:
+![example_of_output](https://github.com/osogi/control-hazard-analyzer/assets/66139162/5cb43919-ba4e-47cf-b675-79eec8d33e3c)
+
+
 Also, you can pass many options to utilities, see help for more details
 
 ```bash
@@ -53,7 +58,7 @@ python3 cha.py aggregate --help
 **Usage example:**
 
 ```bash
-python3 cha.py generate --repeats=100 --dest_dir="out"
+python3 cha.py generate --repeats=10 --out_dir="out" --debug
 ```
 
 ### analyze
@@ -61,7 +66,7 @@ python3 cha.py generate --repeats=100 --dest_dir="out"
 **Usage example:**
 
 ```bash
-python3 cha.py analyze --test_dir="out/src" --profiler="perf"
+python3 cha.py analyze --test_dir="out" --out_dir="perf_result" --debug
 ```
 
 ### summarize
@@ -69,7 +74,7 @@ python3 cha.py analyze --test_dir="out/src" --profiler="perf"
 **Usage example:**
 
 ```bash
-python3 cha.py summarize
+python3 cha.py summarize --src_dirs="perf_result" --out_dir="summarize_result" --debug
 ```
 ## Development
 
