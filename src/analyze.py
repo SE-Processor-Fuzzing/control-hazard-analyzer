@@ -67,6 +67,9 @@ class Analyzer:
         self.analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
         self.analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output dir")
         self.analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
+        self.analyze_parser.add_argument(
+            "--timeout", default=10, help="Number of seconds after which the test will be stopped"
+        )
         self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
         self.analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
         self.analyze_parser.add_argument(
