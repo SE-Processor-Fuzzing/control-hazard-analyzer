@@ -2,6 +2,7 @@ from __future__ import annotations
 from argparse import Namespace
 
 import glob
+import logging
 import shutil
 import signal
 import subprocess
@@ -60,6 +61,8 @@ class PerfProfiler:
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
         self.builder: Builder = builder
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(self.settings.log_level)
         self.temp_dir: Path = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/perfTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
@@ -97,9 +100,8 @@ class PerfProfiler:
 
     def get_stat(self, binary: Path) -> PerfData:
         execute_line = [binary]
-        if self.settings.debug:
-            execute_string = " ".join(map(str, execute_line))
-            print(f"[perfProfiler]: Executing: {execute_string}")
+        execute_string = " ".join(map(str, execute_line))
+        self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
 
         proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

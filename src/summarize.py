@@ -1,8 +1,9 @@
+import logging
 import json
 from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
-from pprint import pprint
+from pprint import pformat
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
@@ -16,20 +17,21 @@ class Summarizer:
         self.settings = None
         self.filename_out_grapg = "graph.png"
         self.filename_out_data = "results.data"
+        self.logger = logging.getLogger(__name__)
 
     def configurate(self, settings: Namespace):
         self.settings = settings
+        self.logger.setLevel(self.settings.log_level)
 
     def run(self):
-        if self.settings.debug:
-            pprint("Summarize is running. Settings:")
-            pprint(vars(self.settings))
+        self.logger.info("Summarize is running. Settings:")
+        self.logger.info(pformat(vars(self.settings)))
 
         src_dirs = self.settings.src_dirs
         data = self.get_data_from_sources(src_dirs)
         plt.close("all")
         if len(data) == 0:
-            print("No data to summarize")
+            print("[-]: No data to summarize")
             return
 
         summarized_data = self.convert_to_pandas(self.summarize_data(data))
@@ -49,7 +51,7 @@ class Summarizer:
         data = {}
         for src_dir in src_dirs:
             if not Path(src_dir).exists():
-                print(f"dir {src_dir} does not exist")
+                print(f"[-]: Directory {src_dir} does not exist")
             else:
                 data[src_dir] = {}
                 for src_file in Path(src_dir).glob("*"):
@@ -86,7 +88,8 @@ class Summarizer:
         for src_dir, data_frame in summarized_data.items():
             summarized_by_dir[src_dir] = {}
             summarized_by_dir[src_dir]["BP incorrect %"] = round(
-                data_frame.loc["BP incorrect"].sum() / data_frame.loc["BP lookups"].sum() * 100, 2
+                data_frame.loc["BP incorrect"].sum() / data_frame.loc["BP lookups"].sum() * 100,
+                2,
             )
         return pd.DataFrame(summarized_by_dir)
 
@@ -117,11 +120,14 @@ class Summarizer:
         for src_dir in src_dirs:
             path = Path(src_dir)
             if not path.exists():
-                print(f"dir {src_dir} does not exist")
+                print(f"[-]: Directory {src_dir} does not exist")
                 continue
 
             path.parent.joinpath(os.path.basename(out_dir)).mkdir(parents=True, exist_ok=True)
-            with open(path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data), "w") as f:
+            with open(
+                path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data),
+                "w",
+            ) as f:
                 data_frame = summarized_data.get(src_dir)
 
                 if data_frame is None:
@@ -156,9 +162,18 @@ class Summarizer:
             "--show_graph", action="store_true", default=True, help="Shows a graph of BP incorrect %"
         )
         self.summarize_parser.add_argument(
-            "--save_graph", action="store_true", default=False, help="Saves a graph of BP incorrect %% in graph.png"
+            "--save_graph",
+            action="store_true",
+            default=False,
+            help="Saves a graph of BP incorrect %% in graph.png",
         )
         self.summarize_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
+        self.summarize_parser.add_argument(
+            "--log_level",
+            default="WARNING",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            help="Log level of program",
+        )
         return self.summarize_parser
 
     def parse_args(self, args: List[str]) -> Namespace:

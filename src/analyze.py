@@ -1,8 +1,9 @@
+import logging
 import shlex
 import shutil
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
-from pprint import pprint
+from pprint import pformat
 from typing import Dict, List, Optional
 
 from profilers.gemProfiler import GemProfiler
@@ -21,11 +22,11 @@ class Analyzer:
         self.analyze_dir: Optional[Path] = None
         self.analyze_parser: Optional[ArgumentParser] = None
         self.settings: Optional[Namespace] = None
+        self.logger = logging.getLogger(__name__)
 
     def configurate(self, settings: Namespace):
         self.settings = settings
-        if not self.settings.__contains__("debug"):
-            self.settings.debug = False
+        self.logger.setLevel(self.settings.log_level)
         self.test_dir: Path = Path(settings.test_dir)
         self.analyze_dir: Path = Path(settings.out_dir)
         self.settings.compiler_args = shlex.split(settings.compiler_args)
@@ -40,9 +41,8 @@ class Analyzer:
             raise Exception(f'"{settings.profiler}" is unknown profiler')
 
     def run(self):
-        if self.settings.debug:
-            print("Analyze running. Settings:")
-            pprint(vars(self.settings))
+        self.logger.info("Analyze running. Settings:")
+        self.logger.info(pformat(vars(self.settings)))
         self.create_empty_dir(self.analyze_dir)
         data = self.profile(self.test_dir)
         self.pack(self.analyze_dir, data)
@@ -53,13 +53,11 @@ class Analyzer:
         dir.mkdir(parents=True)
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
-        if self.settings.debug:
-            print(f"Execute and analyze tests from '{test_dir.absolute()}'")
+        print(f"[+]: Execute and analyze tests from {test_dir.absolute().as_posix()}")
         return self.profiler.profile(test_dir)
 
     def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict]):
-        if self.settings.debug:
-            print(f"Save analysis' results to '{analyze_dir.absolute()}'")
+        print(f"[+]: Save analysis' results to {analyze_dir.absolute().as_posix()}")
         return self.packer.pack(analyze_dir, analyzed_data)
 
     def add_sub_parser(self, sub_parsers) -> ArgumentParser:
@@ -68,7 +66,9 @@ class Analyzer:
         self.analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output dir")
         self.analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
         self.analyze_parser.add_argument(
-            "--timeout", default=10, help="Number of seconds after which the test will be stopped"
+            "--timeout",
+            default=10,
+            help="Number of seconds after which the test will be stopped",
         )
         self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
         self.analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
@@ -82,7 +82,12 @@ class Analyzer:
         self.analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
         self.analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
         self.analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
-        self.analyze_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
+        self.analyze_parser.add_argument(
+            "--log_level",
+            default="WARNING",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            help="Log level of program",
+        )
 
         return self.analyze_parser
 

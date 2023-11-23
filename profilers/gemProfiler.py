@@ -1,3 +1,4 @@
+import logging
 import re
 import shlex
 import shutil
@@ -17,6 +18,8 @@ class GemProfiler:
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
         self.builder: Builder = builder
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(self.settings.log_level)
         self.temp_dir = Path(mkdtemp())
         self.template_path = Path("profilers/attachments/gemTemplate.c")
         self.empty_test_path = Path("profilers/attachments/empty.c")
@@ -94,16 +97,20 @@ class GemProfiler:
         for binary in bin_dir.iterdir():
             is_full_run = True
             bin_path = bin_dir.joinpath(binary)
-            script_args = list(map(lambda x: x.replace(self.BINARY_PLACEHOLDER, str(bin_path)), self.sim_script_args))
+            stat_file = f"{dest_dir}/{bin_path.name.split('.')[0]}.txt"
+            script_args = list(
+                map(
+                    lambda x: x.replace(self.BINARY_PLACEHOLDER, str(bin_path)),
+                    self.sim_script_args,
+                )
+            )
             execute_line = [
                 self.gem5_bin_path,
                 f"--outdir={self.temp_dir}/m5out",
-                f"--stats-file={dest_dir}/{bin_path.name.split('.')[0]}.txt",
+                f"--stats-file={stat_file}",
                 self.sim_script_path,
             ] + script_args
-
-            if self.settings.debug:
-                print(f"gemProfiler is running. Executed line: {execute_line}")
+            self.logger.info(f"gemProfiler is running. Executed line: {execute_line}")
 
             proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
@@ -111,6 +118,8 @@ class GemProfiler:
             except subprocess.TimeoutExpired:
                 proc.send_signal(signal.SIGINT)
                 is_full_run = False
+                while proc.poll() is None:
+                    pass
 
             if is_full_run:
                 fully_runned.add(bin_path.name.split(".")[0])
@@ -119,10 +128,11 @@ class GemProfiler:
 
     def correct(self, analyzed: Dict[str, Dict], full_runned: Set[str]) -> Dict[str, Dict]:
         for file_name in analyzed.keys():
-            if file_name != "empty":
-                for key in analyzed["empty"].keys():
-                    analyzed[file_name][key] -= analyzed["empty"][key]
-                analyzed[file_name]["isFull"] = file_name in full_runned
+            if file_name == "empty" or not analyzed[file_name]:
+                continue
+            for key in analyzed["empty"].keys():
+                analyzed[file_name][key] -= analyzed["empty"][key]
+            analyzed[file_name]["isFull"] = file_name in full_runned
 
         analyzed.pop("empty")
         return analyzed

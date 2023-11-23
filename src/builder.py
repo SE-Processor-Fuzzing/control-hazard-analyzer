@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 from argparse import Namespace
@@ -7,6 +8,8 @@ from pathlib import Path
 class Builder:
     def __init__(self, settings: Namespace):
         self.settings = settings
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(self.settings.log_level)
 
     def build(
         self,
@@ -23,7 +26,6 @@ class Builder:
                 + ["-o", destination_dir.joinpath(f"{test_file}.out")]
                 + additional_flags
             )
-            if self.settings.debug:
-                print(f"Builder(Analyze) is running. Executed command:{execute_line}")
+            self.logger.info(f"Builder(Analyze) is running. Executed command:{execute_line}")
 
             subprocess.run(execute_line, check=True)
