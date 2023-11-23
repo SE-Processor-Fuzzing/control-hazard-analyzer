@@ -145,7 +145,7 @@ class PerfProfiler:
             used_max_perm = False
 
             pth = dir.joinpath(binary)
-            execute_line = ["setcap", "cap_sys_admin=ep", pth]
+            execute_line = ["setcap", "cap_sys_admin,cap_sys_nice=ep", pth]
             while (not suc_launch) and (not used_max_perm):
                 if use_sudo:
                     if sudo_hint:

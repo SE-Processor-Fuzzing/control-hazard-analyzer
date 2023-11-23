@@ -1,5 +1,6 @@
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,6 +86,9 @@ static void sigint_handler() { exit(0); }
 int main() {
     atexit(fin);
     signal(SIGINT, sigint_handler);
+    struct sched_param sp;
+    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    sched_setscheduler(0, SCHED_FIFO, &sp);
     init();
     test_fun();
     return 0;
