@@ -76,8 +76,8 @@ class PerfProfiler:
         dest_test.parent.mkdir(parents=True, exist_ok=True)
         if src_test.is_file():
             with open(dest_test, "wt") as writter:
-                writter.write(f'#include "{src_test.absolute()}"\n')
                 writter.write(f'#include "{self.template_path.absolute()}"\n')
+                writter.write(f'#include "{src_test.absolute()}"\n')
                 return True
         return False
 
@@ -120,22 +120,21 @@ class PerfProfiler:
         else:
             data = PerfData()
 
-        if proc.returncode != 0:
+        if proc.stderr is not None:
             print(f"[-]: Some error occurred during launching '{" ".join(execute_line)}':", file=sys.stderr)
-            if proc.stderr is not None:
-                print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
+            print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
+        if proc.returncode != 0:
             print(
                 "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
                 file=sys.stderr,
             )
         return data
 
-    def get_stat(self, binary: Path, number_executes: int) -> List[PerfData]:
+    def get_stat(self, binary: Path, number_executes: int, cpu_core: int = 0) -> List[PerfData]:
         stats: List[PerfData] = []
-        execute_line = list(map(str, [binary]))
+        execute_line = list(map(str, [binary, cpu_core]))
         execute_string = " ".join(map(str, execute_line))
         self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
-
 
         left_time = self.builder.settings.timeout
         timeout = time.time() + self.builder.settings.timeout
