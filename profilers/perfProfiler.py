@@ -177,14 +177,46 @@ class PerfProfiler:
                         print(f"[-]: Error during seting capability:\n\t {proc_err}", file=sys.stderr)
                     use_sudo = True
 
-    def correct(self, analyzed: Dict[str, PerfData]) -> Dict[str, Dict]:
+    def _get_meddian(self, stats: List[PerfData]) -> PerfData | None:
+        def missed_pct(dt: PerfData) -> float:
+            if dt.branches == 0:
+                dt.branches = 1
+            return dt.missed_branches / dt.branches
+
+        stats.sort(key=missed_pct)
+        if len(stats) > 0:
+            return stats[(len(stats) // 2)]
+        return None
+
+    def get_meddian(self, stats: List[PerfData]) -> PerfData | None:
+        stats = stats.copy()
+        average = self._get_meddian(stats)
+        full_stats: List[PerfData] = []
+        for stat in stats:
+            if stat.is_full:
+                full_stats.append(stat)
+        full_average = self._get_meddian(full_stats)
+        if full_average is not None:
+            average = full_average
+
+        return average
+
+    def correct(self, analyzed: Dict[str, List[PerfData]]) -> Dict[str, Dict]:
         key_empty_test = self.empty_test_path.name.split(".")[0]
-        analyzed[key_empty_test].max(0)
+        analyzed_buf = {key: self.get_meddian(stats) for key, stats in analyzed.items()}
+        analyzed_average: Dict[str, PerfData] = {}
+        for key, val in analyzed_buf.items():
+            if val is not None:
+                analyzed_average[key] = val
+            else:
+                print(f"[-]: Error: can't get average result of '{key}' test", file=sys.stderr)
+
+        analyzed_average[key_empty_test].max(0)
         corrected: Dict[str, Dict] = {}
-        for key in analyzed:
+        for key in analyzed_average:
             if key != key_empty_test:
-                analyzed[key] = analyzed[key] - analyzed[key_empty_test]
-                corrected.update({key: analyzed[key].to_dict()})
+                analyzed_average[key] = analyzed_average[key] - analyzed_average[key_empty_test]
+                corrected.update({key: analyzed_average[key].to_dict()})
         return corrected
 
     def profile(self, test_dir: Path) -> Dict[str, Dict]:
