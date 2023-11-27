@@ -1,5 +1,6 @@
 {
   "profiler": "perf",
   "out_dir": "analyze",
-  "timeout": 10
+  "timeout": 10,
+  "max_test_launches": 50
 }

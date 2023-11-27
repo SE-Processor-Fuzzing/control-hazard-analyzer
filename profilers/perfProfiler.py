@@ -61,6 +61,7 @@ class PerfData:
 class PerfProfiler:
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
+        self.max_test_launches = settings.__dict__.get("max_test_launches", -1)
         self.builder: Builder = builder
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
@@ -129,7 +130,7 @@ class PerfProfiler:
             )
         return data
 
-    def get_stat(self, binary: Path) -> List[PerfData]:
+    def get_stat(self, binary: Path, number_executes: int) -> List[PerfData]:
         stats: List[PerfData] = []
         execute_line = list(map(str, [binary]))
         execute_string = " ".join(map(str, execute_line))
@@ -138,15 +139,16 @@ class PerfProfiler:
 
         left_time = self.builder.settings.timeout
         timeout = time.time() + self.builder.settings.timeout
-        while left_time > 0:
+        while (left_time > 0) and (number_executes != 0):
             stats.append(self.execute_test(execute_line, left_time))
             left_time = timeout - time.time()
+            number_executes -= 1
         return stats
 
     def get_stats_dir(self, dir: Path) -> Dict[str, List[PerfData]]:
         data_dict: Dict[str, List[PerfData]] = {}
         for binary in dir.iterdir():
-            data = self.get_stat(dir.joinpath(binary))
+            data = self.get_stat(dir.joinpath(binary), self.max_test_launches)
             data_dict[binary.name.split(".")[0]] = data
         return data_dict
 
