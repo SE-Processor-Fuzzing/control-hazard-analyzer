@@ -9,7 +9,8 @@ import subprocess
 from pathlib import Path
 import sys
 from tempfile import mkdtemp
-from typing import Dict
+import time
+from typing import Dict, List
 
 from src.builder import Builder
 
@@ -98,19 +99,17 @@ class PerfProfiler:
                 data_dict.update({name.strip(): val.strip()})
         return data_dict
 
-    def get_stat(self, binary: Path) -> PerfData:
-        execute_line = [binary]
-        execute_string = " ".join(map(str, execute_line))
-        self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
-
+    def execute_test(self, execute_line: List[str], timeout: float) -> PerfData:
         proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         is_full = True
         try:
-            proc.wait(self.builder.settings.timeout)
+            proc.wait(timeout)
         except subprocess.TimeoutExpired:
             proc.send_signal(signal.SIGINT)
             is_full = False
+            if proc.poll is None:
+                pass
             if proc.returncode is not int:  # some bug: if send signal to proc, it ret code will be one
                 proc.returncode = 0
 
@@ -121,7 +120,7 @@ class PerfProfiler:
             data = PerfData()
 
         if proc.returncode != 0:
-            print(f"[-]: Some error occured during launching {binary}:", file=sys.stderr)
+            print(f"[-]: Some error occurred during launching '{" ".join(execute_line)}':", file=sys.stderr)
             if proc.stderr is not None:
                 print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
             print(
@@ -130,8 +129,22 @@ class PerfProfiler:
             )
         return data
 
-    def get_stats_dir(self, dir: Path) -> Dict[str, PerfData]:
-        data_dict: Dict[str, PerfData] = {}
+    def get_stat(self, binary: Path) -> List[PerfData]:
+        stats: List[PerfData] = []
+        execute_line = list(map(str, [binary]))
+        execute_string = " ".join(map(str, execute_line))
+        self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
+
+
+        left_time = self.builder.settings.timeout
+        timeout = time.time() + self.builder.settings.timeout
+        while left_time > 0:
+            stats.append(self.execute_test(execute_line, left_time))
+            left_time = timeout - time.time()
+        return stats
+
+    def get_stats_dir(self, dir: Path) -> Dict[str, List[PerfData]]:
+        data_dict: Dict[str, List[PerfData]] = {}
         for binary in dir.iterdir():
             data = self.get_stat(dir.joinpath(binary))
             data_dict[binary.name.split(".")[0]] = data
