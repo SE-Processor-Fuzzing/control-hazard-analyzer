@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
 #include <sched.h>
@@ -7,6 +8,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+void test_fun();
 
 int* perf_fd;
 size_t perf_fd_len = 0;
@@ -83,12 +86,25 @@ static void fin() {
 
 static void sigint_handler() { exit(0); }
 
-int main() {
+int main(int argc, char* argv[]) {
     atexit(fin);
     signal(SIGINT, sigint_handler);
+
     struct sched_param sp;
     sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
     sched_setscheduler(0, SCHED_FIFO, &sp);
+
+    cpu_set_t cpuset;
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <cpu>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+    int cpu = atoi(argv[1]);
+    CPU_SET(cpu, &cpuset);
+    if (sched_setaffinity(0, sizeof(cpuset), &cpuset) == -1) {
+        fprintf(stderr, "Can't set test to %d CPU core\n", cpu);
+    }
+
     init();
     test_fun();
     return 0;
