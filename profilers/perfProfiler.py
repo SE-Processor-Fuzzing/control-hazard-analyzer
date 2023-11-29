@@ -100,6 +100,9 @@ class PerfProfiler:
                 data_dict.update({name.strip(): val.strip()})
         return data_dict
 
+    def tab_lines(self, lines: str):
+        return "\t" + lines.replace("\n", "\n\t")[:-1]
+
     def execute_test(self, execute_line: List[str], timeout: float) -> PerfData:
         proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -121,9 +124,11 @@ class PerfProfiler:
             data = PerfData()
 
         if proc.stderr is not None:
-            execute_str = " ".join(execute_line)
-            print(f"[-]: Some error occurred during launching '{execute_str}':", file=sys.stderr)
-            print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
+            test_errors = proc.stderr.read().decode()
+            if len(test_errors) > 0:
+                execute_str = " ".join(execute_line)
+                print(f"[-]: Some error occurred during launching '{execute_str}':", file=sys.stderr)
+                print(self.tab_lines(test_errors), file=sys.stderr, end="")
         if proc.returncode != 0:
             print(
                 "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
@@ -175,8 +180,8 @@ class PerfProfiler:
                     suc_launch = True
                 else:
                     if used_max_perm:
-                        proc_err = proc.stderr.decode().replace("\n", "\n\t")
-                        print(f"[-]: Error during seting capability:\n\t {proc_err}", file=sys.stderr)
+                        proc_err = proc.stderr.decode()
+                        print(f"[-]: Error during seting capability:\n {self.tab_lines(proc_err)}", file=sys.stderr)
                     use_sudo = True
 
     def _get_meddian(self, stats: List[PerfData]) -> PerfData | None:
