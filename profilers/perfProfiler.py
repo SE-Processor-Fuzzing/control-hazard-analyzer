@@ -121,7 +121,8 @@ class PerfProfiler:
             data = PerfData()
 
         if proc.stderr is not None:
-            print(f"[-]: Some error occurred during launching '{" ".join(execute_line)}':", file=sys.stderr)
+            execute_str = " ".join(execute_line)
+            print(f"[-]: Some error occurred during launching '{execute_str}':", file=sys.stderr)
             print(proc.stderr.read().decode().replace("\n", "\n\t"), file=sys.stderr, end="")
         if proc.returncode != 0:
             print(
