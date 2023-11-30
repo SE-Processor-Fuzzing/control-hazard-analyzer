@@ -150,21 +150,21 @@ class PerfProfiler:
             number_executes -= 1
         return stats
 
-    def get_stats_dir(self, dir: Path) -> Dict[str, List[PerfData]]:
+    def get_stats_dir(self, target_dir: Path) -> Dict[str, List[PerfData]]:
         data_dict: Dict[str, List[PerfData]] = {}
-        for binary in dir.iterdir():
-            data = self.get_stat(dir.joinpath(binary), self.max_test_launches)
+        for binary in target_dir.iterdir():
+            data = self.get_stat(target_dir.joinpath(binary), self.max_test_launches)
             data_dict[binary.name.split(".")[0]] = data
         return data_dict
 
-    def update_capabilities_dir(self, dir: Path):
+    def update_capabilities_dir(self, target_dir: Path):
         sudo_hint = True
         use_sudo = False
-        for binary in dir.iterdir():
+        for binary in target_dir.iterdir():
             suc_launch = False
             used_max_perm = False
 
-            pth = dir.joinpath(binary)
+            pth = target_dir.joinpath(binary)
             execute_line = ["setcap", "cap_sys_admin,cap_sys_nice=ep", pth]
             while (not suc_launch) and (not used_max_perm):
                 if use_sudo:
