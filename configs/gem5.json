@@ -1,7 +1,0 @@
-{
-  "profiler": "gem5",
-  "target_isa": "X86",
-  "gem5_home": "/path/to/your/gem5/home",
-  "out_dir": "analyze",
-  "timeout": 10
-}
