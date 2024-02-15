@@ -3,7 +3,8 @@
     "path_to_configs": "./configs",
     "configs": [
       "perf.json",
-      "gem5.json"
+      "gem5-BiMode.json",
+      "gem5-Tournament.json"
     ],
     "dest_dir": "out"
   }
