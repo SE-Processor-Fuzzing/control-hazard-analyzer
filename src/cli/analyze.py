@@ -6,11 +6,11 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, List, Optional
 
-from profilers.gemProfiler import GemProfiler
-from profilers.perfProfiler import PerfProfiler
-from profilers.profiler import IProfiler
-from src.builder import Builder
-from src.packer import Packer
+from src.profilers.gemProfiler import GemProfiler
+from src.profilers.perfProfiler import PerfProfiler
+from src.profilers.profiler import IProfiler
+from src.other.builder import Builder
+from src.other.packer import Packer
 
 
 class Analyzer:

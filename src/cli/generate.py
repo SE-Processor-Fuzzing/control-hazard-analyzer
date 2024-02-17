@@ -4,7 +4,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List, Optional
 
-import src.blocks_rendering as br
+import src.generators.blocks_rendering as br
 
 
 class Generator:

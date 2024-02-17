@@ -1,11 +1,11 @@
 from argparse import Namespace
 
-from src.aggregate import Aggregator
-from src.analyze import Analyzer
-from src.configurator import Configurator
-from src.generate import Generator
-from src.summarize import Summarizer
-from src.utility import IUtility
+from src.cli.aggregate import Aggregator
+from src.cli.analyze import Analyzer
+from src.other.configurator import Configurator
+from src.cli.generate import Generator
+from src.cli.summarize import Summarizer
+from src.other.utility import IUtility
 
 
 class Controller:

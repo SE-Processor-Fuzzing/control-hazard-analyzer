@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Dict, Set
 
-from src.builder import Builder
+from src.other.builder import Builder
 
 
 class GemProfiler:
@@ -21,8 +21,8 @@ class GemProfiler:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
         self.temp_dir = Path(mkdtemp())
-        self.template_path = Path("profilers/attachments/gemTemplate.c")
-        self.empty_test_path = Path("profilers/attachments/empty.c")
+        self.template_path = Path("src/profilers/attachments/gemTemplate.c")
+        self.empty_test_path = Path("src/profilers/attachments/empty.c")
         self.gem5_home = Path(self.settings.__dict__.get("gem5_home", ""))
         self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
 
