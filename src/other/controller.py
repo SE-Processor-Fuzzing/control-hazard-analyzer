@@ -1,20 +1,20 @@
 from argparse import Namespace
 
-from src.cli.aggregate import Aggregator
-from src.cli.analyze import Analyzer
+from src.cli.aggregate import Aggregate
+from src.cli.analyze import Analyze
 from src.other.configurator import Configurator
-from src.cli.generate import Generator
-from src.cli.summarize import Summarizer
+from src.cli.generate import Generate
+from src.cli.summarize import Summarize
 from src.other.utility import IUtility
 
 
 class Controller:
     def __init__(self):
         self.settings = {}
-        self.generator = Generator()
-        self.analyze = Analyzer()
-        self.summarize = Summarizer()
-        self.aggregate = Aggregator()
+        self.generator = Generate()
+        self.analyze = Analyze()
+        self.summarize = Summarize()
+        self.aggregate = Aggregate()
         self.settings["analyze"]: IUtility = self.analyze
         self.settings["summarize"]: IUtility = self.summarize
         self.settings["aggregate"]: IUtility = self.aggregate
