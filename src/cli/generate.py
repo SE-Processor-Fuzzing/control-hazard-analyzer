@@ -7,7 +7,7 @@ from typing import List, Optional
 import src.generators.blocks_rendering as br
 
 
-class Generator:
+class Generate:
     def __init__(self):
         self.settings: Optional[Namespace] = None
         self.generate_parser: Optional[ArgumentParser] = None

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List
 
 
-class Aggregator:
+class Aggregate:
     def __init__(self):
         self.settings = Namespace()
         self.shell_parser = None

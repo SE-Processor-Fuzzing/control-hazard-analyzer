@@ -13,7 +13,7 @@ from src.other.builder import Builder
 from src.other.packer import Packer
 
 
-class Analyzer:
+class Analyze:
     def __init__(self):
         self.profiler: Optional[IProfiler] = None
         self.packer: Optional[Packer] = None

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 
-class Summarizer:
+class Summarize:
     def __init__(self):
         self.summarize_parser = None
         self.settings = None
