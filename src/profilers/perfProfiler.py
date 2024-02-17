@@ -12,7 +12,7 @@ from tempfile import mkdtemp
 import time
 from typing import Dict, List
 
-from src.builder import Builder
+from src.other.builder import Builder
 
 
 class PerfData:
@@ -66,8 +66,8 @@ class PerfProfiler:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
         self.temp_dir: Path = Path(mkdtemp())
-        self.template_path = Path("profilers/attachments/perfTemplate.c")
-        self.empty_test_path = Path("profilers/attachments/empty.c")
+        self.template_path = Path("src/profilers/attachments/perfTemplate.c")
+        self.empty_test_path = Path("src/profilers/attachments/empty.c")
 
     def __del__(self):
         shutil.rmtree(self.temp_dir)

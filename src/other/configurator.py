@@ -2,7 +2,7 @@ import json
 from argparse import Namespace, ArgumentParser
 from typing import Any, Mapping, Dict, Optional
 
-from src.utility import IUtility
+from src.other.utility import IUtility
 
 
 class Configurator:
