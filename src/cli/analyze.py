@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 
 from src.analyzers.gemAnalyzer import GemAnalyzer
 from src.analyzers.perfAnalyzer import PerfAnalyzer
-from src.analyzers.analyzer import Analyzer
+from src.protocols.analyzer import Analyzer
 from src.helpers.builder import Builder
 from src.helpers.packer import Packer
 
