@@ -58,7 +58,7 @@ class PerfData:
         self.instructions = max(self.instructions, const)
 
 
-class PerfProfiler:
+class PerfAnalyzer:
     def __init__(self, builder: Builder, settings: Namespace):
         self.settings = settings
         self.max_test_launches = settings.__dict__.get("max_test_launches", -1)
@@ -66,8 +66,8 @@ class PerfProfiler:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
         self.temp_dir: Path = Path(mkdtemp())
-        self.template_path = Path("src/profilers/attachments/perfTemplate.c")
-        self.empty_test_path = Path("src/profilers/attachments/empty.c")
+        self.template_path = Path("src/analyzers/attachments/perfTemplate.c")
+        self.empty_test_path = Path("src/analyzers/attachments/empty.c")
 
     def __del__(self):
         shutil.rmtree(self.temp_dir)
@@ -140,7 +140,7 @@ class PerfProfiler:
         stats: List[PerfData] = []
         execute_line = list(map(str, [binary, cpu_core]))
         execute_string = " ".join(map(str, execute_line))
-        self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
+        self.logger.info(f"[perfAnalyzer]: Executing: {execute_string}")
 
         left_time = self.builder.settings.timeout
         timeout = time.time() + self.builder.settings.timeout
@@ -226,7 +226,7 @@ class PerfProfiler:
                 corrected.update({key: analyzed_average[key].to_dict()})
         return corrected
 
-    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+    def analyze(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
 

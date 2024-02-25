@@ -6,16 +6,16 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, List, Optional
 
-from src.profilers.gemProfiler import GemProfiler
-from src.profilers.perfProfiler import PerfProfiler
-from src.profilers.profiler import IProfiler
+from src.analyzers.gemProfiler import GemAnalyzer
+from src.analyzers.perfProfiler import PerfAnalyzer
+from src.analyzers.profiler import Analyzer
 from src.helpers.builder import Builder
 from src.helpers.packer import Packer
 
 
 class Analyze:
     def __init__(self):
-        self.profiler: Optional[IProfiler] = None
+        self.analyzer: Optional[Analyzer] = None
         self.packer: Optional[Packer] = None
         self.builder: Optional[Builder] = None
         self.test_dir: Optional[Path] = None
@@ -32,11 +32,11 @@ class Analyze:
         self.settings.compiler_args = shlex.split(settings.compiler_args)
         self.builder: Builder = Builder(self.settings)
         self.packer = Packer()
-        self.profiler: IProfiler
+        self.analyzer: Analyzer
         if settings.profiler == "perf":
-            self.profiler = PerfProfiler(self.builder, settings)
+            self.analyzer = PerfAnalyzer(self.builder, settings)
         elif settings.profiler == "gem5":
-            self.profiler = GemProfiler(self.builder, settings)
+            self.analyzer = GemAnalyzer(self.builder, settings)
         else:
             raise Exception(f'"{settings.profiler}" is unknown profiler')
 
@@ -44,7 +44,7 @@ class Analyze:
         self.logger.info("Analyze running. Settings:")
         self.logger.info(pformat(vars(self.settings)))
         self.create_empty_dir(self.analyze_dir)
-        data = self.profile(self.test_dir)
+        data = self.analyze(self.test_dir)
         self.pack(self.analyze_dir, data)
 
     def create_empty_dir(self, dir: Path):
@@ -52,9 +52,9 @@ class Analyze:
             shutil.rmtree(dir)
         dir.mkdir(parents=True)
 
-    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+    def analyze(self, test_dir: Path) -> Dict[str, Dict]:
         print(f"[+]: Execute and analyze tests from {test_dir.absolute().as_posix()}")
-        return self.profiler.profile(test_dir)
+        return self.analyzer.analyze(test_dir)
 
     def pack(self, analyze_dir: Path, analyzed_data: Dict[str, Dict]):
         print(f"[+]: Save analysis' results to {analyze_dir.absolute().as_posix()}")

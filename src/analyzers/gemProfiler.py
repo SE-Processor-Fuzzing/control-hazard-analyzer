@@ -12,7 +12,7 @@ from typing import Dict, Set
 from src.helpers.builder import Builder
 
 
-class GemProfiler:
+class GemAnalyzer:
     BINARY_PLACEHOLDER = "{{GEM5_TARGET_BINARY}}"
 
     def __init__(self, builder: Builder, settings: Namespace):
@@ -21,8 +21,8 @@ class GemProfiler:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
         self.temp_dir = Path(mkdtemp())
-        self.template_path = Path("src/profilers/attachments/gemTemplate.c")
-        self.empty_test_path = Path("src/profilers/attachments/empty.c")
+        self.template_path = Path("src/analyzers/attachments/gemTemplate.c")
+        self.empty_test_path = Path("src/analyzers/attachments/empty.c")
         self.gem5_home = Path(self.settings.__dict__.get("gem5_home", ""))
         self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
 
@@ -110,7 +110,7 @@ class GemProfiler:
                 f"--stats-file={stat_file}",
                 self.sim_script_path,
             ] + script_args
-            self.logger.info(f"gemProfiler is running. Executed line: {execute_line}")
+            self.logger.info(f"gemAnalyzer is running. Executed line: {execute_line}")
 
             proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
@@ -137,7 +137,7 @@ class GemProfiler:
         analyzed.pop("empty")
         return analyzed
 
-    def profile(self, test_dir: Path) -> Dict[str, Dict]:
+    def analyze(self, test_dir: Path) -> Dict[str, Dict]:
         src_dir = self.temp_dir.joinpath("src/")
         build_dir = self.temp_dir.joinpath("bins/")
         stats_dir = self.temp_dir.joinpath("stats/")
