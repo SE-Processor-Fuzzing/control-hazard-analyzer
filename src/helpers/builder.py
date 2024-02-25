@@ -19,9 +19,9 @@ class Builder:
         self,
         src_dir: Path,
         destination_dir: Path,
-        additional_flags: list[str] = [],
+        additional_flags: list[str] | None = None,
     ):
-        if len(additional_flags) == 0:
+        if additional_flags is None:
             additional_flags = self.default_additional_flags
 
         list_of_src_files = os.listdir(src_dir)

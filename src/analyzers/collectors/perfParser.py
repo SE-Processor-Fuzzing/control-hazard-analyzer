@@ -5,7 +5,10 @@ import sys
 
 
 class PerfData:
-    def __init__(self, data_dict: Dict[str, str] = {}, is_full: bool = True):
+    def __init__(self, data_dict: Dict[str, str] | None = None, is_full: bool = True):
+        if data_dict is None:
+            data_dict = {}
+
         self.branches = int(data_dict.get("branches", -1))
         self.missed_branches = int(data_dict.get("missed_branches", -1))
         self.cache_bpu = int(data_dict.get("cache_BPU", -1))
