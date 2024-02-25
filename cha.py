@@ -1,5 +1,5 @@
-from src.other.controller import Controller
-import src.other.logging_config as log
+from src.helpers.controller import Controller
+import src.common.logging_config as log
 
 
 if __name__ == "__main__":

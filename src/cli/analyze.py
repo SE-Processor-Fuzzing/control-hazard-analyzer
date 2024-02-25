@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 from src.profilers.gemProfiler import GemProfiler
 from src.profilers.perfProfiler import PerfProfiler
 from src.profilers.profiler import IProfiler
-from src.other.builder import Builder
-from src.other.packer import Packer
+from src.helpers.builder import Builder
+from src.helpers.packer import Packer
 
 
 class Analyze:

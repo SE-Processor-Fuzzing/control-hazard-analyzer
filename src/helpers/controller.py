@@ -2,10 +2,10 @@ from argparse import Namespace
 
 from src.cli.aggregate import Aggregate
 from src.cli.analyze import Analyze
-from src.other.configurator import Configurator
+from src.helpers.configurator import Configurator
 from src.cli.generate import Generate
 from src.cli.summarize import Summarize
-from src.other.utility import IUtility
+from src.protocols.utility import IUtility
 
 
 class Controller:
