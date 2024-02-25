@@ -10,6 +10,10 @@ class Builder:
         self.settings = settings
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
+        self.default_additional_flags: list[str] = []
+
+    def set_default_additional_flags(self, additional_flags: list[str]):
+        self.default_additional_flags = additional_flags
 
     def build(
         self,
@@ -17,6 +21,9 @@ class Builder:
         destination_dir: Path,
         additional_flags: list[str] = [],
     ):
+        if len(additional_flags) == 0:
+            additional_flags = self.default_additional_flags
+
         list_of_src_files = os.listdir(src_dir)
         destination_dir.mkdir(parents=True, exist_ok=True)
         for test_file in list_of_src_files:
