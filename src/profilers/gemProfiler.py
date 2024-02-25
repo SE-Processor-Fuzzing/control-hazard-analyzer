@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Dict, Set
 
-from src.other.builder import Builder
+from src.helpers.builder import Builder
 
 
 class GemProfiler:

@@ -12,7 +12,7 @@ from tempfile import mkdtemp
 import time
 from typing import Dict, List
 
-from src.other.builder import Builder
+from src.helpers.builder import Builder
 
 
 class PerfData:
