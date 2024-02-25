@@ -6,9 +6,9 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, List, Optional
 
-from src.analyzers.gemProfiler import GemAnalyzer
-from src.analyzers.perfProfiler import PerfAnalyzer
-from src.analyzers.profiler import Analyzer
+from src.analyzers.gemAnalyzer import GemAnalyzer
+from src.analyzers.perfAnalyzer import PerfAnalyzer
+from src.analyzers.analyzer import Analyzer
 from src.helpers.builder import Builder
 from src.helpers.packer import Packer
 
