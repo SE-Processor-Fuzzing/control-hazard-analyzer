@@ -12,7 +12,7 @@ from src.protocols.patcher import Patcher
 from src.helpers.builder import Builder
 
 
-class baseAnalyzer:
+class BaseAnalyzer:
     def __init__(self, patcher: Patcher, builder: Builder, collector: Collector, settings: Namespace):
         self.settings = settings
         self.patcher = patcher

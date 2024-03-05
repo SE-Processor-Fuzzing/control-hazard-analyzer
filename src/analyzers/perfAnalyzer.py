@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from src.analyzers.baseAnalyzer import baseAnalyzer
+from src.analyzers.baseAnalyzer import BaseAnalyzer
 from src.analyzers.collectors.perfCollector import PerfCollector
 from src.analyzers.patchers.perfPatcher import PerfPatcher
 from src.protocols.analyzer import Analyzer
@@ -18,7 +18,7 @@ class PerfAnalyzer:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
 
-        self.base: Analyzer = baseAnalyzer(PerfPatcher(settings), self.builder, PerfCollector(settings), settings)
+        self.base: Analyzer = BaseAnalyzer(PerfPatcher(settings), self.builder, PerfCollector(settings), settings)
 
     def analyze(self, test_dir: Path) -> Dict[str, Dict]:
         return self.base.analyze(test_dir)
