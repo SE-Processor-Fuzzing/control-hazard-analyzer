@@ -1,14 +1,14 @@
 from __future__ import annotations
 from argparse import Namespace
 
-from src.analyzers.collectors.perfParser import PerfParser
+from src.analyzers.collectors.perfParser import PerfParser, TestRes
 import logging
 import signal
 import subprocess
 from pathlib import Path
 import sys
 import time
-from typing import IO, Dict, List, Tuple
+from typing import Dict, List
 
 
 class PerfCollector:
@@ -21,7 +21,7 @@ class PerfCollector:
     def tab_lines(self, lines: str):
         return "\t" + lines.replace("\n", "\n\t")[:-1]
 
-    def execute_test(self, execute_line: List[str], timeout: float) -> Tuple[IO[bytes] | None, bool]:
+    def execute_test(self, execute_line: List[str], timeout: float) -> TestRes:
         proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         is_full = True
@@ -48,8 +48,8 @@ class PerfCollector:
             )
         return (proc.stdout, is_full)
 
-    def get_stat(self, binary: Path, number_executes: int, cpu_core: int = 0) -> List[Tuple[IO[bytes] | None, bool]]:
-        stats: List[Tuple[IO[bytes] | None, bool]] = []
+    def get_stat(self, binary: Path, number_executes: int, cpu_core: int = 0) -> List[TestRes]:
+        stats: List[TestRes] = []
         execute_line = list(map(str, [binary, cpu_core]))
         execute_string = " ".join(map(str, execute_line))
         self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
@@ -62,8 +62,8 @@ class PerfCollector:
             number_executes -= 1
         return stats
 
-    def get_stats_dir(self, target_dir: Path) -> Dict[str, List[Tuple[IO[bytes] | None, bool]]]:
-        output_dict: Dict[str, List[Tuple[IO[bytes] | None, bool]]] = {}
+    def get_stats_dir(self, target_dir: Path) -> Dict[str, List[TestRes]]:
+        output_dict: Dict[str, List[TestRes]] = {}
         for binary in target_dir.iterdir():
             data = self.get_stat(target_dir.joinpath(binary), self.max_test_launches)
             output_dict[binary.name.split(".")[0]] = data
