@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple, IO
+from typing import Dict, List, Tuple, IO, TypeAlias
 import sys
+
+TestRes: TypeAlias = Tuple[IO[bytes] | None, bool]
 
 
 class PerfData:
@@ -62,7 +64,7 @@ class PerfParser:
         return data_dict
 
     @staticmethod
-    def out_tuple_to_data(out_tup: Tuple[IO[bytes] | None, bool]):
+    def test_res_to_data(out_tup: TestRes):
         stream, is_full = out_tup
         dic: Dict[str, str] = {}
         if stream is not None:
@@ -95,11 +97,9 @@ class PerfParser:
         return average
 
     @staticmethod
-    def correct(
-        out_res: Dict[str, List[Tuple[IO[bytes] | None, bool]]], key_empty_test: str = "empty"
-    ) -> Dict[str, Dict]:
+    def correct(out_res: Dict[str, List[TestRes]], key_empty_test: str = "empty") -> Dict[str, Dict]:
         analyzed_buf = {
-            key: PerfParser.get_meddian(list(map(PerfParser.out_tuple_to_data, lst))) for key, lst in out_res.items()
+            key: PerfParser.get_meddian(list(map(PerfParser.test_res_to_data, lst))) for key, lst in out_res.items()
         }
         analyzed_average: Dict[str, PerfData] = {}
         for key, val in analyzed_buf.items():
