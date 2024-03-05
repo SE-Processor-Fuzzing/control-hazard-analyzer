@@ -3,7 +3,7 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Dict
 
-from src.analyzers.baseAnalyzer import baseAnalyzer
+from src.analyzers.baseAnalyzer import BaseAnalyzer
 from src.analyzers.collectors.gemCollector import GemCollector
 from src.analyzers.patchers.gemPatcher import GemPatcher
 from src.protocols.analyzer import Analyzer
@@ -34,7 +34,7 @@ class GemAnalyzer:
 
         self.builder.set_default_additional_flags(self.build_additional_flags)
 
-        self.base: Analyzer = baseAnalyzer(GemPatcher(settings), self.builder, GemCollector(settings), settings)
+        self.base: Analyzer = BaseAnalyzer(GemPatcher(settings), self.builder, GemCollector(settings), settings)
 
     def analyze(self, test_dir: Path) -> Dict[str, Dict]:
         return self.base.analyze(test_dir)
