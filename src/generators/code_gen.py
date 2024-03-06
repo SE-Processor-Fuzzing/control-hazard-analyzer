@@ -69,11 +69,9 @@ class Environment:
 
 
 class Block(Protocol):
-    def __init__(self, env: Environment, probs: Probabilities) -> None:
-        ...
+    def __init__(self, env: Environment, probs: Probabilities) -> None: ...
 
-    def render(self, visitor: Visitor) -> None:
-        ...
+    def render(self, visitor: Visitor) -> None: ...
 
 
 class ForBlock(Block):
@@ -212,8 +210,3 @@ class Generator:
 
     def __gen_definition(self, env: Environment) -> DefineBlock:
         return DefineBlock(env, self.probs)
-
-
-g = Generator()
-g.gen()
-g.render(Visitor())
