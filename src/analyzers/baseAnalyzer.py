@@ -36,6 +36,6 @@ class BaseAnalyzer:
         build_dir = self.temp_dir.joinpath("bins/")
 
         self.patcher.patch(test_dir, src_dir)
-        self.builder.build(src_dir, build_dir)
+        self.builder.build_dir(src_dir, build_dir)
         res = self.collector.collect(build_dir)
         return res
