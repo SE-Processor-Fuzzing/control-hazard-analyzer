@@ -66,13 +66,14 @@ class SshCollector:
 
     def execute_command(self, comm: str) -> paramiko.Channel:
         chan = self.transport.open_session()
+        self.logger.info(f"Executing: {comm}")
         chan.exec_command(comm)
         return chan
 
     def mkdtemp(self) -> Path:
-        dir = f"/tmp/chapy-{random.getrandbits(16)}"
-        self.sftp.mkdir(dir)
-        return Path(dir)
+        tmpdir = f"/tmp/chapy-{random.getrandbits(16)}"
+        self.sftp.mkdir(tmpdir)
+        return Path(tmpdir)
 
     def tab_lines(self, lines: str):
         return "\t" + lines.replace("\n", "\n\t")[:-1]
@@ -89,7 +90,7 @@ class SshCollector:
 
         com_stderr = chan.makefile_stderr()
         test_errors = com_stderr.read().decode()
-        if len(test_errors) > 0:
+        if (len(test_errors) > 0) and (not test_errors.isspace()):
             print(f"[-]: Some error occurred during launching '{execute_str}':", file=sys.stderr)
             print(self.tab_lines(test_errors), file=sys.stderr, end="")
         if ret_code != 0:
@@ -135,7 +136,7 @@ class SshCollector:
                     print(f"[-]: Error during seting capability:\n {self.tab_lines(proc_err)}", file=sys.stderr)
                 # use_sudo = True
 
-    def send_file(self, loc_path: Path, host_path: Path):
+    def send_binary(self, loc_path: Path, host_path: Path):
         self.sftp.put(str(loc_path), str(host_path))
         self.sftp.chmod(str(host_path), stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
 
@@ -149,7 +150,7 @@ class SshCollector:
                     break
                 case CSignal.BuiltFile(binary):
                     host_binary = self.bin_dir.joinpath(binary.name)
-                    self.send_file(binary, host_binary)
+                    self.send_binary(binary, host_binary)
                     self.update_capabilities(host_binary)
                     data = self.get_stat(host_binary, self.max_test_launches)
                     analyzed[host_binary.name.split(".")[0]] = data
