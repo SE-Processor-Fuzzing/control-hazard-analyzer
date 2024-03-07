@@ -1,0 +1,12 @@
+{
+  "profiler": "ssh",
+  "out_dir": "analyze",
+
+  "host": "127.0.0.1",
+  "username": "root",
+  "path_to_key": "/path/to/your/priv/key",
+  "password": "not_recommended",
+
+  "timeout": 3,
+  "max_test_launches": 2
+}
