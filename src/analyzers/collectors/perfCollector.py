@@ -51,7 +51,11 @@ class PerfCollector:
                 "[?]: Maybe perf don't have enough capabilities or your CPU don't have special debug counters\n",
                 file=sys.stderr,
             )
-        return (proc.stdout, is_full)
+
+        res = bytes()
+        if proc.stdout is not None:
+            res = proc.stdout.read()
+        return (res, is_full)
 
     def get_stat(self, binary: Path, number_executes: int, cpu_core: int = 0) -> List[TestRes]:
         stats: List[TestRes] = []

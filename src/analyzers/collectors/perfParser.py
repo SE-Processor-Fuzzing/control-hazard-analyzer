@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import sys
-from typing import IO, Any, Dict, List, Tuple, TypeAlias
+from typing import Any, Dict, List, Tuple, TypeAlias
 
 from src.protocols.collector import DictSI
 
-TestRes: TypeAlias = Tuple[IO[bytes] | None, bool]
+TestRes: TypeAlias = Tuple[bytes | None, bool]
 
 
 class PerfData:
@@ -70,7 +70,7 @@ class PerfParser:
         stream, is_full = out_tup
         dic: Dict[str, str] = {}
         if stream is not None:
-            dic = PerfParser.output_to_dict(stream.read().decode())
+            dic = PerfParser.output_to_dict(stream.decode())
         return PerfData(dic, is_full)
 
     @staticmethod
