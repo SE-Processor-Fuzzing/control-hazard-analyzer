@@ -6,6 +6,8 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, List
 
+from src.analyzers.sshAnalyzer import SshAnalyzer
+from src.helpers.backGroundBuilder import BGBuilder
 from src.analyzers.gemAnalyzer import GemAnalyzer
 from src.analyzers.perfAnalyzer import PerfAnalyzer
 from src.helpers.builder import Builder
@@ -32,12 +34,15 @@ class Analyze:
         self.analyze_dir = Path(settings.out_dir)
         self.settings.compiler_args = shlex.split(settings.compiler_args)
         self.builder = Builder(self.settings)
-        if settings.profiler == "perf":
-            self.analyzer = PerfAnalyzer(self.builder, settings)
-        elif settings.profiler == "gem5":
-            self.analyzer = GemAnalyzer(self.builder, settings)
-        else:
-            raise Exception(f'"{settings.profiler}" is unknown profiler')
+        match settings.profiler:
+            case "perf":
+                self.analyzer = PerfAnalyzer(self.builder, settings)
+            case "gem5":
+                self.analyzer = GemAnalyzer(self.builder, settings)
+            case "ssh":
+                self.analyzer = SshAnalyzer(BGBuilder(settings, self.builder), settings)
+            case _:
+                raise Exception(f'"{settings.profiler}" is unknown profiler')
 
     def run(self) -> None:
         self.logger.info("Analyze running. Settings:")
