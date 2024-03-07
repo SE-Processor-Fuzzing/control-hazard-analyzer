@@ -11,6 +11,8 @@
 
 void test_fun();
 
+#define EXIT_SIGNAL 2
+
 int* perf_fd;
 size_t perf_fd_len = 0;
 unsigned long long configs[] = {PERF_COUNT_HW_BRANCH_INSTRUCTIONS, PERF_COUNT_HW_BRANCH_MISSES, PERF_COUNT_HW_CACHE_BPU,
@@ -84,7 +86,7 @@ static void fin() {
     }
 }
 
-static void sigint_handler() { exit(0); }
+static void sigint_handler() { exit(EXIT_SIGNAL); }
 
 int main(int argc, char* argv[]) {
     atexit(fin);
