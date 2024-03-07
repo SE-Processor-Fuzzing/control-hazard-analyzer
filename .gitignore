@@ -7,3 +7,4 @@ __pycache__
 analyze
 tests
 .mypy.ini
+configs/work/
