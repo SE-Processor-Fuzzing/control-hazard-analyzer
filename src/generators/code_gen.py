@@ -92,22 +92,8 @@ class DefineBlock(Block):
         visitor.send(string)
 
 
-class OperationBlock(Block):
-    def __init__(self, env: Scope, probs: Probabilities) -> None:
-        rule: Callable[[str], bool] = lambda x: x.startswith("a")
-        self.env = env
-        self.cur_var = env.get_random_var(rule=rule)
-        self.operator = get_random_key(probs.operators_chanses)
-        self.var_1, self.var_2 = env.get_random_var(), env.get_random_var()
-
-    def render(self, visitor: Visitor) -> None:
-        self.var_2 = f"(D0({self.var_2}))" if self.operator == "/" else self.var_2
-        string = f"{self.cur_var} = {self.var_1} {self.operator} {self.var_2};"
-        visitor.send(string)
-
-
 @dataclass
-class Condition:
+class ApplyBinOperator:
     lvar: str
     rvar: str
     operator: str
@@ -116,10 +102,26 @@ class Condition:
         return f"{self.lvar} {self.operator} {self.rvar}"
 
 
+class OperationBlock(Block):
+    def __init__(self, env: Scope, probs: Probabilities) -> None:
+        rule: Callable[[str], bool] = lambda x: x.startswith("a")
+        self.cur_var = env.get_random_var(rule=rule)
+
+        operator = get_random_key(probs.operators_chanses)
+        lvar, rvar = env.get_random_var(), env.get_random_var()
+        rvar = f"(D0({rvar}))" if operator == "/" else rvar
+
+        self.statement = ApplyBinOperator(lvar, rvar, operator)
+
+    def render(self, visitor: Visitor) -> None:
+        string = f"{self.cur_var} = {self.statement.render()};"
+        visitor.send(string)
+
+
 class IfConditionBlock(Block):
     def __init__(self, env: Scope, probs: Probabilities) -> None:
         lvar, rvar = env.get_random_vars(count=2)
-        self.condition = Condition(lvar, rvar, get_random_key(probs.conditions_chanses))
+        self.condition = ApplyBinOperator(lvar, rvar, get_random_key(probs.conditions_chanses))
         self.then_blocks: List[Block] = []
         self.else_blocks: List[Block] = []
 
@@ -139,7 +141,7 @@ class ForBlock(Block):
 
     def __init__(self, env: Scope, _: Probabilities) -> None:
         self.def_var = env.create_new_var(prefix="f")
-        self.condition = Condition(self.def_var, str(rd.randint(2, ForBlock.max_value)), "<=")
+        self.condition = ApplyBinOperator(self.def_var, str(rd.randint(2, ForBlock.max_value)), "<=")
         self.next_blocks: List[Block] = []
 
     def render(self, visitor: Visitor) -> None:
