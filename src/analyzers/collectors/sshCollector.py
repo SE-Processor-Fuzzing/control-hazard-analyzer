@@ -80,7 +80,9 @@ class SshCollector:
 
     def execute_test(self, execute_line: List[str], timeout: float) -> TestRes:
         execute_str = " ".join(execute_line)
-        chan = self.execute_command(f"timeout -s SIGINT {timeout}s {execute_str}")
+
+        # TODO: sometime timeout don't work and programm hangs
+        chan = self.execute_command(f"timeout --preserve-status -s SIGINT {timeout}s {execute_str}")
 
         is_full = True
         ret_code = chan.recv_exit_status()
