@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple, TypeAlias
 
 from src.protocols.collector import DictSI
 
-TestRes: TypeAlias = Tuple[bytes | None, bool]
+TestRes: TypeAlias = Tuple[bytes, bool]
 
 
 class PerfData:
@@ -66,11 +66,9 @@ class PerfParser:
         return data_dict
 
     @staticmethod
-    def test_res_to_data(out_tup: TestRes) -> PerfData:
-        stream, is_full = out_tup
-        dic: Dict[str, str] = {}
-        if stream is not None:
-            dic = PerfParser.output_to_dict(stream.decode())
+    def test_res_to_data(res: TestRes) -> PerfData:
+        res_bytes, is_full = res
+        dic: Dict[str, str] = PerfParser.output_to_dict(res_bytes.decode())
         return PerfData(dic, is_full)
 
     @staticmethod
