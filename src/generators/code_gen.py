@@ -1,7 +1,7 @@
 import random as rd
 from copy import copy
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Protocol, Tuple, TypeVar
+from typing import Callable, Dict, List, Optional, Protocol, Tuple, Type, TypeVar
 
 from typing_extensions import Self
 
@@ -26,9 +26,7 @@ class Visitor(Protocol):
 
 @dataclass
 class Probabilities:
-    blocks_chanses: Dict[Callable[["Scope"], "Block"], int]
-    operators_chanses: Dict[str, int]
-    conditions_chanses: Dict[str, int]
+    blocks_chanses: Dict[Type["Block"], int]
     blocks_cut: Tuple[int, int]
 
 
@@ -36,17 +34,17 @@ class Scope:
 
     def __init__(
         self,
-        blocks_count: int,
-        bin_operators: Optional[List[str]] = None,
+        max_depth: int,
+        operators: Optional[List[str]] = None,
         condition_operators: Optional[List[str]] = None,
     ) -> None:
-        if bin_operators is None:
-            bin_operators = ["+", "-", "/", "*"]
+        if operators is None:
+            operators = ["+", "-", "/", "*"]
         if condition_operators is None:
             condition_operators = [">", "<", ">=", "<=", "==", "!="]
-        self.bin_operators = bin_operators
+        self.operators = operators
         self.condition_operators = condition_operators
-        self.blocks_count = blocks_count
+        self.current_depth = max_depth
         self.vars: List[str] = []
         self.vars_count = 0
 
@@ -67,6 +65,12 @@ class Scope:
         if count > len(_vars):
             return rd.choices(_vars, k=count)
         return rd.sample(_vars, k=count)
+
+    def get_random_operator(self) -> str:
+        return rd.choice(self.operators)
+
+    def get_random_cond_operator(self) -> str:
+        return rd.choice(self.condition_operators)
 
     def copy(self) -> Self:
         c = copy(self)
@@ -107,7 +111,7 @@ class OperationBlock(Block):
         rule: Callable[[str], bool] = lambda x: x.startswith("a")
         self.cur_var = env.get_random_var(rule=rule)
 
-        operator = get_random_key(probs.operators_chanses)
+        operator = env.get_random_operator()
         lvar, rvar = env.get_random_var(), env.get_random_var()
         rvar = f"(D0({rvar}))" if operator == "/" else rvar
 
@@ -121,7 +125,7 @@ class OperationBlock(Block):
 class IfConditionBlock(Block):
     def __init__(self, env: Scope, probs: Probabilities) -> None:
         lvar, rvar = env.get_random_vars(count=2)
-        self.condition = ApplyBinOperator(lvar, rvar, get_random_key(probs.conditions_chanses))
+        self.condition = ApplyBinOperator(lvar, rvar, env.get_random_cond_operator())
         self.then_blocks: List[Block] = []
         self.else_blocks: List[Block] = []
 
@@ -168,11 +172,25 @@ class EntryPointBlock(Block):
 
 
 class Generator:
-    def __init__(self, random_seed: int, blocks_count: int, probs: Probabilities) -> None:
+    def __init__(
+        self,
+        scope: Scope,
+        probs: Probabilities,
+        random_seed: int | None = 42,
+        **kwargs: Dict[str, int],
+    ) -> None:
         self.probs = probs
         rd.seed(random_seed)
-        self.env = Scope(blocks_count)
-        self.block_generation_functions = [self.__gen_definition, self.__gen_for, self.__gen_if, self.__gen_statement]
+        self.env = scope
+        self.block_generation_functions: Dict[Type[Block], Callable[[Scope], Block]] = {
+            DefineBlock: self.__gen_definition,
+            ForBlock: self.__gen_for,
+            IfConditionBlock: self.__gen_if,
+            OperationBlock: self.__gen_operation,
+        }
+        self.gen_functions_probabilities = {
+            self.block_generation_functions[block]: chanse for block, chanse in probs.blocks_chanses.items()
+        }
 
     def render(self, visitor: Visitor) -> None:
         self.entry_point.render(visitor)
@@ -185,13 +203,13 @@ class Generator:
         self.entry_point.next_blocks.extend(self.__gen_local(env_copy))
 
     def __gen_local(self, env: Scope) -> List[Block]:
-        env.blocks_count -= 1
-        if env.blocks_count <= 0:
+        env.current_depth -= 1
+        if env.current_depth <= 0:
             return []
         gen_blocks: List[Block] = []
         number_of_blocks = rd.randint(*self.probs.blocks_cut)
         for _ in range(number_of_blocks):
-            next_block = get_random_key(self.probs.blocks_chanses)(env)
+            next_block = get_random_key(self.gen_functions_probabilities)(env)
             gen_blocks.append(next_block)
         return gen_blocks
 
@@ -208,8 +226,56 @@ class Generator:
         block.else_blocks = self.__gen_local(env.copy())
         return block
 
-    def __gen_statement(self, env: Scope) -> OperationBlock:
+    def __gen_operation(self, env: Scope) -> OperationBlock:
         return OperationBlock(env, self.probs)
 
     def __gen_definition(self, env: Scope) -> DefineBlock:
         return DefineBlock(env, self.probs)
+
+
+class Accum:
+    def __init__(self) -> None:
+        self.acc = ""
+
+    def send(self, string: str) -> None:
+        self.acc += string
+
+    def get_acc(self) -> str:
+        return self.acc
+
+
+def gen_test(
+    max_depth: int = 5,
+    operators: List[str] | None = None,
+    cond_operators: List[str] | None = None,
+    **kwargs: int,
+) -> str:
+
+    ch_for = kwargs.get("ch_for", 12)
+    ch_if = kwargs.get("ch_if", 12)
+    ch_state = kwargs.get("ch_state", 12)
+    ch_def = kwargs.get("ch_def", 12)
+
+    if operators is None:
+        operators = ["+", "-", "/", "*"]
+
+    if cond_operators is None:
+        cond_operators = ["<", "<=", ">", ">=", "==", "!="]
+
+    seed = rd.randint(1, 1000)
+
+    probs = Probabilities(
+        blocks_chanses={
+            ForBlock: ch_for,
+            IfConditionBlock: ch_if,
+            DefineBlock: ch_def,
+            OperationBlock: ch_state,
+        },
+        blocks_cut=(2, 10),
+    )
+    scope = Scope(max_depth, operators, cond_operators)
+    g = Generator(scope, probs, random_seed=seed)
+    acc = Accum()
+    g.gen()
+    g.render(acc)
+    return acc.get_acc()

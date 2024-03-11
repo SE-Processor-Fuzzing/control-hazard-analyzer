@@ -1,26 +1,26 @@
 import logging
 import shlex
 import shutil
-from argparse import Namespace, ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
 from typing import Dict, List, Optional
 
 from src.analyzers.gemAnalyzer import GemAnalyzer
 from src.analyzers.perfAnalyzer import PerfAnalyzer
-from src.protocols.analyzer import Analyzer
 from src.helpers.builder import Builder
 from src.helpers.packer import Packer
+from src.protocols.analyzer import Analyzer
+from src.protocols.subparser import SubParser
 
 
 class Analyze:
-    def __init__(self):
+    def __init__(self) -> None:
         self.analyzer: Optional[Analyzer] = None
         self.packer: Optional[Packer] = None
         self.builder: Optional[Builder] = None
         self.test_dir: Optional[Path] = None
         self.analyze_dir: Optional[Path] = None
-        self.analyze_parser: Optional[ArgumentParser] = None
         self.settings: Optional[Namespace] = None
         self.logger = logging.getLogger(__name__)
 
@@ -60,36 +60,36 @@ class Analyze:
         print(f"[+]: Save analysis' results to {analyze_dir.absolute().as_posix()}")
         return self.packer.pack(analyze_dir, analyzed_data)
 
-    def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.analyze_parser: ArgumentParser = sub_parsers.add_parser("analyze", prog="analyze")
-        self.analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
-        self.analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output dir")
-        self.analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
-        self.analyze_parser.add_argument(
+    def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
+        analyze_parser: ArgumentParser = subparser.add_parser("analyze")
+        analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
+        analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output dir")
+        analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
+        analyze_parser.add_argument(
             "--timeout",
             default=10,
             help="Number of seconds after which the test will be stopped",
         )
-        self.analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
-        self.analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
-        self.analyze_parser.add_argument(
+        analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
+        analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
+        analyze_parser.add_argument(
             "--profiler",
             choices=["perf", "gem5"],
             default="perf",
             help="Type of profiler",
         )
-        self.analyze_parser.add_argument("--gem5_home", default="./", help="Path to home gem5")
-        self.analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
-        self.analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
-        self.analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
-        self.analyze_parser.add_argument(
+        analyze_parser.add_argument("--gem5_home", default="./", help="Path to home gem5")
+        analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
+        analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
+        analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
+        analyze_parser.add_argument(
             "--log_level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",
         )
-
-        return self.analyze_parser
+        self.analyze_parser = analyze_parser
+        return analyze_parser
 
     def parse_args(self, args: List[str]) -> Namespace:
         return self.analyze_parser.parse_known_args(args)[0]

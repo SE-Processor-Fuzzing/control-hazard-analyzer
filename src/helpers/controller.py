@@ -1,29 +1,31 @@
 from argparse import Namespace
+from typing import Dict
 
 from src.cli.aggregate import Aggregate
 from src.cli.analyze import Analyze
-from src.helpers.configurator import Configurator
 from src.cli.generate import Generate
 from src.cli.summarize import Summarize
-from src.protocols.utility import IUtility
+from src.helpers.configurator import Configurator
+from src.protocols.utility import Utility
 
 
 class Controller:
-    def __init__(self):
-        self.settings = {}
-        self.generator = Generate()
-        self.analyze = Analyze()
-        self.summarize = Summarize()
-        self.aggregate = Aggregate()
-        self.settings["analyze"]: IUtility = self.analyze
-        self.settings["summarize"]: IUtility = self.summarize
-        self.settings["aggregate"]: IUtility = self.aggregate
-        self.settings["generate"]: IUtility = self.generator
-        self.settings = Namespace(**self.settings)
+    def __init__(self) -> None:
+        self.utilities: Dict[str, Utility] = {}
+        generator = Generate()
+        analyze = Analyze()
+        summarize = Summarize()
+        aggregate = Aggregate()
+        self.utilities["generate"] = generator
+        self.utilities["analyze"] = analyze
+        self.utilities["summarize"] = summarize
+        self.utilities["aggregate"] = aggregate
 
-    def run(self):
+    def run(self) -> None:
         c = Configurator()
+        self.configurator = c
+        self.settings = c.configurate(self.utilities)
         self.settings.configurator = c
-        self.settings = c.configurate(vars(self.settings))
-        self.settings.utility.configurate(self.settings)
-        self.settings.utility.run()
+        utility = self.utilities[self.settings.utility]
+        utility.configurate(self.settings)
+        utility.run()

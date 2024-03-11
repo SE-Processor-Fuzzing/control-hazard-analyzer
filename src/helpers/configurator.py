@@ -1,20 +1,15 @@
 import json
-from argparse import Namespace, ArgumentParser
-from typing import Any, Mapping, Dict, Optional
+from argparse import ArgumentParser, Namespace
+from typing import Any, Dict, Optional
 
-from src.protocols.utility import IUtility
+from src.protocols.utility import Utility
 
 
 class Configurator:
-    def __init__(self):
-        self.generator_parser: Optional[ArgumentParser] = None
-        self.shell_parser: Optional[ArgumentParser] = None
-        self.analyze_parser: Optional[ArgumentParser] = None
-        self.summarize_parser: Optional[ArgumentParser] = None
+    def __init__(self) -> None:
         self.args: Optional[Namespace] = None
 
         self.parser = ArgumentParser(
-            prog="aggregate",
             description="This script generate and test code on some platforms",
         )
 
@@ -26,29 +21,22 @@ class Configurator:
             metavar="utility {aggregate, generate, analyze, summarize}",
         )
 
-    def parse_sub_parsers(self, settings: Mapping[str, IUtility]):
-        self.analyze_parser = settings["analyze"].add_sub_parser(self.sub_parser)
-        self.generator_parser = settings["generate"].add_sub_parser(self.sub_parser)
-        self.summarize_parser = settings["summarize"].add_sub_parser(self.sub_parser)
-        self.shell_parser = settings["aggregate"].add_sub_parser(self.sub_parser)
-        self.analyze_parser.set_defaults(utility=settings["analyze"])
-        self.summarize_parser.set_defaults(utility=settings["summarize"])
-        self.shell_parser.set_defaults(utility=settings["aggregate"])
-        self.generator_parser.set_defaults(utility=settings["generate"])
+    def parse_sub_parsers(self, utilities: Dict[str, Utility]) -> tuple[Namespace, list[str]]:
+        for name, utility in utilities.items():
+            utility.add_parser_arguments(self.sub_parser).set_defaults(utility=name)
+
         return self.parser.parse_known_args()
 
-    def configurate(self, settings: Mapping[str, Any] = None) -> Namespace:
-        if settings is None:
-            settings = {}
-        self.args = self.parse_sub_parsers(settings)[0]
+    def configurate(self, utilities: Dict[str, Utility]) -> Namespace:
+        self.args = self.parse_sub_parsers(utilities)[0]
         config = self.read_cfg_file(
             getattr(self.args, "config_file", None),
             self.args.section_in_config if hasattr(self.args, "section_in_config") else None,
         )
 
-        return Namespace(**{**vars(self.args), **settings, **config})
+        return Namespace(**{**vars(self.args), **utilities, **config})
 
-    def read_cfg_file(self, config_file: str, section: str = None) -> Dict[str, Any]:
+    def read_cfg_file(self, config_file: str | None, section: str | None = None) -> Dict[str, Any]:
         if config_file is None:
             return dict()
         with open(config_file, mode="r") as f:

@@ -1,7 +1,7 @@
-import logging
 import json
-from argparse import ArgumentParser, Namespace
+import logging
 import os
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
 from typing import Dict, List
@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from src.protocols.subparser import SubParser
+
 
 class Summarize:
-    def __init__(self):
-        self.summarize_parser = None
+    def __init__(self) -> None:
         self.settings = None
         self.filename_out_grapg = "graph.png"
         self.filename_out_data = "results.data"
@@ -72,13 +73,17 @@ class Summarize:
                 summarized_data[Path(src_dir).as_posix()][Path(src_file).stem] = {
                     "Number of ticks": sim_ticks,
                     "BP lookups": bp_lookups,
-                    "Ticks per BP": round(sim_ticks / float(bp_lookups) if bp_lookups != 0 else 0, 2)
-                    if bp_lookups != np.nan and sim_ticks != np.nan
-                    else np.nan,
+                    "Ticks per BP": (
+                        round(sim_ticks / float(bp_lookups) if bp_lookups != 0 else 0, 2)
+                        if bp_lookups != np.nan and sim_ticks != np.nan
+                        else np.nan
+                    ),
                     "BP incorrect": bp_incorrect,
-                    "BP incorrect %": round(bp_incorrect / float(bp_lookups) * 100 if bp_lookups != 0 else 0, 2)
-                    if bp_lookups != np.nan and bp_incorrect != np.nan
-                    else np.nan,
+                    "BP incorrect %": (
+                        round(bp_incorrect / float(bp_lookups) * 100 if bp_lookups != 0 else 0, 2)
+                        if bp_lookups != np.nan and bp_incorrect != np.nan
+                        else np.nan
+                    ),
                 }
         return summarized_data
 
@@ -153,28 +158,29 @@ class Summarize:
         pd.DataFrame({k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}).plot.bar()
         plt.savefig(out_dir.joinpath(self.filename_out_grapg))
 
-    def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.summarize_parser: ArgumentParser = sub_parsers.add_parser("summarize", prog="summarize")
+    def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
+        summarize_parser: ArgumentParser = subparser.add_parser("summarize", prog="summarize")
 
-        self.summarize_parser.add_argument("--src_dirs", help="Path to source dirs.", nargs="*")
-        self.summarize_parser.add_argument("--out_dir", default="summarize", help="Path to output directory")
-        self.summarize_parser.add_argument(
+        summarize_parser.add_argument("--src_dirs", help="Path to source dirs.", nargs="*")
+        summarize_parser.add_argument("--out_dir", default="summarize", help="Path to output directory")
+        summarize_parser.add_argument(
             "--show_graph", action="store_true", default=True, help="Shows a graph of BP incorrect %"
         )
-        self.summarize_parser.add_argument(
+        summarize_parser.add_argument(
             "--save_graph",
             action="store_true",
             default=False,
             help="Saves a graph of BP incorrect %% in graph.png",
         )
-        self.summarize_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
-        self.summarize_parser.add_argument(
+        summarize_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
+        summarize_parser.add_argument(
             "--log_level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",
         )
-        return self.summarize_parser
+        self.summarize_parser = summarize_parser
+        return summarize_parser
 
     def parse_args(self, args: List[str]) -> Namespace:
         return self.summarize_parser.parse_known_args(args)[0]
