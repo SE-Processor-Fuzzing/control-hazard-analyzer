@@ -1,4 +1,3 @@
-from pprint import pformat
 import logging
 import os
 import random
@@ -6,13 +5,15 @@ import shlex
 import shutil
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from pprint import pformat
 from typing import List
+
+from src.protocols.subparser import SubParser
 
 
 class Aggregate:
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = Namespace()
-        self.shell_parser = None
         self.logger = logging.getLogger(__name__)
 
     def clean_output_dir(self):
@@ -70,30 +71,31 @@ class Aggregate:
         self.settings = Namespace(**{**vars(settings), **vars(self.settings)})
         self.logger.setLevel(self.settings.log_level)
 
-    def add_sub_parser(self, sub_parsers) -> ArgumentParser:
-        self.shell_parser: ArgumentParser = sub_parsers.add_parser("aggregate", prog="aggregate")
+    def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
+        shell_parser: ArgumentParser = subparser.add_parser("aggregate", prog="aggregate")
 
-        self.shell_parser.add_argument("--config_file", default="config.json", help="Path to .cfg file")
-        self.shell_parser.add_argument(
+        shell_parser.add_argument("--config_file", default="config.json", help="Path to .cfg file")
+        shell_parser.add_argument(
             "--section_in_config",
             default="DEFAULT",
             help="Set the custom section in config file (DEFAULT by default)",
         )
-        self.shell_parser.add_argument(
+        shell_parser.add_argument(
             "--dest_dir",
             default="out",
             help="Path to dist dir, if not exit it will be created",
         )
-        self.shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
-        self.shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
-        self.shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
-        self.shell_parser.add_argument(
+        shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
+        shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
+        shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
+        shell_parser.add_argument(
             "--log_level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",
         )
-        return self.shell_parser
+        self.shell_parser = shell_parser
+        return shell_parser
 
     def parse_args(self, args: List[str]) -> Namespace:
         return self.shell_parser.parse_known_args(args)[0]

@@ -1,7 +1,7 @@
 import logging.config
 
 
-def apply():
+def apply() -> None:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
