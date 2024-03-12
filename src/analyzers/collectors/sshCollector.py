@@ -24,13 +24,26 @@ class SshCollector:
         self.is_tmp_created = False
 
         self.host = settings.__dict__.get("host", "127.0.0.1")
-        user = settings.__dict__.get("username", "root")
-        path_to_key = settings.__dict__.get("path_to_key", "~/.ssh/id_rsa")
-        password = settings.__dict__.get("password", "toor")
+        self.user = settings.__dict__.get("username", "root")
+        self.path_to_key = settings.__dict__.get("path_to_key", "~/.ssh/id_rsa")
+        self.password = settings.__dict__.get("password", "toor")
 
+        self.open()
+
+        if bin_dir is None:
+            bin_dir = self.mkdtemp()
+            self.is_tmp_created = True
+        self.bin_dir = bin_dir
+
+    # TODO: understand why it isn't called. Apparently the link to "parrent" analyzer is saved somethere
+    def __del__(self):
+        self.delete_tmp_dir()
+        self.close()
+
+    def open(self):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=self.host, username=user, key_filename=path_to_key, password=password)
+        client.connect(hostname=self.host, username=self.user, key_filename=self.path_to_key, password=self.password)
 
         transport = client.get_transport()
         if transport is None:
@@ -43,16 +56,6 @@ class SshCollector:
         self.transport = transport
         self.sftp = sftp
         self.client = client
-
-        if bin_dir is None:
-            bin_dir = self.mkdtemp()
-            self.is_tmp_created = True
-        self.bin_dir = bin_dir
-
-    # TODO: understand why it isn't called. Apparently the link to "parrent" analyzer is saved somethere
-    def __del__(self):
-        self.delete_tmp_dir()
-        self.close()
 
     def delete_tmp_dir(self):
         try:
