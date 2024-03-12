@@ -23,16 +23,14 @@ class SshCollector:
         self.logger.setLevel(self.settings.log_level)
         self.is_tmp_created = False
 
-        host = settings.__dict__.get("host", "127.0.0.1")
+        self.host = settings.__dict__.get("host", "127.0.0.1")
         user = settings.__dict__.get("username", "root")
         path_to_key = settings.__dict__.get("path_to_key", "~/.ssh/id_rsa")
         password = settings.__dict__.get("password", "toor")
 
-        self.sftp: paramiko.SFTPClient
-
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=host, username=user, key_filename=path_to_key, password=password)
+        client.connect(hostname=self.host, username=user, key_filename=path_to_key, password=password)
 
         transport = client.get_transport()
         if transport is None:
@@ -51,18 +49,42 @@ class SshCollector:
             self.is_tmp_created = True
         self.bin_dir = bin_dir
 
-    # TODO: understand why it isn't called
+    # TODO: understand why it isn't called. Apparently the link to "parrent" analyzer is saved somethere
     def __del__(self):
-        if self.is_tmp_created:
-            c = self.execute_command(f"rm -r {self.bin_dir}")
-            c.recv_exit_status()
+        self.delete_tmp_dir()
+        self.close()
 
-        # TODO: find how to find out if it is defined or not, may be try catch
-        if self.sftp is not None:
+    def delete_tmp_dir(self):
+        try:
+            if self.is_tmp_created:
+                c = self.execute_command(f"rm -r {self.bin_dir}")
+                c.recv_exit_status()
+                self.is_tmp_created = False
+        except paramiko.SSHException as err:
+            if err.args[0] != "SSH session not active":
+                self.logger.warning(
+                    f"temp directory {self.bin_dir} is not deleted at {self.host}, because ssh session is not active"
+                )
+                raise err
+
+    def close(self, del_tmp_dir: bool = True):
+        if del_tmp_dir:
+            self.delete_tmp_dir()
+
+        try:
+            self.transport.close()
+        except AttributeError:
+            pass
+
+        try:
             self.sftp.close()
+        except AttributeError:
+            pass
 
-        if self.client is not None:
+        try:
             self.client.close()
+        except AttributeError:
+            pass
 
     def execute_command(self, comm: str) -> paramiko.Channel:
         chan = self.transport.open_session()
