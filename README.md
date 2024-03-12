@@ -15,7 +15,7 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - gem5
 
 ## Installation
