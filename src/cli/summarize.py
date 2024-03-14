@@ -184,15 +184,13 @@ class Summarize:
         summarize_parser.add_argument("--src_dirs", help="Path to source dirs", nargs="*")
         summarize_parser.add_argument("--out_dir", default="summarize", help="Path to output directory")
         summarize_parser.add_argument(
-            "--show_graph",
-            action="store_true",
-            default=True,
+            "--no_show_graph",
+            action="store_false",
             help="Shows a graph of BP incorrect %%",
         )
         summarize_parser.add_argument(
-            "--save_graph",
-            action="store_true",
-            default=True,
+            "--no_save_graph",
+            action="store_false",
             help="Saves a graph of BP incorrect %% in graph.png",
         )
         summarize_parser.add_argument(
