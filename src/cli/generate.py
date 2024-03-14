@@ -41,10 +41,10 @@ class Generate:
             self.logger.info(f"Write test into {file}")
             f.write(test)
 
-    def create_empty_dir(self, dir: Path) -> None:
-        if dir.exists():
-            shutil.rmtree(dir)
-        dir.mkdir(parents=True)
+    def create_empty_dir(self, dir_path: Path) -> None:
+        if dir_path.exists():
+            shutil.rmtree(dir_path)
+        dir_path.mkdir(parents=True)
 
     def run(self) -> None:
         self.logger.info("Generate is running. Settings:")

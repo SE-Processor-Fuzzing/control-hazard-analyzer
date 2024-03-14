@@ -49,10 +49,10 @@ class Analyze:
         data = self.analyze(self.test_dir)
         self.pack(self.analyze_dir, data)
 
-    def create_empty_dir(self, dir: Path) -> None:
-        if dir.exists():
-            shutil.rmtree(dir)
-        dir.mkdir(parents=True)
+    def create_empty_dir(self, dir_path: Path) -> None:
+        if dir_path.exists():
+            shutil.rmtree(dir_path)
+        dir_path.mkdir(parents=True)
 
     def analyze(self, test_dir: Path) -> Dict[str, DictSI]:
         print(f"[+]: Execute and analyze tests from {test_dir.absolute().as_posix()}")
