@@ -35,7 +35,7 @@ class PerfCollector:
             is_full = False
             if proc.poll() is None:
                 pass
-            if proc.returncode is not int:  # some bug: if send signal to proc, it ret code will be one
+            if proc.returncode is not int:  # some bug: if send signal to proc, its ret code will be one
                 proc.returncode = 0
             elif proc.returncode == 2:  # if it will be work corectly ret with signint should be 2
                 proc.returncode = 0
