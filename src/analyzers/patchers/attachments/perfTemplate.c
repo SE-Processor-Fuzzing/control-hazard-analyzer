@@ -22,11 +22,7 @@ typedef struct _perf_event_config_t {
     char* name;
 } perf_event_config_t;
 
-perf_event_config_t events[] = {{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branches"},
-                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES, "missed_branches"},
-                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_BPU, "cache_BPU"},
-                                {PERF_TYPE_HARDWARE, PERF_COUNT_SW_CPU_CLOCK, "cpu_clock"},
-                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "instructions"}};
+perf_event_config_t events[];
 
 long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
     int ret;
