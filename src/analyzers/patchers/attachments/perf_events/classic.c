@@ -1,5 +1,8 @@
 #include <linux/perf_event.h>
+#include <stddef.h>
 
+#ifndef EVENTS_INIT
+    #define EVENTS_INIT
 typedef struct _perf_event_config_t {
     unsigned int type;
     unsigned long long config;
@@ -14,3 +17,6 @@ perf_event_config_t events[] = {
     {PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "instructions"},
     // {PERF_SOME_TYPE, PERF_COUNT_BRANCH_PREDICTED, "predicted_branches"}
 };
+
+size_t events_len = sizeof(events) / sizeof(*events);
+#endif

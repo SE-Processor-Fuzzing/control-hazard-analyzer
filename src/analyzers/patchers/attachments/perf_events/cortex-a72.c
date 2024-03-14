@@ -1,12 +1,15 @@
 #include <linux/perf_event.h>
+#include <stddef.h>
 
+#ifndef EVENTS_INIT
+    #define EVENTS_INIT
 typedef struct _perf_event_config_t {
     unsigned int type;
     unsigned long long config;
     char* name;
 } perf_event_config_t;
 
-#define A72_PC_BRANCH_PRED 0x12
+    #define A72_PC_BRANCH_PRED 0x12
 
 perf_event_config_t events[] = {
     //{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branches"},
@@ -15,3 +18,6 @@ perf_event_config_t events[] = {
     {PERF_TYPE_HARDWARE, PERF_COUNT_SW_CPU_CLOCK, "cpu_clock"},
     {PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "instructions"},
     {PERF_TYPE_RAW, A72_PC_BRANCH_PRED, "predicted_branches"}};
+
+size_t events_len = sizeof(events) / sizeof(*events);
+#endif
