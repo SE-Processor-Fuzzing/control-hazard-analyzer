@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple, IO, TypeAlias
 import sys
+from typing import IO, Any, Dict, List, Tuple, TypeAlias
+
+from src.protocols.collector import DictSI
 
 TestRes: TypeAlias = Tuple[IO[bytes] | None, bool]
 
@@ -18,8 +20,8 @@ class PerfData:
         self.instructions = int(data_dict.get("instructions", -1))
         self.is_full = is_full
 
-    def to_dict(self) -> Dict:
-        data_dict: Dict = {}
+    def to_dict(self) -> DictSI:
+        data_dict: DictSI = {}
         data_dict["branchPred.lookups"] = self.branches
         data_dict["branchPred.condIncorrect"] = self.missed_branches
         data_dict["branchPred.BTBUpdates"] = self.cache_bpu
@@ -28,7 +30,7 @@ class PerfData:
         data_dict["isFull"] = self.is_full
         return data_dict
 
-    def __sub__(self, other) -> PerfData:
+    def __sub__(self, other: Any) -> PerfData:
         if isinstance(other, PerfData):
             res: PerfData = PerfData()
             res.branches = self.branches - other.branches
@@ -44,7 +46,7 @@ class PerfData:
     def __str__(self) -> str:
         return str(self.to_dict())
 
-    def max(self, const: int):
+    def max(self, const: int) -> None:
         self.branches = max(self.branches, const)
         self.missed_branches = max(self.missed_branches, const)
         self.cache_bpu = max(self.cache_bpu, const)
@@ -64,7 +66,7 @@ class PerfParser:
         return data_dict
 
     @staticmethod
-    def test_res_to_data(out_tup: TestRes):
+    def test_res_to_data(out_tup: TestRes) -> PerfData:
         stream, is_full = out_tup
         dic: Dict[str, str] = {}
         if stream is not None:
@@ -97,7 +99,7 @@ class PerfParser:
         return average
 
     @staticmethod
-    def correct(out_res: Dict[str, List[TestRes]], key_empty_test: str = "empty") -> Dict[str, Dict]:
+    def correct(out_res: Dict[str, List[TestRes]], key_empty_test: str = "empty") -> Dict[str, DictSI]:
         analyzed_buf = {
             key: PerfParser.get_meddian(list(map(PerfParser.test_res_to_data, lst))) for key, lst in out_res.items()
         }
@@ -109,7 +111,7 @@ class PerfParser:
                 print(f"[-]: Error: can't get average result of '{key}' test", file=sys.stderr)
 
         analyzed_average[key_empty_test].max(0)
-        corrected: Dict[str, Dict] = {}
+        corrected: Dict[str, DictSI] = {}
         for key in analyzed_average:
             if key != key_empty_test:
                 analyzed_average[key] = analyzed_average[key] - analyzed_average[key_empty_test]

@@ -1,4 +1,3 @@
-from argparse import Namespace
 from typing import Dict
 
 from src.cli.aggregate import Aggregate

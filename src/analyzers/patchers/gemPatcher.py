@@ -1,7 +1,8 @@
 import logging
+import sys
 from argparse import Namespace
 from pathlib import Path
-import sys
+
 from src.analyzers.patchers import ATTACH_DIR
 
 
@@ -31,6 +32,6 @@ class GemPatcher:
             dest_test = dest_dir.joinpath(src_test.name)
             self.patch_test(src_test, dest_test)
 
-    def patch(self, test_dir: Path, dst_dir: Path):
+    def patch(self, test_dir: Path, dst_dir: Path) -> None:
         self.patch_tests_in_dir(test_dir.absolute(), dst_dir)
         self.patch_test(self.empty_test_path, dst_dir.joinpath(self.empty_test_path.name))

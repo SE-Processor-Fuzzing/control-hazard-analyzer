@@ -1,5 +1,5 @@
-from io import TextIOWrapper
 import random as rd
+from io import TextIOWrapper
 
 CONDITION_OPERANDS = ["<", "<=", ">=", ">", "==", "!="]
 

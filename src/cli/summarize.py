@@ -4,27 +4,28 @@ import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pandas.core.api import DataFrame
 
+from src.protocols.collector import DictSI
 from src.protocols.subparser import SubParser
 
 
 class Summarize:
     def __init__(self) -> None:
-        self.settings = None
         self.filename_out_grapg = "graph.png"
         self.filename_out_data = "results.data"
         self.logger = logging.getLogger(__name__)
 
-    def configurate(self, settings: Namespace):
+    def configurate(self, settings: Namespace) -> None:
         self.settings = settings
         self.logger.setLevel(self.settings.log_level)
 
-    def run(self):
+    def run(self) -> None:
         self.logger.info("Summarize is running. Settings:")
         self.logger.info(pformat(vars(self.settings)))
 
@@ -48,8 +49,8 @@ class Summarize:
         if self.settings.save_graph:
             self.save_plot(summarized_data, out_dir)
 
-    def get_data_from_sources(self, src_dirs: list[str]):
-        data = {}
+    def get_data_from_sources(self, src_dirs: List[str]) -> Dict[str, Dict[str, DictSI]]:
+        data: Dict[str, Dict[str, DictSI]] = {}
         for src_dir in src_dirs:
             if not Path(src_dir).exists():
                 print(f"[-]: Directory {src_dir} does not exist")
@@ -63,8 +64,10 @@ class Summarize:
 
         return data
 
-    def summarize_data(self, data: dict):
-        summarized_data = {Path(src_dir).as_posix(): {} for src_dir in data}
+    def summarize_data(
+        self, data: Dict[str, Dict[str, Dict[str, int]]]
+    ) -> Dict[str, Dict[str, Dict[str, int | float]]]:
+        summarized_data: Dict[str, Dict[str, Dict[str, int | float]]] = {}
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
                 sim_ticks = src_data.get("simTicks", np.nan)
@@ -88,40 +91,43 @@ class Summarize:
         return summarized_data
 
     # Parse data from json, from sources
-    def summarize_by_dir(self, summarized_data: dict):
-        summarized_by_dir = {}
+    def summarize_by_dir(self, summarized_data: Dict[str, DataFrame]) -> DataFrame:
+        summarized_by_dir: Dict[str, Dict[str, Any]] = {}
         for src_dir, data_frame in summarized_data.items():
             summarized_by_dir[src_dir] = {}
             summarized_by_dir[src_dir]["BP incorrect %"] = round(
-                data_frame.loc["BP incorrect"].sum() / data_frame.loc["BP lookups"].sum() * 100,
+                data_frame.loc["BP incorrect"].sum() / data_frame.loc["BP lookups"].sum() * 100,  # pyright: ignore
                 2,
             )
-        return pd.DataFrame(summarized_by_dir)
+        return DataFrame(summarized_by_dir)
 
-    def convert_to_pandas(self, summarized_data: dict):
+    def convert_to_pandas(self, summarized_data: Dict[str, Dict[Any, Any]]) -> Dict[str, DataFrame]:
+        result: Dict[str, DataFrame] = {}
         for src_dir, src_files in summarized_data.items():
-            summarized_data[src_dir] = pd.DataFrame(src_files)
-        return summarized_data
+            result[src_dir] = pd.DataFrame(src_files)
+        return result
 
-    def save_summarized_data(self, summarized_data: dict, summarized_by_dir, out_dir: Path):
+    def save_summarized_data(
+        self, summarized_data: Dict[str, DataFrame], summarized_by_dir: DataFrame, out_dir: Path
+    ) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         with open(out_dir.joinpath(self.filename_out_data), "w") as f:
             # Use pandas to print data to file
             f.write("Summarized data:\n")
-            f.write(summarized_by_dir.to_string())
+            f.write(summarized_by_dir.to_string())  # pyright: ignore
             f.write("\n\n")
             for src_dir, src_files in summarized_data.items():
                 f.write(f"dir: {src_dir}\n")
-                f.write(pd.DataFrame(src_files).to_string())
+                f.write(pd.DataFrame(src_files).to_string())  # pyright: ignore
                 f.write("\n\n")
 
     def save_data_for_each_source(
         self,
-        summarized_data: Dict[str, pd.DataFrame],
-        summarized_by_dir: Dict[str, pd.DataFrame],
-        src_dirs: List[Path],
+        summarized_data: Dict[str, DataFrame],
+        summarized_by_dir: DataFrame,
+        src_dirs: List[str],
         out_dir: Path,
-    ):
+    ) -> None:
         for src_dir in src_dirs:
             path = Path(src_dir)
             if not path.exists():
@@ -133,46 +139,62 @@ class Summarize:
                 path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data),
                 "w",
             ) as f:
-                data_frame = summarized_data.get(src_dir)
 
+                data_frame = summarized_data.get(src_dir)
                 if data_frame is None:
                     f.write("No provided data")
                     continue
 
-                summarized_by_dir_data_frame = summarized_by_dir.get(src_dir)
+                summarized_by_dir_data_frame: pd.Series[Any] | None = summarized_by_dir.get(src_dir)  # pyright: ignore
+                if summarized_by_dir_data_frame is None:
+                    f.write("No provided data")
+                    continue
+
                 f.write(f"dir: {src_dir}\n")
                 f.write("\n")
-                f.write(data_frame.to_string())
+                f.write(data_frame.to_string())  # pyright: ignore[reportUnknownMemberType]
                 f.write("\n\n")
                 f.write("Average % of BP incorrect: ")
-                f.write(str(summarized_by_dir_data_frame.get("BP incorrect %")))
 
-    def construct_plot(self, summarized_data: Dict[str, pd.DataFrame]):
-        pd.DataFrame({k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}).plot.bar()
+                bp_incorrect = summarized_by_dir_data_frame.get("BP incorrect %")  # pyright: ignore
+                if bp_incorrect is None:
+                    f.write("Unknown")
+                    continue
 
-    def show_plot(self):
-        plt.show()
+                f.write(bp_incorrect.to_string())
 
-    def save_plot(self, summarized_data: Dict[str, pd.DataFrame], out_dir: Path):
+    def construct_plot(self, summarized_data: Dict[str, pd.DataFrame]) -> None:
+        pd.DataFrame(
+            {k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}
+        ).plot.bar()  # pyright: ignore[reportUnknownMemberType]
+
+    def show_plot(self) -> None:
+        plt.show()  # pyright: ignore[reportUnknownMemberType]
+
+    def save_plot(self, summarized_data: Dict[str, pd.DataFrame], out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame({k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}).plot.bar()
-        plt.savefig(out_dir.joinpath(self.filename_out_grapg))
+        pd.DataFrame(
+            {k: summarized_data[k].loc["BP incorrect %"] for k in summarized_data}
+        ).plot.bar()  # pyright: ignore
+        plt.savefig(out_dir.joinpath(self.filename_out_grapg))  # pyright: ignore
 
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
-        summarize_parser: ArgumentParser = subparser.add_parser("summarize", prog="summarize")
+        summarize_parser = subparser.add_parser("summarize")
 
-        summarize_parser.add_argument("--src_dirs", help="Path to source dirs.", nargs="*")
+        summarize_parser.add_argument("--src_dirs", help="Path to source dirs", nargs="*")
         summarize_parser.add_argument("--out_dir", default="summarize", help="Path to output directory")
         summarize_parser.add_argument(
-            "--show_graph", action="store_true", default=True, help="Shows a graph of BP incorrect %"
+            "--show_graph",
+            action="store_true",
+            default=True,
+            help="Shows a graph of BP incorrect %%",
         )
         summarize_parser.add_argument(
             "--save_graph",
             action="store_true",
-            default=False,
+            default=True,
             help="Saves a graph of BP incorrect %% in graph.png",
         )
-        summarize_parser.add_argument("--debug", action="store_true", help="Turn on helping prints")
         summarize_parser.add_argument(
             "--log_level",
             default="WARNING",

@@ -12,7 +12,7 @@ class Builder:
         self.logger.setLevel(self.settings.log_level)
         self.default_additional_flags: list[str] = []
 
-    def set_default_additional_flags(self, additional_flags: list[str]):
+    def set_default_additional_flags(self, additional_flags: list[str]) -> None:
         self.default_additional_flags = additional_flags
 
     def build(
@@ -20,7 +20,7 @@ class Builder:
         src_dir: Path,
         destination_dir: Path,
         additional_flags: list[str] | None = None,
-    ):
+    ) -> None:
         if additional_flags is None:
             additional_flags = self.default_additional_flags
 

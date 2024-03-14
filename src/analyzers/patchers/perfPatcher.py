@@ -1,11 +1,12 @@
 from __future__ import annotations
-from argparse import Namespace
 
 import glob
 import logging
-from pathlib import Path
-from src.analyzers.patchers import ATTACH_DIR
 import sys
+from argparse import Namespace
+from pathlib import Path
+
+from src.analyzers.patchers import ATTACH_DIR
 
 
 class PerfPatcher:
@@ -26,16 +27,16 @@ class PerfPatcher:
                 return True
         return False
 
-    def add_empty_patched_test(self, destination_file: Path):
+    def add_empty_patched_test(self, destination_file: Path) -> None:
         destination_file.parent.mkdir(parents=True, exist_ok=True)
         self.patch_test(self.empty_test_path, destination_file)
 
-    def patch_tests_in_dir(self, src_dir: Path, dst_dir: Path):
+    def patch_tests_in_dir(self, src_dir: Path, dst_dir: Path) -> None:
         dst_dir.mkdir(parents=True, exist_ok=True)
         for src_test in glob.glob(str(src_dir) + "/*.c"):
-            src_test = Path(src_test)
-            self.patch_test(src_test, dst_dir.joinpath(src_test.name))
+            src_test_path = Path(src_test)
+            self.patch_test(src_test_path, dst_dir.joinpath(src_test_path.name))
 
-    def patch(self, test_dir: Path, dst_dir: Path):
+    def patch(self, test_dir: Path, dst_dir: Path) -> None:
         self.patch_tests_in_dir(test_dir, dst_dir)
         self.add_empty_patched_test(dst_dir.joinpath(self.empty_test_path.name))

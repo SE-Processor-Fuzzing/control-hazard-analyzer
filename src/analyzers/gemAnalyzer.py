@@ -6,8 +6,9 @@ from typing import Dict
 from src.analyzers.baseAnalyzer import BaseAnalyzer
 from src.analyzers.collectors.gemCollector import GemCollector
 from src.analyzers.patchers.gemPatcher import GemPatcher
-from src.protocols.analyzer import Analyzer
 from src.helpers.builder import Builder
+from src.protocols.analyzer import Analyzer
+from src.protocols.collector import DictSI
 
 
 class GemAnalyzer:
@@ -36,5 +37,5 @@ class GemAnalyzer:
 
         self.base: Analyzer = BaseAnalyzer(GemPatcher(settings), self.builder, GemCollector(settings), settings)
 
-    def analyze(self, test_dir: Path) -> Dict[str, Dict]:
+    def analyze(self, test_dir: Path) -> Dict[str, DictSI]:
         return self.base.analyze(test_dir)
