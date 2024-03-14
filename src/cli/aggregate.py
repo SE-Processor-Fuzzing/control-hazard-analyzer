@@ -16,10 +16,10 @@ class Aggregate:
         self.settings = Namespace()
         self.logger = logging.getLogger(__name__)
 
-    def clean_output_dir(self):
+    def clean_output_dir(self) -> None:
         shutil.rmtree(self.settings.dest_dir)
 
-    def run(self):
+    def run(self) -> None:
         self.logger.info("Aggregate is running. Settings:")
         self.logger.info(pformat(vars(self.settings)))
 
@@ -67,7 +67,7 @@ class Aggregate:
         self.settings.summarize.configurate(settings_summarize)
         self.settings.summarize.run()
 
-    def configurate(self, settings: Namespace):
+    def configurate(self, settings: Namespace) -> None:
         self.settings = Namespace(**{**vars(settings), **vars(self.settings)})
         self.logger.setLevel(self.settings.log_level)
 

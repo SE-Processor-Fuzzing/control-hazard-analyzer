@@ -1,14 +1,17 @@
-from __future__ import annotations
-from argparse import Namespace
-
-from src.analyzers.collectors.perfParser import PerfParser, TestRes
 import logging
 import signal
 import subprocess
-from pathlib import Path
 import sys
 import time
-from typing import Dict, List
+from argparse import Namespace
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List
+
+if TYPE_CHECKING:
+    from _typeshed import StrOrBytesPath
+
+from src.analyzers.collectors.perfParser import PerfParser, TestRes
+from src.protocols.collector import DictSI
 
 
 class PerfCollector:
@@ -18,7 +21,7 @@ class PerfCollector:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings.log_level)
 
-    def tab_lines(self, lines: str):
+    def tab_lines(self, lines: str) -> str:
         return "\t" + lines.replace("\n", "\n\t")[:-1]
 
     def execute_test(self, execute_line: List[str], timeout: float) -> TestRes:
@@ -30,7 +33,7 @@ class PerfCollector:
         except subprocess.TimeoutExpired:
             proc.send_signal(signal.SIGINT)
             is_full = False
-            if proc.poll is None:
+            if proc.poll() is None:
                 pass
             if proc.returncode is not int:  # some bug: if send signal to proc, it ret code will be one
                 proc.returncode = 0
@@ -69,7 +72,7 @@ class PerfCollector:
             output_dict[binary.name.split(".")[0]] = data
         return output_dict
 
-    def update_capabilities_dir(self, target_dir: Path):
+    def update_capabilities_dir(self, target_dir: Path) -> None:
         sudo_hint = True
         use_sudo = False
         for binary in target_dir.iterdir():
@@ -77,7 +80,7 @@ class PerfCollector:
             used_max_perm = False
 
             pth = target_dir.joinpath(binary)
-            execute_line = ["setcap", "cap_sys_admin,cap_sys_nice=ep", pth]
+            execute_line: List[StrOrBytesPath] = ["setcap", "cap_sys_admin,cap_sys_nice=ep", pth]
             while (not suc_launch) and (not used_max_perm):
                 if use_sudo:
                     if sudo_hint:
@@ -96,7 +99,7 @@ class PerfCollector:
                         print(f"[-]: Error during seting capability:\n {self.tab_lines(proc_err)}", file=sys.stderr)
                     use_sudo = True
 
-    def collect(self, bin_dir: Path) -> Dict[str, Dict]:
+    def collect(self, bin_dir: Path) -> Dict[str, DictSI]:
         self.update_capabilities_dir(bin_dir)
         analyzed = self.get_stats_dir(bin_dir)
 

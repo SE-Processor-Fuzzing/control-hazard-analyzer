@@ -7,6 +7,8 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Dict, Set
 
+from src.protocols.collector import DictSI
+
 
 class GemCollector:
     BINARY_PLACEHOLDER = "{{GEM5_TARGET_BINARY}}"
@@ -37,8 +39,8 @@ class GemCollector:
         if self.target_isa == "":
             raise Exception("No target isa provided")
 
-    def get_stats_from_file(self, stat_path: Path) -> Dict[str, int]:
-        stats = {}
+    def get_stats_from_file(self, stat_path: Path) -> DictSI:
+        stats: DictSI = {}
         with open(stat_path, "r") as file:
             for line in file.readlines():
                 if re.search("branch", line) and not re.search("Ratio", line):
@@ -48,8 +50,8 @@ class GemCollector:
 
         return stats
 
-    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str, Dict]:
-        stats_dict = {}
+    def get_stats_from_dir(self, stats_dir: Path) -> Dict[str, DictSI]:
+        stats_dict: Dict[str, DictSI] = {}
         for stat_path in stats_dir.iterdir():
             test_name = stat_path.name.split(".")[0]
             stats_dict[test_name] = self.get_stats_from_file(stats_dir.joinpath(stat_path))
@@ -57,7 +59,7 @@ class GemCollector:
         return stats_dict
 
     def run_bins_in_dir(self, bin_dir: Path, dest_dir: Path) -> Set[str]:
-        fully_runned = set()
+        fully_runned: set[str] = set()
         dest_dir.mkdir(parents=True, exist_ok=True)
         for binary in bin_dir.iterdir():
             if binary.is_dir():
@@ -94,7 +96,7 @@ class GemCollector:
 
         return fully_runned
 
-    def correct(self, analyzed: Dict[str, Dict], full_runned: Set[str]) -> Dict[str, Dict]:
+    def correct(self, analyzed: Dict[str, DictSI], full_runned: Set[str]) -> Dict[str, DictSI]:
         for file_name in analyzed.keys():
             if file_name == "empty" or not analyzed[file_name]:
                 continue
@@ -105,7 +107,7 @@ class GemCollector:
         analyzed.pop("empty")
         return analyzed
 
-    def collect(self, bin_dir: Path) -> Dict[str, Dict]:
+    def collect(self, bin_dir: Path) -> Dict[str, DictSI]:
         stats_dir = bin_dir.joinpath("stats/")
 
         full_runned = self.run_bins_in_dir(bin_dir, stats_dir)
