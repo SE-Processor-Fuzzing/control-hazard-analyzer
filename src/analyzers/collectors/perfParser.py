@@ -18,12 +18,22 @@ class PerfData:
         self.cache_bpu = int(data_dict.get("cache_BPU", -1))
         self.ticks = int(data_dict.get("cpu_clock", -1))
         self.instructions = int(data_dict.get("instructions", -1))
+        self.predicted_branches = int(data_dict.get("predicted_branches", -1))
+
+        if (self.branches == -1) and (self.missed_branches != -1) and (self.predicted_branches != -1):
+            self.branches = self.missed_branches + self.predicted_branches
+        if (self.predicted_branches == -1) and (self.branches != -1) and (self.missed_branches != -1):
+            self.predicted_branches = self.branches - self.missed_branches
+        if (self.missed_branches == -1) and (self.branches != -1) and (self.predicted_branches != -1):
+            self.missed_branches = self.branches - self.predicted_branches
+
         self.is_full = is_full
 
     def to_dict(self) -> DictSI:
         data_dict: DictSI = {}
         data_dict["branchPred.lookups"] = self.branches
         data_dict["branchPred.condIncorrect"] = self.missed_branches
+        data_dict["branchPred.condCorrect"] = self.predicted_branches
         data_dict["branchPred.BTBUpdates"] = self.cache_bpu
         data_dict["simTicks"] = self.ticks
         data_dict["instructions"] = self.instructions
@@ -35,6 +45,7 @@ class PerfData:
             res: PerfData = PerfData()
             res.branches = self.branches - other.branches
             res.missed_branches = self.missed_branches - other.missed_branches
+            res.predicted_branches = self.predicted_branches - other.predicted_branches
             res.cache_bpu = self.cache_bpu - other.cache_bpu
             res.ticks = self.ticks - other.ticks
             res.instructions = self.instructions - other.instructions
@@ -48,6 +59,7 @@ class PerfData:
 
     def max(self, const: int) -> None:
         self.branches = max(self.branches, const)
+        self.predicted_branches = max(self.predicted_branches, const)
         self.missed_branches = max(self.missed_branches, const)
         self.cache_bpu = max(self.cache_bpu, const)
         self.ticks = max(self.ticks, const)
