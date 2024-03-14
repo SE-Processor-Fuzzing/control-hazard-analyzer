@@ -15,23 +15,31 @@ void test_fun();
 
 int* perf_fd;
 size_t perf_fd_len = 0;
-unsigned long long configs[] = {PERF_COUNT_HW_BRANCH_INSTRUCTIONS, PERF_COUNT_HW_BRANCH_MISSES, PERF_COUNT_HW_CACHE_BPU,
-                                PERF_COUNT_SW_CPU_CLOCK, PERF_COUNT_HW_INSTRUCTIONS};
-char* value_names[] = {"branches", "missed_branches", "cache_BPU", "cpu_clock", "instructions"};
+
+typedef struct _perf_event_config_t {
+    unsigned int type;
+    unsigned long long config;
+    char* name;
+} perf_event_config_t;
+
+perf_event_config_t events[] = {{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branches"},
+                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES, "missed_branches"},
+                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_BPU, "cache_BPU"},
+                                {PERF_TYPE_HARDWARE, PERF_COUNT_SW_CPU_CLOCK, "cpu_clock"},
+                                {PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "instructions"}};
 
 long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
     int ret;
-
     ret = syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
     return ret;
 }
 
-int set_up_perf_event(unsigned long long config) {
+int set_up_perf_event(perf_event_config_t* event) {
     int fd;
     struct perf_event_attr* pe = malloc(sizeof(struct perf_event_attr));
-    pe->type = PERF_TYPE_HARDWARE;
+    pe->type = event->type;
     pe->size = sizeof(struct perf_event_attr);
-    pe->config = config;
+    pe->config = event->config;
     pe->disabled = 1;
     pe->exclude_kernel = 1;
     pe->exclude_hv = 1;
@@ -45,19 +53,19 @@ int set_up_perf_event(unsigned long long config) {
 }
 
 static void init() {
-    size_t configs_len = sizeof(configs) / sizeof(*configs);
-    perf_fd_len = configs_len;
-    perf_fd = calloc(configs_len, sizeof(*perf_fd));
-    for (size_t i = 0; i < configs_len; i++) {
-        perf_fd[i] = set_up_perf_event(configs[i]);
+    size_t events_len = sizeof(events) / sizeof(*events);
+    perf_fd_len = events_len;
+    perf_fd = calloc(events_len, sizeof(*perf_fd));
+    for (size_t i = 0; i < events_len; i++) {
+        perf_fd[i] = set_up_perf_event(&events[i]);
     }
 
-    for (size_t i = 0; i < configs_len; i++) {
+    for (size_t i = 0; i < events_len; i++) {
         if (perf_fd[i] != -1)
             ioctl(perf_fd[i], PERF_EVENT_IOC_RESET, 0);
     }
 
-    for (size_t i = 0; i < configs_len; i++) {
+    for (size_t i = 0; i < events_len; i++) {
         if (perf_fd[i] != -1)
             ioctl(perf_fd[i], PERF_EVENT_IOC_ENABLE, 0);
     }
@@ -75,13 +83,13 @@ static void fin() {
         for (size_t i = 0; i < perf_fd_len; i++) {
             if (perf_fd[i] != -1) {
                 if (read(perf_fd[i], &value_result, sizeof(long long)) <= 0) {
-                    fprintf(stderr, "Can't read value of '%s'\n", value_names[i]);
+                    fprintf(stderr, "Can't read value of '%s'\n", events[i].name);
                 }
                 close(perf_fd[i]);
             } else {
                 value_result = -1;
             }
-            printf("%s: %lld\n", value_names[i], value_result);
+            printf("%s: %lld\n", events[i].name, value_result);
         }
     }
 }
