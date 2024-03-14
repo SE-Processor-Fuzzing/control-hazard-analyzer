@@ -16,13 +16,17 @@ void test_fun();
 int* perf_fd;
 size_t perf_fd_len = 0;
 
+#ifndef EVENTS_INIT
+    #define EVENTS_INIT
 typedef struct _perf_event_config_t {
     unsigned int type;
     unsigned long long config;
     char* name;
 } perf_event_config_t;
 
-perf_event_config_t events[];
+perf_event_config_t events[] = {};
+size_t events_len = 0;
+#endif
 
 long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
     int ret;
@@ -49,7 +53,6 @@ int set_up_perf_event(perf_event_config_t* event) {
 }
 
 static void init() {
-    size_t events_len = sizeof(events) / sizeof(*events);
     perf_fd_len = events_len;
     perf_fd = calloc(events_len, sizeof(*perf_fd));
     for (size_t i = 0; i < events_len; i++) {
