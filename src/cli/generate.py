@@ -26,7 +26,7 @@ class Generate:
         self,
         target_dir: Path,
         count: int,
-        max_depth: int = 7,
+        max_depth: int = 6,
     ) -> None:
         print(f"[+]: Generate tests to '{target_dir.absolute()}'")
         for i in range(count):
