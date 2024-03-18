@@ -4,7 +4,7 @@ import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +13,9 @@ from pandas.core.api import DataFrame
 
 from src.protocols.collector import DictSI
 from src.protocols.subparser import SubParser
+
+S = TypeVar("S")
+DataType = Dict[str, Dict[str, Dict[str, S]]]
 
 
 class Summarize:
@@ -35,15 +38,15 @@ class Summarize:
             print("[-]: No data to summarize")
             return
 
-        prepared_data = self.convert_to_pandas(self.prepare_data(data))
-        summarized_by_dir = self.summarize_by_dir(prepared_data)
+        data_df = self.convert_to_pandas(self.prepare_data(data))
+        mean_of_dir = self.summarize_by_dir(data_df)
         out_dir = Path(self.settings.out_dir)
 
-        self.save_summarized_data(prepared_data, summarized_by_dir, out_dir)
-        self.save_data_for_each_source(prepared_data, summarized_by_dir, src_dirs, out_dir)
+        self.save_mean_data(mean_of_dir, src_dirs, out_dir)
+        self.save_data_for_each_source(data_df, mean_of_dir, src_dirs, out_dir)
 
-        prepared_data = self.filter_summarize_data(prepared_data)
-        data_frame_plot = self.construct_plot(prepared_data)
+        data_df = self.filter_summarize_data(data_df)
+        data_frame_plot = self.construct_data_for_plot(data_df)
         data_frame_plot = self.sort_data(data_frame_plot)
         data_frame_plot.plot.bar()
 
@@ -51,33 +54,36 @@ class Summarize:
             self.show_plot()
 
         if not self.settings.no_save_graph:
-            self.save_plot(data_frame_plot, out_dir)
+            self.save_plot(out_dir)
 
-    def get_data_from_sources(self, src_dirs: List[str]) -> Dict[str, Dict[str, DictSI]]:
+    def get_data_from_sources(self, src_dirs: List[str]) -> DataType[int]:
         data: Dict[str, Dict[str, DictSI]] = {}
+
         for src_dir in src_dirs:
-            if not Path(src_dir).exists():
+            src_dir_path = Path(src_dir)
+            if not src_dir_path.exists():
                 print(f"[-]: Directory {src_dir} does not exist")
                 continue
 
-            data[src_dir] = {}
-            for src_file in Path(src_dir).glob("*"):
+            posix_dir_path = src_dir_path.as_posix()
+            data[posix_dir_path] = {}
+            for src_file in src_dir_path.glob("*"):
                 with open(src_file, "r") as f:
-                    data[src_dir][src_file.stem] = json.loads(f.read())
-                for key, val in data[src_dir][src_file.stem].items():
-                    data[src_dir][src_file.stem][key] = int(val)
+                    data[posix_dir_path][src_file.stem] = json.loads(f.read())
+                for key, val in data[posix_dir_path][src_file.stem].items():
+                    data[posix_dir_path][src_file.stem][key] = int(val)
 
         return data
 
-    def prepare_data(self, data: Dict[str, Dict[str, DictSI]]) -> Dict[str, Dict[str, Dict[str, int | float]]]:
+    def prepare_data(self, data: DataType[int]) -> DataType[int | float]:
 
-        result: Dict[str, Dict[str, Dict[str, int | float]]] = {src_dir: {} for src_dir in data}
+        result: DataType[int | float] = {Path(src_dir).as_posix(): {} for src_dir in data}
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
                 sim_ticks = src_data.get("simTicks", np.nan)
                 bp_lookups = src_data.get("branchPred.lookups", np.nan)
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
-                result[Path(src_dir).as_posix()][Path(src_file).stem] = {
+                result[src_dir][Path(src_file).stem] = {
                     "Number of ticks": sim_ticks,
                     "BP lookups": bp_lookups,
                     "Ticks per BP": (
@@ -95,66 +101,63 @@ class Summarize:
         return result
 
     def summarize_by_dir(self, data: DataFrame) -> DataFrame:
-        summarized_by_dir: Dict[str, Dict[str, Any]] = {}
-        for src_dir in set(data.index.get_level_values(0)):
-            summarized_by_dir[src_dir] = {}
-            summarized_by_dir[src_dir]["BP incorrect %"] = round(
+        mean_of_dir: Dict[str, Dict[str, Any]] = {}
+        for src_dir in data.index.unique(level="dir"):
+            mean_of_dir[src_dir] = {}
+            mean_of_dir[src_dir]["BP incorrect %"] = round(
                 data.loc[src_dir, "BP incorrect"].sum()
                 / data.loc[src_dir, "BP lookups"].sum()
                 * 100,  # pyright: ignore
                 2,
             )
-        return DataFrame(summarized_by_dir)
+        return DataFrame(mean_of_dir)
 
     def convert_to_pandas(self, data: Dict[str, Dict[Any, Any]]) -> DataFrame:
-        return pd.concat({key: DataFrame(value).T for key, value in data.items()})
+        df = pd.concat({key: DataFrame(value).T for key, value in data.items()})
+        return df.rename_axis(["dir", "test"])
 
-    def save_summarized_data(self, summarized_data: DataFrame, summarized_by_dir: DataFrame, out_dir: Path) -> None:
+    def save_mean_data(self, mean_of_dir: DataFrame, src_dirs: List[str], out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         with open(out_dir.joinpath(self.filename_out_data), "w") as f:
             # Use pandas to print data to file
             f.write("Summarized data:\n")
-            f.write(summarized_by_dir.to_string())  # pyright: ignore
+            f.write(mean_of_dir.to_string())  # pyright: ignore
             f.write("\n\n")
-            for src_dir in set(summarized_data.index.get_level_values(0)):
+            for src_dir in src_dirs:
                 f.write(f"dir: {src_dir}\n")
-                f.write(summarized_data.loc[src_dir].to_string())  # pyright: ignore
+                f.write(src_dir)
                 f.write("\n\n\n")
 
     def save_data_for_each_source(
         self,
-        summarized_data: DataFrame,
-        summarized_by_dir: DataFrame,
+        data: DataFrame,
+        mean_of_dir: DataFrame,
         src_dirs: List[str],
         out_dir: Path,
     ) -> None:
+
         for src_dir in src_dirs:
-            path = Path(src_dir)
-            if not path.exists():
+            dir_path = Path(src_dir)
+            if not dir_path.exists():
                 print(f"[-]: Directory {src_dir} does not exist")
                 continue
 
-            path.parent.joinpath(os.path.basename(out_dir)).mkdir(parents=True, exist_ok=True)
-            with open(
-                path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data),
-                "w",
-            ) as f:
+            out_file = dir_path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data)
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(out_file, "w") as f:
 
-                data_frame = summarized_data.loc[src_dir]  # pyright: ignore
+                data_frame = data.loc[src_dir]  # pyright: ignore
                 f.write(f"dir: {src_dir}\n")
                 f.write("\n")
                 f.write(data_frame.to_string())  # pyright: ignore
                 f.write("\n\n")
                 f.write("Average % of BP incorrect: ")
 
-                bp_incorrect = summarized_by_dir.loc["BP incorrect %", src_dir]  # pyright: ignore
+                bp_incorrect = mean_of_dir.loc["BP incorrect %", src_dir]  # pyright: ignore
                 f.write(str(bp_incorrect))
 
-    def construct_plot(self, summarized_data: DataFrame) -> DataFrame:
-        result = DataFrame(
-            {k: summarized_data.loc[k, "BP incorrect %"] for k in set(summarized_data.index.get_level_values(0))}
-        )
-        return result
+    def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
+        return DataFrame({k: data.loc[k, "BP incorrect %"] for k in data.index.unique(level="dir")})
 
     def filter_summarize_data(self, data: DataFrame) -> DataFrame:
         result = data.copy()
@@ -168,22 +171,11 @@ class Summarize:
     def sort_data(self, data: DataFrame) -> DataFrame:
         return data.loc[data.max(axis=1).sort_values(na_position="first").index]
 
-    def filter_summarize_data(self, summarized_data: Dict[str, DataFrame]) -> Dict[str, DataFrame]:
-        result = summarized_data.copy()
-        for src_dir, frame in summarized_data.items():
-            for test, _ in frame.items():  # pyright: ignore
-                if not (0 <= frame.loc["BP incorrect %", test] <= 100):  # type: ignore
-                    result[src_dir].loc["BP incorrect %", test] = np.NaN  # type: ignore
-                if frame.loc["BP lookups", test] < 50:  # type: ignore
-                    result[src_dir].loc["BP incorrect %", test] = np.NaN  # type: ignore
-        return result
-
     def show_plot(self) -> None:
         plt.show()  # pyright: ignore[reportUnknownMemberType]
 
-    def save_plot(self, data: DataFrame, out_dir: Path) -> None:
+    def save_plot(self, out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        data.plot.bar()
         plt.savefig(out_dir.joinpath(self.filename_out_grapg))  # pyright: ignore
 
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
