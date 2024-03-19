@@ -9,7 +9,7 @@ from typing import Any, Dict, List, TypeVar
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pandas.core.api import DataFrame
+from pandas import DataFrame
 
 from src.protocols.collector import DictSI
 from src.protocols.subparser import SubParser
@@ -105,9 +105,7 @@ class Summarize:
         for src_dir in data.index.unique(level="dir"):
             mean_of_dir[src_dir] = {}
             mean_of_dir[src_dir]["BP incorrect %"] = round(
-                data.loc[src_dir, "BP incorrect"].sum()
-                / data.loc[src_dir, "BP lookups"].sum()
-                * 100,  # pyright: ignore
+                data.loc[src_dir, "BP incorrect"].sum() / data.loc[src_dir, "BP lookups"].sum() * 100,
                 2,
             )
         return DataFrame(mean_of_dir)
@@ -121,7 +119,7 @@ class Summarize:
         with open(out_dir.joinpath(self.filename_out_data), "w") as f:
             # Use pandas to print data to file
             f.write("Summarized data:\n")
-            f.write(mean_of_dir.to_string())  # pyright: ignore
+            f.write(mean_of_dir.to_string())
             f.write("\n\n")
             for src_dir in src_dirs:
                 f.write(f"dir: {src_dir}\n")
@@ -146,14 +144,14 @@ class Summarize:
             out_file.parent.mkdir(parents=True, exist_ok=True)
             with open(out_file, "w") as f:
 
-                data_frame = data.loc[src_dir]  # pyright: ignore
+                data_frame = data.loc[src_dir]
                 f.write(f"dir: {src_dir}\n")
                 f.write("\n")
-                f.write(data_frame.to_string())  # pyright: ignore
+                f.write(data_frame.to_string())
                 f.write("\n\n")
                 f.write("Average % of BP incorrect: ")
 
-                bp_incorrect = mean_of_dir.loc["BP incorrect %", src_dir]  # pyright: ignore
+                bp_incorrect = mean_of_dir.loc["BP incorrect %", src_dir]
                 f.write(str(bp_incorrect))
 
     def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
@@ -162,21 +160,21 @@ class Summarize:
     def filter_summarize_data(self, data: DataFrame) -> DataFrame:
         result = data.copy()
         for key in data.index:
-            if not (0 <= data.loc[key, "BP incorrect %"] <= 100):  # type: ignore
-                result.loc[key, "BP incorrect %"] = np.NaN  # type: ignore
-            if data.loc[key, "BP lookups"] < 50:  # type: ignore
-                result.loc[key, "BP incorrect %"] = np.NaN  # type: ignore
+            if not (0 <= data.loc[key, "BP incorrect %"] <= 100):
+                result.loc[key, "BP incorrect %"] = np.NaN
+            if data.loc[key, "BP lookups"] < 50:
+                result.loc[key, "BP incorrect %"] = np.NaN
         return result
 
     def sort_data(self, data: DataFrame) -> DataFrame:
         return data.loc[data.max(axis=1).sort_values(na_position="first").index]
 
     def show_plot(self) -> None:
-        plt.show()  # pyright: ignore[reportUnknownMemberType]
+        plt.show()
 
     def save_plot(self, out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        plt.savefig(out_dir.joinpath(self.filename_out_grapg))  # pyright: ignore
+        plt.savefig(out_dir.joinpath(self.filename_out_grapg))
 
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
         summarize_parser = subparser.add_parser("summarize")
