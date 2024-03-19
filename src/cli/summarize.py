@@ -34,7 +34,7 @@ class Summarize:
         self.logger.info("Summarize is running. Settings:")
         self.logger.info(pformat(vars(self.settings)))
 
-        src_dirs: List[str] = self.settings.src_dirs
+        src_dirs: List[Path] = [Path(s) for s in self.settings.src_dirs]
         data = self.get_data_from_sources(src_dirs)
         if len(data) == 0:
             print("[-]: No data to summarize")
@@ -62,18 +62,17 @@ class Summarize:
         if not self.settings.no_save_graph:
             self.save_plot(out_dir)
 
-    def get_data_from_sources(self, src_dirs: List[str]) -> DataType[int]:
+    def get_data_from_sources(self, src_dirs: List[Path]) -> DataType[int]:
         data: Dict[str, Dict[str, DictSI]] = {}
 
         for src_dir in src_dirs:
-            src_dir_path = Path(src_dir)
-            if not src_dir_path.exists():
+            if not src_dir.exists():
                 print(f"[-]: Directory {src_dir} does not exist")
                 continue
 
-            posix_dir_path = src_dir_path.as_posix()
+            posix_dir_path = src_dir.as_posix()
             data[posix_dir_path] = {}
-            for src_file in src_dir_path.glob("*"):
+            for src_file in src_dir.glob("*"):
                 with open(src_file, "r") as f:
                     data[posix_dir_path][src_file.stem] = json.loads(f.read())
                 for key, val in data[posix_dir_path][src_file.stem].items():
@@ -100,7 +99,10 @@ class Summarize:
                     ),
                     "BP incorrect": bp_incorrect,
                     "BP incorrect %": (
-                        round(bp_incorrect / float(bp_lookups) * 100 if bp_lookups != 0 else 0, 2)
+                        round(
+                            (bp_incorrect / float(bp_lookups) * 100 if bp_lookups != 0 else 0),
+                            2,
+                        )
                         if bp_lookups != np.nan and bp_incorrect != np.nan
                         else np.nan
                     ),
@@ -122,7 +124,7 @@ class Summarize:
         df = pd.concat({key: DataFrame(value).T for key, value in data.items()})
         return df.rename_axis(["dir", "test"])
 
-    def save_mean_data(self, mean_of_dir: DataFrame, src_dirs: List[str], out_dir: Path) -> None:
+    def save_mean_data(self, mean_of_dir: DataFrame, src_dirs: List[Path], out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         with open(out_dir.joinpath(self.filename_out_data), "w") as f:
             # Use pandas to print data to file
@@ -131,35 +133,34 @@ class Summarize:
             f.write("\n\n")
             for src_dir in src_dirs:
                 f.write(f"dir: {src_dir}\n")
-                f.write(src_dir)
+                f.write(str(src_dir))
                 f.write("\n\n\n")
 
     def save_data_for_each_source(
         self,
         data: DataFrame,
         mean_of_dir: DataFrame,
-        src_dirs: List[str],
+        src_dirs: List[Path],
         out_dir: Path,
     ) -> None:
 
         for src_dir in src_dirs:
-            dir_path = Path(src_dir)
-            if not dir_path.exists():
+            if not src_dir.exists():
                 print(f"[-]: Directory {src_dir} does not exist")
                 continue
 
-            out_file = dir_path.parent.joinpath(os.path.basename(out_dir), self.filename_out_data)
+            out_file = src_dir.parent.joinpath(os.path.basename(out_dir), self.filename_out_data)
             out_file.parent.mkdir(parents=True, exist_ok=True)
             with open(out_file, "w") as f:
 
-                data_frame = data.loc[src_dir]
+                data_frame = data.loc[str(src_dir)]
                 f.write(f"dir: {src_dir}\n")
                 f.write("\n")
                 f.write(data_frame.to_string())
                 f.write("\n\n")
                 f.write("Average % of BP incorrect: ")
 
-                bp_incorrect = mean_of_dir.loc["BP incorrect %", src_dir]
+                bp_incorrect = mean_of_dir.loc["BP incorrect %", str(src_dir)]
                 f.write(str(bp_incorrect))
 
     def filter_summarize_data(self, data: DataFrame) -> DataFrame:
