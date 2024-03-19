@@ -7,6 +7,7 @@ import shutil
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
+import threading
 from typing import List
 
 from src.cli.analyze import Analyze
@@ -18,15 +19,24 @@ class Aggregate:
         self.settings = Namespace()
         self.logger = logging.getLogger(__name__)
 
+    def _run_analyzer(self, analyze: Analyze, chan: Queue):
+        analyze.run()
+        if analyze.settings is None:
+            raise LookupError("Didn't find settings for analyze")
+        chan.put(analyze.settings.out_dir)
+
     # TODO: this is a draft method and should be removed or rewritted with asincio
     def run_analyzers(self) -> List[str]:
         output_analyze_dirs: List[str] = []
-
+        chan = Queue()
         for analyze in self.analyzes:
-            analyze.run()
-            if analyze.settings is None:
-                raise LookupError("Didn't find settings for analyze")
-            output_analyze_dirs.append(analyze.settings.out_dir)
+            if self.settings.async_analyze:
+                threading.Thread(target=self._run_analyzer, args=(analyze, chan)).start()
+            else:
+                self._run_analyzer(analyze, chan)
+
+        for _ in self.analyzes:
+            output_analyze_dirs.append(chan.get())
 
         return output_analyze_dirs
 
@@ -107,6 +117,9 @@ class Aggregate:
             "--dest_dir",
             default="out",
             help="Path to dist dir, if not exit it will be created",
+        )
+        shell_parser.add_argument(
+            "--async_analyze", action="store_true", help="Run analyze steps simultaneously (not recommended with perf)"
         )
         shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
         shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
