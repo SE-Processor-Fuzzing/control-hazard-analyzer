@@ -75,14 +75,15 @@ class Summarize:
 
         return data
 
-    def prepare_data(self, data: DataType[int]) -> DataType[int | float]:
+    def prepare_data(self, data: DataType[int]) -> DataType[int | float | bool]:
 
-        result: DataType[int | float] = {Path(src_dir).as_posix(): {} for src_dir in data}
+        result: DataType[int | float | bool] = {Path(src_dir).as_posix(): {} for src_dir in data}
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
                 sim_ticks = src_data.get("simTicks", np.nan)
                 bp_lookups = src_data.get("branchPred.lookups", np.nan)
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
+                is_full = src_data.get("isFull", False)
                 result[src_dir][Path(src_file).stem] = {
                     "Number of ticks": sim_ticks,
                     "BP lookups": bp_lookups,
@@ -97,6 +98,7 @@ class Summarize:
                         if bp_lookups != np.nan and bp_incorrect != np.nan
                         else np.nan
                     ),
+                    "Full launch": is_full,
                 }
         return result
 
@@ -163,6 +165,8 @@ class Summarize:
             if not (0 <= data.loc[key, "BP incorrect %"] <= 100):
                 result.loc[key, "BP incorrect %"] = np.NaN
             if data.loc[key, "BP lookups"] < 50:
+                result.loc[key, "BP incorrect %"] = np.NaN
+            if not data.loc[key, "Full launch"]:
                 result.loc[key, "BP incorrect %"] = np.NaN
         return result
 
