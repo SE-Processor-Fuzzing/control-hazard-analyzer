@@ -6,6 +6,7 @@ from pprint import pformat
 from typing import List, Optional
 
 from src.generators.code_gen import gen_test
+from src.generators.weigths_for_block import WeightsForBlocks
 from src.protocols.subparser import SubParser
 
 
@@ -21,19 +22,20 @@ class Generate:
         self.logger.setLevel(self.settings.log_level)
         self.out_dir = Path(settings.out_dir)
         self.repeats = int(settings.repeats)
+        self.weights = WeightsForBlocks(5, 20, 9, 12, (5, 10))
 
     def generate_tests(
         self,
         target_dir: Path,
         count: int,
-        max_depth: int = 6,
+        max_depth: int = 4,
     ) -> None:
         print(f"[+]: Generate tests to '{target_dir.absolute()}'")
         for i in range(count):
-            self._generate_test(target_dir.joinpath(f"test_{i}.c"), max_depth)
+            self._generate_test(target_dir.joinpath(f"test_{i}.c"), self.weights, max_depth)
 
-    def _generate_test(self, file: Path, max_depth: int) -> None:
-        test = gen_test(max_depth)
+    def _generate_test(self, file: Path, weights: WeightsForBlocks, max_depth: int) -> None:
+        test = gen_test(weights, max_depth)
         if file.is_dir():
             self.logger.warn(f"Provided path {file} are not a file. Skipping this test.")
             return
