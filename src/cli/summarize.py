@@ -89,7 +89,7 @@ class Summarize:
                 sim_ticks = src_data.get("simTicks", np.nan)
                 bp_lookups = src_data.get("branchPred.lookups", np.nan)
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
-                is_full = src_data.get("isFull", False)
+                is_full = bool(src_data.get("isFull", False))
                 result[src_dir][Path(src_file).stem] = {
                     "Number of ticks": sim_ticks,
                     "BP lookups": bp_lookups,
@@ -221,7 +221,6 @@ class Summarize:
             # if bbox is not None:
             #     bbox.set_alpha(0.3)
 
-        # Функция для отображения значения при наведении
         def show_annotation(event: Event) -> Any:
             vis = annot.get_visible()
             for bar in bars:
