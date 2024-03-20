@@ -54,7 +54,7 @@ class Summarize:
         clean_df_plot = DataFrame(
             {k: data_frame_plot.loc[k, "BP incorrect %"] for k in data_frame_plot.index.unique(level="dir")}
         )
-        self.construct_plot(clean_df_plot, data_frame_plot.loc[:, "BP lookups"])
+        self.construct_plot(clean_df_plot, data_frame_plot.loc[:, ["BP lookups", "Full launch"]])
 
         if not self.settings.no_show_graph:
             self.show_plot()
@@ -169,12 +169,12 @@ class Summarize:
                 result.loc[key, "BP incorrect %"] = np.NaN
             if data.loc[key, "BP lookups"] < 50:
                 result.loc[key, "BP incorrect %"] = np.NaN
-            if not data.loc[key, "Full launch"]:
-                result.loc[key, "BP incorrect %"] = np.NaN
+            # if not data.loc[key, "Full launch"]:
+            #     result.loc[key, "BP incorrect %"] = np.NaN
         return result
 
     def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
-        return data.loc[:, ["BP incorrect %", "BP lookups"]]
+        return data.loc[:, ["BP incorrect %", "BP lookups", "Full launch"]]
 
     def sort_data(self, data: DataFrame) -> DataFrame:
 
@@ -187,13 +187,16 @@ class Summarize:
         data = df_sorted.set_index(["dir", "test"]).drop("BP incorrect %_max", axis=1)
         return data
 
-    def construct_plot(self, data: DataFrame, hovers: Any) -> None:
+    def construct_plot(self, data: DataFrame, hovers: DataFrame) -> None:
         ax = data.plot(kind="bar", rot=0)
 
         fig = ax.figure
         if fig is None:
             return
         bars = ax.patches
+        for bar in bars:
+            if hovers.iloc[bars.index(bar)].loc["Full launch"] == 0:
+                bar.set_alpha(0.5)
         annot = ax.annotate(
             "",
             xy=(0, 0),
@@ -204,15 +207,15 @@ class Summarize:
         )
         annot.set_visible(False)
 
-        def get_hover(bar: Patch) -> int | str:
+        def get_hover(bar: Patch) -> Any:
             index = bars.index(bar)
-            return int(hovers.iloc[index]) if index < len(hovers) else "N/A"
+            return hovers.iloc[index].to_string(name=False) if index < len(hovers) else "N/A"
 
         def update_annot(bar: Any) -> None:
             x = bar.get_x() + bar.get_width() / 2.0
             y = bar.get_y() + bar.get_height()
             annot.xy = (x, y)
-            text = f"BP lookups:\n{get_hover(bar)}"
+            text = f"{get_hover(bar)}"
             annot.set_text(text)
             # bbox = annot.get_bbox_patch()
             # if bbox is not None:
