@@ -9,6 +9,8 @@ from typing import Any, Dict, List, TypeVar
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.backend_bases import Event
+from matplotlib.patches import Patch
 from pandas import DataFrame
 
 from src.protocols.collector import DictSI
@@ -39,7 +41,8 @@ class Summarize:
             return
 
         data_df = self.convert_to_pandas(self.prepare_data(data))
-        mean_of_dir = self.summarize_by_dir(data_df)
+        self.logger.debug(f"Collected data:\n{data_df.head()}")
+        mean_of_dir = self.calculate_mean_of_dir(data_df)
         out_dir = Path(self.settings.out_dir)
 
         self.save_mean_data(mean_of_dir, src_dirs, out_dir)
@@ -48,7 +51,10 @@ class Summarize:
         data_df = self.filter_summarize_data(data_df)
         data_frame_plot = self.construct_data_for_plot(data_df)
         data_frame_plot = self.sort_data(data_frame_plot)
-        data_frame_plot.plot.bar()
+        clean_df_plot = DataFrame(
+            {k: data_frame_plot.loc[k, "BP incorrect %"] for k in data_frame_plot.index.unique(level="dir")}
+        )
+        self.construct_plot(clean_df_plot, data_frame_plot.loc[:, "BP lookups"])
 
         if not self.settings.no_show_graph:
             self.show_plot()
@@ -102,7 +108,7 @@ class Summarize:
                 }
         return result
 
-    def summarize_by_dir(self, data: DataFrame) -> DataFrame:
+    def calculate_mean_of_dir(self, data: DataFrame) -> DataFrame:
         mean_of_dir: Dict[str, Dict[str, Any]] = {}
         for src_dir in data.index.unique(level="dir"):
             mean_of_dir[src_dir] = {}
@@ -156,9 +162,6 @@ class Summarize:
                 bp_incorrect = mean_of_dir.loc["BP incorrect %", src_dir]
                 f.write(str(bp_incorrect))
 
-    def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
-        return DataFrame({k: data.loc[k, "BP incorrect %"] for k in data.index.unique(level="dir")})
-
     def filter_summarize_data(self, data: DataFrame) -> DataFrame:
         result = data.copy()
         for key in data.index:
@@ -170,8 +173,67 @@ class Summarize:
                 result.loc[key, "BP incorrect %"] = np.NaN
         return result
 
+    def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
+        return data.loc[:, ["BP incorrect %", "BP lookups"]]
+
     def sort_data(self, data: DataFrame) -> DataFrame:
-        return data.loc[data.max(axis=1).sort_values(na_position="first").index]
+
+        data = data.reset_index(level=["dir", "test"])
+        max_values = data.groupby("test")["BP incorrect %"].max()
+
+        data = data.merge(max_values, on="test", suffixes=("", "_max"))
+
+        df_sorted = data.sort_values(by=["dir", "BP incorrect %_max"], na_position="first")
+        data = df_sorted.set_index(["dir", "test"]).drop("BP incorrect %_max", axis=1)
+        return data
+
+    def construct_plot(self, data: DataFrame, hovers: Any) -> None:
+        ax = data.plot(kind="bar", rot=0)
+
+        fig = ax.figure
+        if fig is None:
+            return
+        bars = ax.patches
+        annot = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(-20, 20),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="b", ec="b", lw=2, alpha=0.3),
+            arrowprops=dict(arrowstyle="->"),
+        )
+        annot.set_visible(False)
+
+        def get_hover(bar: Patch) -> int | str:
+            index = bars.index(bar)
+            return int(hovers.iloc[index]) if index < len(hovers) else "N/A"
+
+        def update_annot(bar: Any) -> None:
+            x = bar.get_x() + bar.get_width() / 2.0
+            y = bar.get_y() + bar.get_height()
+            annot.xy = (x, y)
+            text = f"BP lookups:\n{get_hover(bar)}"
+            annot.set_text(text)
+            # bbox = annot.get_bbox_patch()
+            # if bbox is not None:
+            #     bbox.set_alpha(0.3)
+
+        # Функция для отображения значения при наведении
+        def show_annotation(event: Event) -> Any:
+            vis = annot.get_visible()
+            for bar in bars:
+                cont, _ = bar.contains(event)  # type: ignore
+                if cont:
+                    update_annot(bar)
+                    annot.set_visible(True)
+                    fig.canvas.draw_idle()
+                    return
+
+            if vis:
+                annot.set_visible(False)
+                fig.canvas.draw_idle()
+
+        fig.canvas.mpl_connect("motion_notify_event", show_annotation)
 
     def show_plot(self) -> None:
         plt.show()
