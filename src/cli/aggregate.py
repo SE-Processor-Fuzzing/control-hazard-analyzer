@@ -1,13 +1,13 @@
-from datetime import datetime
 import logging
 import os
-from queue import Queue
 import shlex
 import shutil
+import threading
 from argparse import ArgumentParser, Namespace
+from datetime import datetime
 from pathlib import Path
 from pprint import pformat
-import threading
+from queue import Queue
 from typing import List
 
 from src.cli.analyze import Analyze
@@ -107,25 +107,25 @@ class Aggregate:
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
         shell_parser: ArgumentParser = subparser.add_parser("aggregate", prog="aggregate")
 
-        shell_parser.add_argument("--config_file", default="config.json", help="Path to .cfg file")
+        shell_parser.add_argument("--config-file", default="config.json", help="Path to .cfg file")
         shell_parser.add_argument(
-            "--section_in_config",
+            "--section-in-config",
             default="DEFAULT",
             help="Set the custom section in config file (DEFAULT by default)",
         )
         shell_parser.add_argument(
-            "--dest_dir",
+            "--dest-dir",
             default="out",
             help="Path to dist dir, if not exit it will be created",
         )
         shell_parser.add_argument(
-            "--async_analyze", action="store_true", help="Run analyze steps simultaneously (not recommended with perf)"
+            "--async-analyze", action="store_true", help="Run analyze steps simultaneously (not recommended with perf)"
         )
         shell_parser.add_argument("--Wg", default="", help="Pass arguments to generate")
         shell_parser.add_argument("--Wz", default="", help="Pass arguments to analyze")
         shell_parser.add_argument("--Ws", default="", help="Pass arguments to summarize")
         shell_parser.add_argument(
-            "--log_level",
+            "--log-level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",
