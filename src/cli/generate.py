@@ -57,10 +57,10 @@ class Generate:
 
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
         generate_parser = subparser.add_parser("generate")
-        generate_parser.add_argument("--out_dir", default="tests", help="Path to output dir")
+        generate_parser.add_argument("--out-dir", default="tests", help="Path to output dir")
         generate_parser.add_argument("--repeats", type=int, default=1, help="Count of repeats to generated test")
         generate_parser.add_argument(
-            "--log_level",
+            "--log-level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",

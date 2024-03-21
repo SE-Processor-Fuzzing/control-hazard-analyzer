@@ -248,20 +248,20 @@ class Summarize:
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
         summarize_parser = subparser.add_parser("summarize")
 
-        summarize_parser.add_argument("--src_dirs", help="Path to source dirs", nargs="*")
-        summarize_parser.add_argument("--out_dir", default="summarize", help="Path to output directory")
+        summarize_parser.add_argument("--src-dirs", help="Path to source dirs", nargs="*")
+        summarize_parser.add_argument("--out-dir", default="summarize", help="Path to output directory")
         summarize_parser.add_argument(
-            "--no_show_graph",
+            "--no-show-graph",
             action="store_true",
             help="Shows a graph of BP incorrect %%",
         )
         summarize_parser.add_argument(
-            "--no_save_graph",
+            "--no-save-graph",
             action="store_true",
             help="Saves a graph of BP incorrect %% in graph.png",
         )
         summarize_parser.add_argument(
-            "--log_level",
+            "--log-level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",

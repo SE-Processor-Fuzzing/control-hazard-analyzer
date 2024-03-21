@@ -6,10 +6,10 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, List
 
-from src.analyzers.sshAnalyzer import SshAnalyzer
-from src.helpers.backGroundBuilder import BGBuilder
 from src.analyzers.gemAnalyzer import GemAnalyzer
 from src.analyzers.perfAnalyzer import PerfAnalyzer
+from src.analyzers.sshAnalyzer import SshAnalyzer
+from src.helpers.backGroundBuilder import BGBuilder
 from src.helpers.builder import Builder
 from src.helpers.packer import Packer
 from src.protocols.analyzer import Analyzer
@@ -72,28 +72,28 @@ class Analyze:
 
     def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
         analyze_parser: ArgumentParser = subparser.add_parser("analyze")
-        analyze_parser.add_argument("--config_file", default=None, help="Path to config file")
-        analyze_parser.add_argument("--out_dir", default="analyze", help="Path to output dir")
-        analyze_parser.add_argument("--test_dir", default="tests", help="Path to directory with tests")
+        analyze_parser.add_argument("--config-file", default=None, help="Path to config file")
+        analyze_parser.add_argument("--out-dir", default="analyze", help="Path to output dir")
+        analyze_parser.add_argument("--test-dir", default="tests", help="Path to directory with tests")
         analyze_parser.add_argument(
             "--timeout",
             default=10,
             help="Number of seconds after which the test will be stopped",
         )
         analyze_parser.add_argument("--compiler", default="gcc", help="Path to compiler")
-        analyze_parser.add_argument("--compiler_args", default="", help="Pass arguments on to the compiler")
+        analyze_parser.add_argument("--compiler-args", default="", help="Pass arguments on to the compiler")
         analyze_parser.add_argument(
             "--profiler",
             choices=["perf", "gem5"],
             default="perf",
             help="Type of profiler",
         )
-        analyze_parser.add_argument("--gem5_home", default="./", help="Path to home gem5")
-        analyze_parser.add_argument("--gem5_bin", default="./", help="Path to execute gem5")
-        analyze_parser.add_argument("--target_isa", default="", help="Type of architecture being simulated")
-        analyze_parser.add_argument("--sim_script", default="./", help="Path to simulation Script")
+        analyze_parser.add_argument("--gem5-home", default="./", help="Path to home gem5")
+        analyze_parser.add_argument("--gem5-bin", default="./", help="Path to execute gem5")
+        analyze_parser.add_argument("--target-isa", default="", help="Type of architecture being simulated")
+        analyze_parser.add_argument("--sim-script", default="./", help="Path to simulation Script")
         analyze_parser.add_argument(
-            "--log_level",
+            "--log-level",
             default="WARNING",
             choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             help="Log level of program",
