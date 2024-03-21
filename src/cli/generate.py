@@ -5,6 +5,8 @@ from pathlib import Path
 from pprint import pformat
 from typing import List, Optional
 
+# old generation code, DON'T TOUCH IT
+# from src.generators.blocks_rendering import generate_test
 from src.generators.code_gen import gen_test
 from src.generators.weigths_for_block import WeightsForBlocks
 from src.protocols.subparser import SubParser
@@ -32,6 +34,8 @@ class Generate:
     ) -> None:
         print(f"[+]: Generate tests to '{target_dir.absolute()}'")
         for i in range(count):
+            # old genaration code, DON'T TOUCH IT
+            # generate_test(target_dir.joinpath(f"test_{i}.c"), 100, 2, 2)
             self._generate_test(target_dir.joinpath(f"test_{i}.c"), self.weights, max_depth)
 
     def _generate_test(self, file: Path, weights: WeightsForBlocks, max_depth: int) -> None:

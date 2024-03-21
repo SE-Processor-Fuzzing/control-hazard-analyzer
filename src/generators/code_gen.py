@@ -172,10 +172,11 @@ class Generator:
         self,
         scope: Scope,
         weights: WeightsForBlocks,
-        random_seed: int | None = 42,
+        random_seed: int | float | None = 42,
         **_: Dict[str, int],
     ) -> None:
         self.weights = weights
+        self.seed = random_seed
         rd.seed(random_seed)
         self.env = scope
         self.block_generation_functions: Dict[Type[Block], Callable[[Scope], Block]] = {
@@ -196,6 +197,7 @@ class Generator:
         }
 
     def render(self, visitor: Visitor) -> None:
+        visitor.send(f"// random seed: {self.seed}\n")
         self.entry_point.render(visitor)
 
     def gen(self) -> None:
