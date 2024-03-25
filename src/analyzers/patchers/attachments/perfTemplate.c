@@ -109,6 +109,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     int cpu = atoi(argv[1]);
+    CPU_ZERO(&cpuset);
     CPU_SET(cpu, &cpuset);
     if (sched_setaffinity(0, sizeof(cpuset), &cpuset) == -1) {
         fprintf(stderr, "Can't set test to %d CPU core\n", cpu);
