@@ -1,10 +1,10 @@
 {
   "DEFAULT": {
-    "path_to_configs": "./configs",
+    "path_to_configs": "./configs/work",
     "configs": [
-      "perf.json",
-      "gem5-BiMode.json",
-      "gem5-Tournament.json"
+      "ssh_odroid_big.json",
+      "ssh_odroid_little.json",
+      "ssh_mal.json"
     ],
     "dest_dir": "out"
   }
