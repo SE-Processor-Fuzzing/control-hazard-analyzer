@@ -34,7 +34,7 @@ long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int g
     return ret;
 }
 
-int set_up_perf_event(perf_event_config_t* event) {
+int set_up_perf_event(perf_event_config_t* event, int cpu) {
     int fd;
     struct perf_event_attr* pe = malloc(sizeof(struct perf_event_attr));
     pe->type = event->type;
@@ -44,7 +44,7 @@ int set_up_perf_event(perf_event_config_t* event) {
     pe->exclude_kernel = 1;
     pe->exclude_hv = 1;
 
-    fd = perf_event_open(pe, 0, -1, -1, 0);
+    fd = perf_event_open(pe, 0, cpu, -1, 0);
     if (fd == -1) {
         fprintf(stderr, "Error opening leader %llx\n", pe->config);
     }
@@ -52,11 +52,11 @@ int set_up_perf_event(perf_event_config_t* event) {
     return fd;
 }
 
-static void init() {
+static void init(int cpu) {
     perf_fd_len = events_len;
     perf_fd = calloc(events_len, sizeof(*perf_fd));
     for (size_t i = 0; i < events_len; i++) {
-        perf_fd[i] = set_up_perf_event(&events[i]);
+        perf_fd[i] = set_up_perf_event(&events[i], cpu);
     }
 
     for (size_t i = 0; i < events_len; i++) {
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Can't set test to %d CPU core\n", cpu);
     }
 
-    init();
+    init(cpu);
     test_fun();
     return 0;
 }
