@@ -25,4 +25,5 @@ for f in src_dir.iterdir():
             out_dict[KEY_PREDICTED_BRANCH] += src_dict[KEY_BRANCH] - out_dict[KEY_BRANCH]
             out_dict[KEY_BRANCH] = src_dict[KEY_BRANCH]
             writter.seek(0, 0)
+            writter.truncate(0)
             writter.write(json.dumps(out_dict))
