@@ -18,6 +18,9 @@ size_t perf_fd_len = 0;
 
 #ifndef EVENTS_INIT
     #define EVENTS_INIT
+
+    #define EVENTS_EXCLUDE_KERNEL 1
+    #define EVENTS_EXCLUDE_HV     1
 typedef struct _perf_event_config_t {
     unsigned int type;
     unsigned long long config;
@@ -26,6 +29,7 @@ typedef struct _perf_event_config_t {
 
 perf_event_config_t events[] = {};
 size_t events_len = 0;
+
 #endif
 
 long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
@@ -41,8 +45,8 @@ int set_up_perf_event(perf_event_config_t* event, int cpu) {
     pe->size = sizeof(struct perf_event_attr);
     pe->config = event->config;
     pe->disabled = 1;
-    pe->exclude_kernel = 1;
-    pe->exclude_hv = 1;
+    pe->exclude_kernel = EVENTS_EXCLUDE_KERNEL;
+    pe->exclude_hv = EVENTS_EXCLUDE_HV;
 
     fd = perf_event_open(pe, 0, cpu, -1, 0);
     if (fd == -1) {
