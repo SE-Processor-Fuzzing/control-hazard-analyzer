@@ -2,9 +2,12 @@
   "DEFAULT": {
     "path_to_configs": "./configs/work",
     "configs": [
-      "ssh_odroid_big.json",
-      "ssh_odroid_little.json",
-      "ssh_mal.json"
+      "ssh_starfive.json",
+      "ssh_starfive.json",
+      "ssh_starfive.json",
+      "ssh_lich.json",
+      "ssh_lich.json",
+      "ssh_lich.json"
     ],
     "dest_dir": "out"
   }

@@ -24,13 +24,13 @@ class Generate:
         self.logger.setLevel(self.settings.log_level)
         self.out_dir = Path(settings.out_dir)
         self.repeats = int(settings.repeats)
-        self.weights = WeightsForBlocks(5, 20, 9, 12, (5, 10))
+        self.weights = WeightsForBlocks(1, 80, 6, 36, (5, 10))
 
     def generate_tests(
         self,
         target_dir: Path,
         count: int,
-        max_depth: int = 4,
+        max_depth: int = 5,
     ) -> None:
         print(f"[+]: Generate tests to '{target_dir.absolute()}'")
         for i in range(count):
