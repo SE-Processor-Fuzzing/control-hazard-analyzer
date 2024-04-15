@@ -79,7 +79,6 @@ class Scope:
 
 
 class Block(Protocol):
-    def __init__(self, env: Scope, probs: Probabilities) -> None: ...
 
     def render(self, visitor: Visitor) -> None: ...
 
@@ -87,9 +86,13 @@ class Block(Protocol):
 class DefineBlock(Block):
     max_value = 100
 
-    def __init__(self, env: Scope, _: Probabilities) -> None:
-        self.var = env.create_new_var()
-        self.value = rd.randint(0, DefineBlock.max_value)
+    def __init__(self, var: str, value: int) -> None:
+        self.var = var
+        self.value = value
+
+    # def __init__(self, env: Scope, _: Probabilities) -> None:
+    #     self.var = env.create_new_var()
+    #     self.value = rd.randint(0, DefineBlock.max_value)
 
     def render(self, visitor: Visitor) -> None:
         string = f"int {self.var} = {self.value};"
@@ -107,15 +110,20 @@ class ApplyBinOperator:
 
 
 class OperationBlock(Block):
-    def __init__(self, env: Scope, probs: Probabilities) -> None:
-        rule: Callable[[str], bool] = lambda x: x.startswith("a")
-        self.cur_var = env.get_random_var(rule=rule)
 
-        operator = env.get_random_operator()
-        lvar, rvar = env.get_random_var(), env.get_random_var()
-        rvar = f"(D0({rvar}))" if operator == "/" else rvar
+    def __init__(self, cur_var: str, cond: ApplyBinOperator) -> None:
+        self.cur_var = cur_var
+        self.statement = cond
 
-        self.statement = ApplyBinOperator(lvar, rvar, operator)
+    # def __init__(self, env: Scope, probs: Probabilities) -> None:
+    #     rule: Callable[[str], bool] = lambda x: x.startswith("a")
+    #     self.cur_var = env.get_random_var(rule=rule)
+
+    #     operator = env.get_random_operator()
+    #     lvar, rvar = env.get_random_var(), env.get_random_var()
+    #     rvar = f"(D0({rvar}))" if operator == "/" else rvar
+
+    #     self.statement = ApplyBinOperator(lvar, rvar, operator)
 
     def render(self, visitor: Visitor) -> None:
         string = f"{self.cur_var} = {self.statement.render()};"
@@ -123,11 +131,11 @@ class OperationBlock(Block):
 
 
 class IfConditionBlock(Block):
-    def __init__(self, env: Scope, probs: Probabilities) -> None:
-        lvar, rvar = env.get_random_vars(count=2)
-        self.condition = ApplyBinOperator(lvar, rvar, env.get_random_cond_operator())
-        self.then_blocks: List[Block] = []
-        self.else_blocks: List[Block] = []
+
+    def __init__(self, cond: ApplyBinOperator, then_blocks: List[Block], else_blocks: List[Block]) -> None:
+        self.condition = cond
+        self.then_blocks = then_blocks
+        self.else_blocks = else_blocks
 
     def render(self, visitor: Visitor) -> None:
         string = f"if ({self.condition.render()}) {{"
@@ -143,10 +151,10 @@ class IfConditionBlock(Block):
 class ForBlock(Block):
     max_value = 100
 
-    def __init__(self, env: Scope, _: Probabilities) -> None:
-        self.def_var = env.create_new_var(prefix="f")
-        self.condition = ApplyBinOperator(self.def_var, str(rd.randint(2, ForBlock.max_value)), "<=")
-        self.next_blocks: List[Block] = []
+    def __init__(self, def_var: str, cond: ApplyBinOperator, next_blocks: List[Block]) -> None:
+        self.def_var = def_var
+        self.condition = cond
+        self.next_blocks = next_blocks
 
     def render(self, visitor: Visitor) -> None:
         string = f"for (int {self.def_var} = 0; {self.condition.render()}; {self.def_var}++) {{"
@@ -157,11 +165,9 @@ class ForBlock(Block):
 
 
 class EntryPointBlock(Block):
-    def __init__(self, env: Scope, probs: Probabilities):
-        self.env = env
-        self.probs = probs
-        self.next_blocks: List[Block] = []
-        self.blocks_cut = probs.blocks_cut
+
+    def __init__(self, next_blocks: List[Block]) -> None:
+        self.next_blocks = next_blocks
 
     def render(self, visitor: Visitor) -> None:
         string = "# define D0(x) (x==0) ? 1 : x\n\nvoid test_fun() {"
@@ -197,10 +203,14 @@ class Generator:
 
     def gen(self) -> None:
         env_copy = self.env.copy()
-        self.entry_point = EntryPointBlock(env_copy, self.probs)
-        def_block: Block = DefineBlock(env_copy, self.probs)
-        self.entry_point.next_blocks.append(def_block)
-        self.entry_point.next_blocks.extend(self.__gen_local(env_copy))
+
+        var = env_copy.create_new_var()
+        value = rd.randint(0, DefineBlock.max_value)
+        def_block: Block = DefineBlock(var, value)
+
+        next_blocks: List[Block] = [def_block]
+        next_blocks.extend(self.__gen_local(env_copy))
+        self.entry_point = EntryPointBlock(next_blocks)
 
     def __gen_local(self, env: Scope) -> List[Block]:
         env.current_depth -= 1
@@ -215,22 +225,41 @@ class Generator:
 
     def __gen_for(self, env: Scope) -> ForBlock:
         env_copy = env.copy()
-        block = ForBlock(env_copy, self.probs)
-        block.next_blocks = self.__gen_local(env_copy)
+
+        def_var = env_copy.create_new_var(prefix="f")
+        cond = ApplyBinOperator(def_var, str(rd.randint(2, ForBlock.max_value)), "<=")
+        next_blocks = self.__gen_local(env_copy)
+
+        block = ForBlock(def_var, cond, next_blocks)
         return block
 
     def __gen_if(self, env: Scope) -> IfConditionBlock:
         env_copy = env.copy()
-        block = IfConditionBlock(env_copy, self.probs)
-        block.then_blocks = self.__gen_local(env.copy())
-        block.else_blocks = self.__gen_local(env.copy())
+
+        lvar, rvar = env_copy.get_random_vars(count=2)
+        cond = ApplyBinOperator(lvar, rvar, env_copy.get_random_cond_operator())
+        then_blocks = self.__gen_local(env.copy())
+        else_blocks = self.__gen_local(env.copy())
+
+        block = IfConditionBlock(cond, then_blocks, else_blocks)
         return block
 
     def __gen_operation(self, env: Scope) -> OperationBlock:
-        return OperationBlock(env, self.probs)
+        rule: Callable[[str], bool] = lambda x: x.startswith("a")
+        cur_var = env.get_random_var(rule=rule)
+
+        operator = env.get_random_operator()
+        lvar, rvar = env.get_random_var(), env.get_random_var()
+        rvar = f"(D0({rvar}))" if operator == "/" else rvar
+        statement = ApplyBinOperator(lvar, rvar, operator)
+
+        return OperationBlock(cur_var, statement)
 
     def __gen_definition(self, env: Scope) -> DefineBlock:
-        return DefineBlock(env, self.probs)
+        var = env.create_new_var()
+        value = rd.randint(0, DefineBlock.max_value)
+
+        return DefineBlock(var, value)
 
 
 class Accum:
