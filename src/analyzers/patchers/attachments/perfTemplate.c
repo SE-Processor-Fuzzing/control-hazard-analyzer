@@ -13,9 +13,6 @@ void test_fun();
 
 #define EXIT_SIGNAL 2
 
-int* perf_fd;
-size_t perf_fd_len = 0;
-
 #ifndef EVENTS_INIT
     #define EVENTS_INIT
 
@@ -32,13 +29,21 @@ size_t events_len = 0;
 
 #endif
 
+typedef struct _perf_group_t {
+    int group_fd;
+    int* perf_fd;
+    size_t perf_fd_len;
+} perf_group_t;
+
+perf_group_t* perf_group = NULL;
+
 long perf_event_open(struct perf_event_attr* hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
     int ret;
     ret = syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
     return ret;
 }
 
-int set_up_perf_event(perf_event_config_t* event, int cpu) {
+int set_up_perf_event(perf_event_config_t* event, int cpu, int group_fd) {
     int fd;
     struct perf_event_attr* pe = malloc(sizeof(struct perf_event_attr));
     pe->type = event->type;
@@ -48,7 +53,7 @@ int set_up_perf_event(perf_event_config_t* event, int cpu) {
     pe->exclude_kernel = EVENTS_EXCLUDE_KERNEL;
     pe->exclude_hv = EVENTS_EXCLUDE_HV;
 
-    fd = perf_event_open(pe, 0, cpu, -1, 0);
+    fd = perf_event_open(pe, 0, cpu, group_fd, 0);
     if (fd == -1) {
         fprintf(stderr, "Error opening leader %llx\n", pe->config);
     }
@@ -56,44 +61,72 @@ int set_up_perf_event(perf_event_config_t* event, int cpu) {
     return fd;
 }
 
+perf_group_t* create_perf_group(perf_event_config_t* events, size_t len, int cpu) {
+    perf_group_t* group = calloc(1, sizeof(*group));
+    group->perf_fd_len = len;
+    group->perf_fd = calloc(events_len, sizeof(*(group->perf_fd)));
+
+    int group_fd = -1;
+    for (size_t i = 0; i < events_len; i++) {
+        group->perf_fd[i] = set_up_perf_event(&events[i], cpu, group_fd);
+        if (group->perf_fd[i] > -1)
+            group_fd = group->perf_fd[i];
+    }
+
+    if (group_fd < 0) {
+        fprintf(stderr, "Can't set up any perf event\n");
+        exit(EXIT_FAILURE);
+    }
+
+    group->group_fd = group_fd;
+    return group;
+}
+
+void delete_perf_group_t(perf_group_t* group) {
+    if (group != NULL) {
+        for (size_t i = 0; i < perf_group->perf_fd_len; i++) {
+            if (group->perf_fd[i] > -1)
+                close(group->perf_fd[i]);
+        }
+
+        free(group->perf_fd);
+        free(group);
+    }
+}
+
+void group_reset_counters(perf_group_t* group) { ioctl(group->group_fd, PERF_EVENT_IOC_RESET, 0); }
+void group_enable_counters(perf_group_t* group) { ioctl(group->group_fd, PERF_EVENT_IOC_ENABLE, 0); }
+void group_disable_counters(perf_group_t* group) { ioctl(group->group_fd, PERF_EVENT_IOC_DISABLE, 0); }
+long long group_get_counter(perf_group_t* group, size_t index) {
+    long long value_result = -1;
+
+    if (group->perf_fd[index] > -1) {
+        read(group->perf_fd[index], &value_result, sizeof(long long));
+    }
+    return value_result;
+}
+
 static void init(int cpu) {
-    perf_fd_len = events_len;
-    perf_fd = calloc(events_len, sizeof(*perf_fd));
-    for (size_t i = 0; i < events_len; i++) {
-        perf_fd[i] = set_up_perf_event(&events[i], cpu);
-    }
-
-    for (size_t i = 0; i < events_len; i++) {
-        if (perf_fd[i] != -1)
-            ioctl(perf_fd[i], PERF_EVENT_IOC_RESET, 0);
-    }
-
-    for (size_t i = 0; i < events_len; i++) {
-        if (perf_fd[i] != -1)
-            ioctl(perf_fd[i], PERF_EVENT_IOC_ENABLE, 0);
-    }
+    perf_group = create_perf_group(events, events_len, cpu);
+    group_reset_counters(perf_group);
+    group_enable_counters(perf_group);
 }
 
 static void fin() {
     signal(SIGINT, SIG_IGN);
-    if (perf_fd != NULL) {
-        for (size_t i = 0; i < perf_fd_len; i++) {
-            if (perf_fd[i] != -1)
-                ioctl(perf_fd[i], PERF_EVENT_IOC_DISABLE, 0);
-        }
+    if (perf_group != NULL) {
+        group_disable_counters(perf_group);
 
         long long value_result = -1;
-        for (size_t i = 0; i < perf_fd_len; i++) {
-            if (perf_fd[i] != -1) {
-                if (read(perf_fd[i], &value_result, sizeof(long long)) <= 0) {
-                    fprintf(stderr, "Can't read value of '%s'\n", events[i].name);
-                }
-                close(perf_fd[i]);
-            } else {
+        for (size_t i = 0; i < perf_group->perf_fd_len; i++) {
+            value_result = group_get_counter(perf_group, i);
+            if (value_result < 0) {
+                fprintf(stderr, "Can't read value of '%s'\n", events[i].name);
                 value_result = -1;
             }
             printf("%s: %lld\n", events[i].name, value_result);
         }
+        delete_perf_group_t(perf_group);
     }
 }
 
