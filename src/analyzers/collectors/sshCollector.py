@@ -38,8 +38,7 @@ class SshCollector:
             self.is_tmp_created = True
         self.bin_dir = bin_dir
 
-    # TODO: understand why it isn't called. Apparently the link to "parrent" analyzer is saved somethere
-    def __del__(self):
+    def fin(self):
         self.delete_tmp_dir()
         self.close()
 
