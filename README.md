@@ -74,7 +74,7 @@ python3 cha.py analyze --test_dir="out" --out_dir="perf_result" --debug
 **Usage example:**
 
 ```bash
-python3 cha.py summarize --src_dirs="perf_result" --out_dir="summarize_result" --debug
+python3 cha.py summarize --src-dirs="perf_result" --out_dir="summarize_result" --debug
 ```
 ## Development
 
