@@ -97,6 +97,29 @@ pre-commit install
 ```bash
 pre-commit run --all-files --color always --verbose
 ```
+## Troubleshooting
+
+### Common Problems
+
+<details>
+<summary>Qt Platform Plugin Error</summary>
+If you encounter the following error:
+
+```text
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
+Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-egl, wayland-xcomposite-glx, webgl, xcb.
+
+Aborted (core dumped)
+```
+
+This issue can be resolved by installing the required Qt library. Run the following command:
+
+```bash
+sudo apt-get install libqt5gui5
+```
+</details>
 
 ## Contributing
 
