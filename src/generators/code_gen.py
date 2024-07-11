@@ -177,6 +177,29 @@ class EntryPointBlock(Block):
         visitor.send("}")
 
 
+class SwitchCaseBlock(Block):
+    def __init__(self, expr: ApplyBinOperator, case_blocks: List[List[Block]], cases: List[int]) -> None:
+        self.expression = expr
+        self.case_blocks = case_blocks
+        self.cases = cases
+
+    def render(self, visitor: Visitor) -> None:
+        string = f"switch ({self.expression.render()}) {{"
+        visitor.send(string)
+
+        for i in range(len(self.cases)):
+            visitor.send(f"case {self.cases[i]}: {{")
+            for block in self.case_blocks[i]:
+                block.render(visitor)
+            visitor.send("break; }")
+        visitor.send("default: {")
+
+        if len(self.case_blocks) != 0:
+            for block in self.case_blocks[-1]:
+                block.render(visitor)
+        visitor.send("}} ")
+
+
 class Generator:
     def __init__(
         self,
@@ -193,6 +216,7 @@ class Generator:
             ForBlock: self.__gen_for,
             IfConditionBlock: self.__gen_if,
             OperationBlock: self.__gen_operation,
+            SwitchCaseBlock: self.__gen_switch,
         }
         self.gen_functions_probabilities = {
             self.block_generation_functions[block]: chanse for block, chanse in probs.blocks_chanses.items()
@@ -261,6 +285,19 @@ class Generator:
 
         return DefineBlock(var, value)
 
+    def __gen_switch(self, env: Scope) -> SwitchCaseBlock:
+        env_copy = env.copy()
+
+        lvar, rvar = env_copy.get_random_vars(count=2)
+        operator = env_copy.get_random_operator()
+        rvar = f"(D0({rvar}))" if operator == "/" else rvar
+        expr = ApplyBinOperator(lvar, rvar, operator)
+        cases = [rd.randint(-100000, 100000) for _ in range(rd.randint(0, 3))]
+        case_blocks = [self.__gen_local(env.copy()) for _ in range(len(cases) + 1)]
+
+        block = SwitchCaseBlock(expr, case_blocks, cases)
+        return block
+
 
 class Accum:
     def __init__(self) -> None:
@@ -284,6 +321,7 @@ def gen_test(
     ch_if = kwargs.get("ch_if", 12)
     ch_state = kwargs.get("ch_state", 12)
     ch_def = kwargs.get("ch_def", 12)
+    ch_switch = kwargs.get("ch_switch", 12)
 
     if operators is None:
         operators = ["+", "-", "/", "*"]
@@ -299,6 +337,7 @@ def gen_test(
             IfConditionBlock: ch_if,
             DefineBlock: ch_def,
             OperationBlock: ch_state,
+            SwitchCaseBlock: ch_switch,
         },
         blocks_cut=(2, 10),
     )
