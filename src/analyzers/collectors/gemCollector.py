@@ -23,7 +23,7 @@ class GemCollector:
 
         self.gem5_bin_path = self.settings.__dict__.get(
             "gem5_bin_path",
-            self.gem5_home.joinpath("build", self.target_isa.capitalize(), "gem5.opt"),
+            self.gem5_home.joinpath("build", self.target_isa.upper(), "gem5.opt"),
         )
 
         self.sim_script_path = self.settings.__dict__.get(
