@@ -178,12 +178,36 @@ class EntryPointBlock(Block):
 
 
 class SwitchCaseBlock(Block):
+    """
+    Class of representation switch-case construction block.
+
+    Attributes
+    --------
+    expression : ApplyBinOperator
+        expression in switch
+    case_blocks : List[List[Block]]
+        list of blocks in each case
+    cases : List[int]
+        values for each case
+    """
+
     def __init__(self, expr: ApplyBinOperator, case_blocks: List[List[Block]], cases: List[int]) -> None:
+        """
+        Sets all required attributes for an object SwitchCaseBlock.
+        :param expr: expression in switch
+        :param case_blocks: list of blocks in each case
+        :param cases: values for each case
+        """
         self.expression = expr
         self.case_blocks = case_blocks
         self.cases = cases
 
     def render(self, visitor: Visitor) -> None:
+        """
+        Function for render block into code.
+        :param visitor: object of Visitor that render block construction.
+        :return: None
+        """
         string = f"switch ({self.expression.render()}) {{"
         visitor.send(string)
 
@@ -286,6 +310,11 @@ class Generator:
         return DefineBlock(var, value)
 
     def __gen_switch(self, env: Scope) -> SwitchCaseBlock:
+        """
+        Method that generate switch-case block.
+        :param env: environment that keeps all for creating new lines of code.
+        :return: object of class SwitchCaseBlock
+        """
         env_copy = env.copy()
 
         lvar, rvar = env_copy.get_random_vars(count=2)
@@ -341,6 +370,7 @@ def gen_test(
         },
         blocks_cut=(2, 10),
     )
+
     scope = Scope(max_depth, operators, cond_operators)
     g = Generator(scope, probs, random_seed=seed)
     acc = Accum()
