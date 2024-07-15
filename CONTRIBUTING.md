@@ -22,6 +22,7 @@ The `<type>` field must take one of these values:
 * `struct` for changes related to a change in the structure of the project (BUT NOT CODE), for example, changing
   folder locations
 * `ci` for various ci/cd tasks
+* `docs` for changes in documentation
 
 The `<body>` field contains the gist of the changes in the present imperative in English without the dot in
 at the end, the first word is a verb with a small letter.
