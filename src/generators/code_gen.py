@@ -178,34 +178,23 @@ class EntryPointBlock(Block):
 
 
 class SwitchCaseBlock(Block):
-    """
-    Class of representation switch-case construction block.
+    """Class of representation switch-case construction block
 
-    Attributes
-    --------
-    expression : ApplyBinOperator
-        expression in switch
-    case_blocks : List[List[Block]]
-        list of blocks in each case
-    cases : List[int]
-        values for each case
+    :param expr: expression in switch
+    :param case_blocks: list of blocks in each case
+    :param cases: values for each case
     """
 
     def __init__(self, expr: ApplyBinOperator, case_blocks: List[List[Block]], cases: List[int]) -> None:
-        """
-        Sets all required attributes for an object SwitchCaseBlock.
-        :param expr: expression in switch
-        :param case_blocks: list of blocks in each case
-        :param cases: values for each case
-        """
+        """Constructor method"""
         self.expression = expr
         self.case_blocks = case_blocks
         self.cases = cases
 
     def render(self, visitor: Visitor) -> None:
-        """
-        Function for render block into code.
-        :param visitor: object of Visitor that render block construction.
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
         :return: None
         """
         string = f"switch ({self.expression.render()}) {{"
@@ -310,10 +299,10 @@ class Generator:
         return DefineBlock(var, value)
 
     def __gen_switch(self, env: Scope) -> SwitchCaseBlock:
-        """
-        Method that generate switch-case block.
-        :param env: environment that keeps all for creating new lines of code.
-        :return: object of class SwitchCaseBlock
+        """Method that generate switch-case block
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: new block of code witch switch-case
         """
         env_copy = env.copy()
 
