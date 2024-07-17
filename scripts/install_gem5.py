@@ -68,14 +68,13 @@ def parse_args(args: list[str]) -> tuple[str, str]:
 
 def build_gem5(isa: str, var: str) -> None:
     nproc = os.cpu_count()
-    os.chdir(gem5_dir)
-    subprocess.run(["scons", "defconfig", f"build/{isa}" f"build_opts/{isa}"])
-    subprocess.run(["scons", "setconfig", f"build/{isa}", f"M5_BUILD_CACHE={gem5_build_cache_dir}"])
-    subprocess.run(["scons", f"build/{isa}/gem5.{var}", "-j", f"{nproc}"])
+    # Build gem5 with cache
+    subprocess.run(["scons", "defconfig", f"build/{isa}", f"build_opts/{isa}", "--install-hooks"], cwd=gem5_dir)
+    subprocess.run(["scons", "setconfig", f"build/{isa}", f"M5_BUILD_CACHE={gem5_build_cache_dir}"], cwd=gem5_dir)
+    subprocess.run(["scons", f"build/{isa}/gem5.{var}", "-j", f"{nproc}"], cwd=gem5_dir)
     # Build M5 ops
-    os.chdir(m5ops_dir)
     m5_isa = isa.lower()
-    subprocess.run(["scons", f"build/{m5_isa}/out/m5", "-j", f"{nproc}"])
+    subprocess.run(["scons", f"./build/{m5_isa}/out/m5", "-j", f"{nproc}"], cwd=m5ops_dir)
 
 
 if __name__ == "__main__":
