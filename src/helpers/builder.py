@@ -1,15 +1,15 @@
 import logging
 import os
 import subprocess
-from argparse import Namespace
 from pathlib import Path
+from typing import Dict, Any
 
 
 class Builder:
-    def __init__(self, settings: Namespace):
+    def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
         self.default_additional_flags: list[str] = []
 
     def set_default_additional_flags(self, additional_flags: list[str]) -> None:
@@ -26,8 +26,8 @@ class Builder:
 
         destination_file.parent.mkdir(parents=True, exist_ok=True)
         execute_line = (
-            [self.settings.compiler, src_file]
-            + self.settings.compiler_args
+            [self.settings["compiler"], src_file]
+            + self.settings["compiler_args"]
             + ["-o", destination_file]
             + additional_flags
         )

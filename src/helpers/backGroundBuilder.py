@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 import logging
 import os
-from argparse import Namespace
 from pathlib import Path
 from queue import Queue
 import threading
-from typing import TypeAlias
+from typing import TypeAlias, Dict, Any
 
 from src.helpers.builder import Builder
 
@@ -23,10 +22,10 @@ ChanSignal: TypeAlias = CSignal.BuiltFile | CSignal.End
 
 
 class BGBuilder:
-    def __init__(self, settings: Namespace, builder: Builder | None = None):
+    def __init__(self, settings: Dict[str, Any], builder: Builder | None = None):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
         self.builder_mutex = threading.Lock()
         if builder is None:
