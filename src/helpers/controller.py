@@ -1,30 +1,150 @@
-from typing import Dict
+from typing import Dict, List
+
+import typer
+from typing_extensions import Annotated
 
 from src.cli.aggregate import Aggregate
 from src.cli.analyze import Analyze
 from src.cli.generate import Generate
 from src.cli.summarize import Summarize
-from src.helpers.configurator import Configurator
+from src.helpers.configurator import Configurator, LogLevel, ProfilerType
 from src.protocols.utility import Utility
+
+app = typer.Typer(help="This script generate and test code on some platforms", chain=True)
+command_args = {}
+configurator = Configurator()
+
+
+@app.command("generate")
+def init_generator(
+        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
+                                             show_default=False)] = "tests",
+        repeats: Annotated[int, typer.Option(help="Path to output directory", metavar="REPEATS",
+                                             show_default=False)] = 1,
+        log_level: Annotated[LogLevel, typer.Option(help="Log level of program",
+                                                    case_sensitive=True)] = LogLevel.WARNING
+):
+    command_args["utility"] = "generate"
+    command_args["out_dir"] = out_dir
+    command_args["repeats"] = repeats
+    command_args["log_level"] = log_level.value
+    run_utility()
+
+
+@app.command("analyze")
+def init_analyzer(
+        config_file: Annotated[str, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE",
+                                                 show_default=False)] = None,
+        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
+                                             show_default=False)] = "analyze",
+        test_dir: Annotated[str, typer.Option(help="Path to directory with tests", metavar="TEST_DIR",
+                                              show_default=False)] = "tests",
+        timeout: Annotated[int, typer.Option(help="Number of seconds after which the test will be stopped",
+                                             metavar="TIMEOUT", show_default=False)] = 10,
+        compiler: Annotated[str, typer.Option(help="Path to compiler", metavar="COMPILER", show_default=False)] = "gcc",
+        compiler_args: Annotated[str, typer.Option(help="Pass arguments on to the compiler", metavar="COMPILER_ARGS",
+                                                   show_default=False)] = "",
+        profiler: Annotated[ProfilerType, typer.Option(help="Type of profiler")] = ProfilerType.PERF,
+        gem5_home: Annotated[str, typer.Option(help="Path to home gem5", metavar="GEM5_HOME",
+                                               show_default=False)] = "./",
+        gem5_bin: Annotated[str, typer.Option(help="Path to execute gem5", metavar="GEM5_BIN",
+                                              show_default=False)] = "./",
+        target_isa: Annotated[str, typer.Option(help="Type of architecture being simulated",
+                                                metavar="TARGET_ISA", show_default=False)] = "",
+        sim_script: Annotated[str, typer.Option(help="Path to simulation Script", metavar="SIM_SCRIPT",
+                                                show_default=False)] = "./",
+        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+):
+    command_args["utility"] = "analyze"
+    command_args["config_file"] = config_file
+    command_args["out_dir"] = out_dir
+    command_args["test_dir"] = test_dir
+    command_args["timeout"] = timeout
+    command_args["compiler"] = compiler
+    command_args["compiler_args"] = compiler_args
+    command_args["profiler"] = profiler
+    command_args["gem5_home"] = gem5_home
+    command_args["gem5_bin"] = gem5_bin
+    command_args["target_isa"] = target_isa
+    command_args["sim_script"] = sim_script
+    command_args["log_level"] = log_level.value
+    configurator.configurate(command_args)
+    run_utility()
+
+
+@app.command("summarize")
+def init_summarizer(
+        src_dirs: Annotated[List[str], typer.Option(help="Path to source dirs", metavar="SRC_DIRS",
+                                                    show_default=False)] = None,
+        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
+                                             show_default=False)] = "summarize",
+        no_show_graph: Annotated[bool, typer.Option("--no-show-graph", help="Shows a graph of BP incorrect %%",
+                                                    show_default=False)] = False,
+        no_save_graph: Annotated[bool, typer.Option("--no-save-graph", help="Saves a graph of BP incorrect %% "
+                                                                            "in graph.png", show_default=False)] = False,
+        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+):
+    command_args["utility"] = "summarize"
+    command_args["src_dirs"] = src_dirs
+    command_args["out_dir"] = out_dir
+    command_args["no_show_graph"] = no_show_graph
+    command_args["no_save_graph"] = no_save_graph
+    command_args["log_level"] = log_level.value
+    run_utility()
+
+
+@app.command("aggregate", help="aggregate is shell above: analyze (code generator + profiler), summarize")
+def init_aggregator(
+        config_file: Annotated[str, typer.Option(help="Path to .cfg file", metavar="CONFIG_FILE",
+                                                 show_default=False)] = "config.json",
+        section_in_config: Annotated[str, typer.Option(help="Set the custom section "
+                                                            "in config file (DEFAULT by default)",
+                                                       metavar="SECTION_IN_CONFIG", show_default=False)] = "DEFAULT",
+        dest_dir: Annotated[str, typer.Option(help="Path to dist dir, if not exit it will be created",
+                                              metavar="OUT_DIR", show_default=False)] = "out",
+        async_analyze: Annotated[bool, typer.Option("--async-analyze", help="Run analyze steps simultaneously "
+                                                                            "(not recommended with perf)",
+                                                    metavar="ASYNC_ANALYZE", show_default=False)] = True,
+        generate_arg: Annotated[str, typer.Option("--Wg", help="Pass arguments to generate", metavar="WG",
+                                                  show_default=False)] = "",
+        analyze_arg: Annotated[str, typer.Option("--Wz", help="Pass arguments to analyze", metavar="WZ",
+                                                 show_default=False)] = "",
+        summarize_arg: Annotated[str, typer.Option("--Ws", help="Pass arguments to summarize", metavar="WZ",
+                                                   show_default=False)] = "",
+        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+):
+    command_args["utility"] = "aggregate"
+    command_args["config_file"] = config_file
+    command_args["section_in_config"] = section_in_config
+    command_args["dest_dir"] = dest_dir
+    command_args["async_analyze"] = async_analyze
+    command_args["Wg"] = generate_arg
+    command_args["Wz"] = analyze_arg
+    command_args["Ws"] = summarize_arg
+    command_args["log_level"] = log_level.value
+    configurator.configurate(command_args)
+    run_utility()
+
+
+def run_utility():
+    util_name = command_args["utility"]
+    utility = command_args[util_name]
+    utility.configurate(command_args)
+    utility.run()
 
 
 class Controller:
     def __init__(self) -> None:
-        self.utilities: Dict[str, Utility] = {}
-        generator = Generate()
-        analyze = Analyze()
-        summarize = Summarize()
-        aggregate = Aggregate()
-        self.utilities["generate"] = generator
-        self.utilities["analyze"] = analyze
-        self.utilities["summarize"] = summarize
-        self.utilities["aggregate"] = aggregate
+        self.utilities: Dict[str, Utility] = {
+            "generate": Generate(),
+            "analyze": Analyze(),
+            "summarize": Summarize(),
+            "aggregate": Aggregate()
+        }
+
+        for command in self.utilities:
+            command_args[command] = self.utilities[command]
 
     def run(self) -> None:
-        c = Configurator()
-        self.configurator = c
-        self.settings = c.configurate(self.utilities)
-        self.settings.configurator = c
-        utility = self.utilities[self.settings.utility]
-        utility.configurate(self.settings)
-        utility.run()
+        command_args["configurator"] = configurator
+        app()

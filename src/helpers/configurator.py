@@ -1,5 +1,19 @@
 import json
+from enum import Enum
 from typing import Any, Dict, List
+
+
+class LogLevel(str, Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
+class ProfilerType(str, Enum):
+    PERF = "perf"
+    GEM5 = "gem5"
 
 
 class Configurator:
