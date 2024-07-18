@@ -1,18 +1,18 @@
 import glob
 import logging
 import sys
-from argparse import Namespace
 from pathlib import Path
+from typing import Dict, Any
 
 ATTACH_DIR = "src/analyzers/patchers/attachments/"
 
 
 class BasePatcher:
-    def __init__(self, settings: Namespace, templates: list[str]):
+    def __init__(self, settings: Dict[str, Any], templates: list[str]):
         self.settings = settings
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
         launch_dir = Path(sys.argv[0]).parent
         self.empty_test_path = launch_dir.joinpath(ATTACH_DIR, "empty.c")

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from argparse import Namespace
 from queue import Queue
 import logging
 import random
@@ -7,7 +6,7 @@ import stat
 from pathlib import Path
 import sys
 import time
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import paramiko
 
@@ -16,20 +15,19 @@ from src.helpers.backGroundBuilder import CSignal
 
 
 class SshCollector:
-    def __init__(self, settings: Namespace, bin_dir: Path | None = None):
+    def __init__(self, settings: Dict[str, Any], bin_dir: Path | None = None):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
         self.is_tmp_created = False
 
-        set_dict = vars(settings)
-        self.max_test_launches = set_dict.get("max_test_launches", -1)
-        self.cpu = set_dict.get("cpu", 0)
+        self.max_test_launches = settings.get("max_test_launches", -1)
+        self.cpu = settings.get("cpu", 0)
 
-        self.host = set_dict.get("host", "127.0.0.1")
-        self.user = set_dict.get("username", "root")
-        self.path_to_key = set_dict.get("path_to_key", "~/.ssh/id_rsa")
-        self.password = set_dict.get("password", "toor")
+        self.host = settings.get("host", "127.0.0.1")
+        self.user = settings.get("username", "root")
+        self.path_to_key = settings.get("path_to_key", "~/.ssh/id_rsa")
+        self.password = settings.get("password", "toor")
 
         self.open()
 
@@ -137,8 +135,8 @@ class SshCollector:
         execute_string = " ".join(map(str, execute_line))
         self.logger.info(f"[sshProfiler]: Executing: {execute_string}")
 
-        left_time = self.settings.timeout
-        timeout = time.time() + self.settings.timeout
+        left_time = self.settings["timeout"]
+        timeout = time.time() + self.settings["timeout"]
         while (left_time > 0) and (number_executes != 0):
             stats.append(self.execute_test(execute_line, left_time))
             left_time = timeout - time.time()

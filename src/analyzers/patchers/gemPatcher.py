@@ -1,15 +1,15 @@
 import logging
-from argparse import Namespace
 from pathlib import Path
+from typing import Dict, Any
 
 from src.analyzers.patchers.basePatcher import BasePatcher
 
 
 class GemPatcher:
-    def __init__(self, settings: Namespace):
+    def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
         self.patcher = BasePatcher(settings, ["gemTemplate.c"])
 

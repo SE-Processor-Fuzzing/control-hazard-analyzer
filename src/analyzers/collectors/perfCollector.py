@@ -3,9 +3,8 @@ import signal
 import subprocess
 import sys
 import time
-from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Any
 
 if TYPE_CHECKING:
     from _typeshed import StrOrBytesPath
@@ -15,14 +14,13 @@ from src.protocols.collector import DictSI
 
 
 class PerfCollector:
-    def __init__(self, settings: Namespace):
+    def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
-        set_dict = vars(settings)
-        self.max_test_launches = set_dict.get("max_test_launches", -1)
-        self.cpu = set_dict.get("cpu", 0)
+        self.max_test_launches = settings.get("max_test_launches", -1)
+        self.cpu = settings.get("cpu", 0)
 
     def tab_lines(self, lines: str) -> str:
         return "\t" + lines.replace("\n", "\n\t")[:-1]
@@ -66,8 +64,8 @@ class PerfCollector:
         execute_string = " ".join(map(str, execute_line))
         self.logger.info(f"[perfProfiler]: Executing: {execute_string}")
 
-        left_time = self.settings.timeout
-        timeout = time.time() + self.settings.timeout
+        left_time = self.settings["timeout"]
+        timeout = time.time() + self.settings["timeout"]
         while (left_time > 0) and (number_executes != 0):
             stats.append(self.execute_test(execute_line, left_time))
             left_time = timeout - time.time()
