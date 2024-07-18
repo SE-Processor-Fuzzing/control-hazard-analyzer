@@ -3,9 +3,8 @@ import re
 import shlex
 import signal
 import subprocess
-from argparse import Namespace
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Set, Any
 
 from src.protocols.collector import DictSI
 
@@ -13,25 +12,25 @@ from src.protocols.collector import DictSI
 class GemCollector:
     BINARY_PLACEHOLDER = "{{GEM5_TARGET_BINARY}}"
 
-    def __init__(self, settings: Namespace):
+    def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
-        self.gem5_home = Path(self.settings.__dict__.get("gem5_home", ""))
-        self.target_isa = self.settings.__dict__.get("target_isa", "").lower()
+        self.gem5_home = Path(self.settings.get("gem5_home", ""))
+        self.target_isa = self.settings.get("target_isa", "").lower()
 
-        self.gem5_bin_path = self.settings.__dict__.get(
+        self.gem5_bin_path = self.settings.get(
             "gem5_bin_path",
             self.gem5_home.joinpath("build", self.target_isa.upper(), "gem5.opt"),
         )
 
-        self.sim_script_path = self.settings.__dict__.get(
+        self.sim_script_path = self.settings.get(
             "sim_script_path",
             self.gem5_home.joinpath("configs/deprecated/example/se.py"),
         )
 
-        self.sim_script_args = self.settings.__dict__.get(
+        self.sim_script_args = self.settings.get(
             "sim_script_args", f"--cpu-type=O3CPU --caches -c {self.BINARY_PLACEHOLDER}"
         )
         self.sim_script_args = shlex.split(self.sim_script_args)
@@ -84,7 +83,7 @@ class GemCollector:
 
             proc = subprocess.Popen(execute_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
-                proc.wait(self.settings.timeout)
+                proc.wait(self.settings["timeout"])
             except subprocess.TimeoutExpired:
                 proc.send_signal(signal.SIGINT)
                 is_full_run = False

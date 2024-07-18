@@ -1,18 +1,17 @@
 import logging
-from argparse import Namespace
 from pathlib import Path
+from typing import Dict, Any
 
 from src.analyzers.patchers.basePatcher import BasePatcher
 
 
 class PerfPatcher:
-    def __init__(self, settings: Namespace):
+    def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
-        settings_dict = vars(settings)
-        events_file: str = settings_dict.get("events", "classic.c")
+        events_file: str = settings.get("events", "classic.c")
         events_file = "perf_events/" + events_file
 
         self.patcher = BasePatcher(settings, [events_file, "perfTemplate.c"])
