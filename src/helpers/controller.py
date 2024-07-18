@@ -127,6 +127,7 @@ def init_aggregator(
 
 
 def run_utility():
+    """Execute the utility specified in command_args"""
     util_name = command_args["utility"]
     utility = command_args[util_name]
     utility.configurate(command_args)
@@ -135,6 +136,7 @@ def run_utility():
 
 class Controller:
     def __init__(self) -> None:
+        """Initialize the Controller with available utilities"""
         self.utilities: Dict[str, Utility] = {
             "generate": Generate(),
             "analyze": Analyze(),
@@ -146,5 +148,6 @@ class Controller:
             command_args[command] = self.utilities[command]
 
     def run(self) -> None:
+        """Run the application with typer"""
         command_args["configurator"] = configurator
         app()
