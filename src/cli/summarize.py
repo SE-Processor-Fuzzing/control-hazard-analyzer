@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Dict, List, TypeVar
@@ -14,36 +13,35 @@ from matplotlib.patches import Patch
 from pandas import DataFrame
 
 from src.protocols.collector import DictSI
-from src.protocols.subparser import SubParser
+from src.protocols.utility import Utility
 
 S = TypeVar("S")
 DataType = Dict[str, Dict[str, Dict[str, S]]]
 
 
-class Summarize:
+class Summarize(Utility):
     def __init__(self) -> None:
         self.filename_out_grapg = "graph.png"
         self.filename_out_data = "results.data"
         self.logger = logging.getLogger(__name__)
 
-    def configurate(self, settings: Namespace) -> None:
+    def configurate(self, settings: Dict[str, Any]) -> None:
         self.settings = settings
-        self.logger.setLevel(self.settings.log_level)
+        self.logger.setLevel(self.settings["log_level"])
 
     def run(self) -> None:
         self.logger.info("Summarize is running. Settings:")
-        self.logger.info(pformat(vars(self.settings)))
+        self.logger.info(pformat(self.settings))
 
-        src_dirs: List[Path] = [Path(s) for s in self.settings.src_dirs]
+        src_dirs: List[Path] = [Path(s) for s in self.settings["src_dirs"]]
         data = self.get_data_from_sources(src_dirs)
         if len(data) == 0:
-            print("[-]: No data to summarize")
             return
 
         data_df = self.convert_to_pandas(self.prepare_data(data))
         self.logger.debug(f"Collected data:\n{data_df.head()}")
         mean_of_dir = self.calculate_mean_of_dir(data_df)
-        out_dir = Path(self.settings.out_dir)
+        out_dir = Path(self.settings["out_dir"])
 
         self.save_mean_data(mean_of_dir, src_dirs, out_dir)
         self.save_data_for_each_source(data_df, mean_of_dir, src_dirs, out_dir)
@@ -56,10 +54,10 @@ class Summarize:
         )
         self.construct_plot(clean_df_plot, data_frame_plot.loc[:, ["BP lookups", "Full launch"]])
 
-        if not self.settings.no_save_graph:
+        if not self.settings["no_save_graph"]:
             self.save_plot(out_dir)
 
-        if not self.settings.no_show_graph:
+        if not self.settings["no_show_graph"]:
             self.show_plot()
 
     def get_data_from_sources(self, src_dirs: List[Path]) -> DataType[int]:
@@ -86,7 +84,7 @@ class Summarize:
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
                 sim_ticks = src_data.get("simTicks", np.nan)
-                bp_lookups = src_data.get("branchPred.lookups", src_data.get("branchPred.BTBLookups", np.nan))
+                bp_lookups = src_data.get("branchPred.lookups", src_data.get("branchPred.btb.lookups::total", np.nan),)
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
                 is_full = bool(src_data.get("isFull", False))
                 result[src_dir][Path(src_file).stem] = {
@@ -245,29 +243,11 @@ class Summarize:
         out_dir.mkdir(parents=True, exist_ok=True)
         plt.savefig(out_dir.joinpath(self.filename_out_grapg))
 
-    def add_parser_arguments(self, subparser: SubParser) -> ArgumentParser:
-        summarize_parser = subparser.add_parser("summarize")
-
-        summarize_parser.add_argument("--src-dirs", help="Path to source dirs", nargs="*")
-        summarize_parser.add_argument("--out-dir", default="summarize", help="Path to output directory")
-        summarize_parser.add_argument(
-            "--no-show-graph",
-            action="store_true",
-            help="Shows a graph of BP incorrect %%",
-        )
-        summarize_parser.add_argument(
-            "--no-save-graph",
-            action="store_true",
-            help="Saves a graph of BP incorrect %% in graph.png",
-        )
-        summarize_parser.add_argument(
-            "--log-level",
-            default="WARNING",
-            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-            help="Log level of program",
-        )
-        self.summarize_parser = summarize_parser
-        return summarize_parser
-
-    def parse_args(self, args: List[str]) -> Namespace:
-        return self.summarize_parser.parse_known_args(args)[0]
+    default_params = {
+        "utility": "summarize",
+        "src_dirs": None,
+        "out_dir": "summarize",
+        "no_show_graph": False,
+        "no_save_graph": False,
+        "log_level": "WARNING",
+    }
