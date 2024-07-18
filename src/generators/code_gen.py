@@ -46,7 +46,10 @@ class Scope:
         self.condition_operators = condition_operators
         self.current_depth = max_depth
         self.vars: List[str] = []
+        self.funcs: List[str] = []
         self.vars_count = 0
+        self.funcs_count = 0
+        self.funcs_args_number: Dict[str, int] = {}
 
     def create_new_var(self, prefix: str = "a") -> str:
         self.vars.append(var := f"{prefix}{self.vars_count}")
@@ -57,6 +60,16 @@ class Scope:
         if rule is None:
             return rd.choice(self.vars)
         return rd.choice(list(filter(rule, self.vars)))
+
+    def create_new_func(self, prefix: str = "func") -> str:
+        self.funcs.append(var := f"{prefix}{self.funcs_count}")
+        self.funcs_count += 1
+        return var
+
+    def get_random_func(self, rule: Optional[Callable[[str], bool]] = None) -> str:
+        if rule is None:
+            return rd.choice(self.funcs)
+        return rd.choice(list(filter(rule, self.funcs)))
 
     def get_random_vars(self, rule: Optional[Callable[[str], bool]] = None, count: int = 1) -> List[str]:
         _vars = self.vars
@@ -75,6 +88,7 @@ class Scope:
     def copy(self) -> Self:
         c = copy(self)
         c.vars = self.vars[:]
+        c.funcs = self.funcs[:]
         return c
 
 
@@ -166,15 +180,54 @@ class ForBlock(Block):
 
 class EntryPointBlock(Block):
 
-    def __init__(self, next_blocks: List[Block]) -> None:
+    def __init__(self, func_blocks: List[Block], next_blocks: List[Block]) -> None:
+        self.func_blocks = func_blocks
         self.next_blocks = next_blocks
 
     def render(self, visitor: Visitor) -> None:
-        string = "# define D0(x) (x==0) ? 1 : x\n\nvoid test_fun() {"
+        string = "# define D0(x) (x==0) ? 1 : x\n\n"
         visitor.send(string)
+
+        for func in self.func_blocks:
+            func.render(visitor)
+
+        visitor.send("void test_fun() { ")
+
         for block in self.next_blocks:
             block.render(visitor)
         visitor.send("}")
+
+
+class DefineFunctionBlock(Block):
+    def __init__(self, func: str, args: List[str], next_blocks: List[Block]) -> None:
+        self.name = func
+        self.args = args
+        self.next_blocks = next_blocks
+
+    def render(self, visitor: Visitor) -> None:
+        visitor.send(f"void {self.name}(")
+        for i in range(len(self.args)):
+            visitor.send(f"int {self.args[i]}")
+            if i != len(self.args) - 1:
+                visitor.send(", ")
+        visitor.send(") {")
+        for block in self.next_blocks:
+            block.render(visitor)
+        visitor.send("}\n\n")
+
+
+class FuncBlock(Block):
+    def __init__(self, func: str, args: List[str]) -> None:
+        self.name = func
+        self.args = args
+
+    def render(self, visitor: Visitor) -> None:
+        visitor.send(f"{self.name}(")
+        for i in range(len(self.args)):
+            visitor.send(f"{self.args[i]}")
+            if i != len(self.args) - 1:
+                visitor.send(", ")
+        visitor.send("); ")
 
 
 class SwitchCaseBlock(Block):
@@ -230,6 +283,7 @@ class Generator:
             IfConditionBlock: self.__gen_if,
             OperationBlock: self.__gen_operation,
             SwitchCaseBlock: self.__gen_switch,
+            FuncBlock: self.__gen_func_call,
         }
         self.gen_functions_probabilities = {
             self.block_generation_functions[block]: chanse for block, chanse in probs.blocks_chanses.items()
@@ -241,42 +295,83 @@ class Generator:
     def gen(self) -> None:
         env_copy = self.env.copy()
 
+        funcs_blocks = self.__gen_def_funcs(env_copy)
         var = env_copy.create_new_var()
         value = rd.randint(0, DefineBlock.max_value)
         def_block: Block = DefineBlock(var, value)
 
         next_blocks: List[Block] = [def_block]
-        next_blocks.extend(self.__gen_local(env_copy))
-        self.entry_point = EntryPointBlock(next_blocks)
+        next_blocks.extend(self.__gen_local(env_copy, env_copy.funcs_count))
+        self.entry_point = EntryPointBlock(funcs_blocks, next_blocks)
 
-    def __gen_local(self, env: Scope) -> List[Block]:
+    def __gen_def_funcs(self, env: Scope) -> List[Block]:
+        funcs_number = rd.randint(1, 3)
+        func_blocks: List[Block] = []
+
+        for _ in range(funcs_number):
+            func = env.create_new_func()
+            func_args_number = rd.randint(1, 4)
+            env.funcs_args_number[func] = func_args_number
+
+            env_copy = env.copy()
+            func_args: List[str] = []
+            for __ in range(func_args_number):
+                func_args.append(env_copy.create_new_var(prefix="arg"))
+
+            func_content_block = self.__gen_local(env_copy, env_copy.funcs_count - 1)
+            func_blocks.append(DefineFunctionBlock(func, func_args, func_content_block))
+
+        return func_blocks
+
+    def __gen_func_call(self, env: Scope, curr_func_num: int) -> FuncBlock:
+        func = env.get_random_func(rule=lambda x: int(x[4:]) < curr_func_num)
+        args = env.get_random_vars(count=env.funcs_args_number[func])
+
+        return FuncBlock(func, args)
+
+    def __gen_local(self, env: Scope, curr_func_num: int) -> List[Block]:
         env.current_depth -= 1
         if env.current_depth <= 0:
             return []
         gen_blocks: List[Block] = []
         number_of_blocks = rd.randint(*self.probs.blocks_cut)
         for _ in range(number_of_blocks):
-            next_block = get_random_key(self.gen_functions_probabilities)(env)
+            gen_func = get_random_key(self.gen_functions_probabilities)
+            while gen_func == self.__gen_func_call and curr_func_num == 0:
+                gen_func = get_random_key(self.gen_functions_probabilities)
+
+            next_block = (
+                gen_func(env)
+                if (
+                    gen_func
+                    in [
+                        self.__gen_def_funcs,
+                        self.__gen_operation,
+                        self.__gen_definition,
+                    ]
+                )
+                else gen_func(env, curr_func_num)
+            )
             gen_blocks.append(next_block)
         return gen_blocks
 
-    def __gen_for(self, env: Scope) -> ForBlock:
+    def __gen_for(self, env: Scope, curr_func_num: int) -> ForBlock:
         env_copy = env.copy()
 
         def_var = env_copy.create_new_var(prefix="f")
         cond = ApplyBinOperator(def_var, str(rd.randint(2, ForBlock.max_value)), "<=")
-        next_blocks = self.__gen_local(env_copy)
+        next_blocks = self.__gen_local(env_copy, curr_func_num)
 
         block = ForBlock(def_var, cond, next_blocks)
         return block
 
-    def __gen_if(self, env: Scope) -> IfConditionBlock:
+    def __gen_if(self, env: Scope, curr_func_num: int) -> IfConditionBlock:
         env_copy = env.copy()
 
         lvar, rvar = env_copy.get_random_vars(count=2)
         cond = ApplyBinOperator(lvar, rvar, env_copy.get_random_cond_operator())
-        then_blocks = self.__gen_local(env.copy())
-        else_blocks = self.__gen_local(env.copy())
+        then_blocks = self.__gen_local(env.copy(), curr_func_num)
+        else_blocks = self.__gen_local(env.copy(), curr_func_num)
 
         block = IfConditionBlock(cond, then_blocks, else_blocks)
         return block
@@ -298,7 +393,7 @@ class Generator:
 
         return DefineBlock(var, value)
 
-    def __gen_switch(self, env: Scope) -> SwitchCaseBlock:
+    def __gen_switch(self, env: Scope, curr_func_num: int) -> SwitchCaseBlock:
         """Method that generate switch-case block
 
         :param env: environment that keeps all for creating new lines of code
@@ -311,7 +406,7 @@ class Generator:
         rvar = f"(D0({rvar}))" if operator == "/" else rvar
         expr = ApplyBinOperator(lvar, rvar, operator)
         cases = [rd.randint(-100000, 100000) for _ in range(rd.randint(0, 3))]
-        case_blocks = [self.__gen_local(env.copy()) for _ in range(len(cases) + 1)]
+        case_blocks = [self.__gen_local(env.copy(), curr_func_num) for _ in range(len(cases) + 1)]
 
         block = SwitchCaseBlock(expr, case_blocks, cases)
         return block
@@ -329,7 +424,7 @@ class Accum:
 
 
 def gen_test(
-    max_depth: int = 5,
+    max_depth: int = 3,
     operators: List[str] | None = None,
     cond_operators: List[str] | None = None,
     **kwargs: int,
@@ -340,6 +435,7 @@ def gen_test(
     ch_state = kwargs.get("ch_state", 12)
     ch_def = kwargs.get("ch_def", 12)
     ch_switch = kwargs.get("ch_switch", 12)
+    ch_func = kwargs.get("ch_func", 12)
 
     if operators is None:
         operators = ["+", "-", "/", "*"]
@@ -356,8 +452,9 @@ def gen_test(
             DefineBlock: ch_def,
             OperationBlock: ch_state,
             SwitchCaseBlock: ch_switch,
+            FuncBlock: ch_func,
         },
-        blocks_cut=(2, 10),
+        blocks_cut=(2, 5),
     )
 
     scope = Scope(max_depth, operators, cond_operators)
