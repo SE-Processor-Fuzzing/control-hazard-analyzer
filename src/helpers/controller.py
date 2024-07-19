@@ -20,7 +20,9 @@ def init_generator(
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
     ] = "tests",
-    repeats: Annotated[int, typer.Option(help="Path to output directory", metavar="REPEATS", show_default=False)] = 1,
+    repeats: Annotated[
+        int, typer.Option(help="Count of repeats to generated test", metavar="REPEATS", show_default=False)
+    ] = 1,
     log_level: Annotated[LogLevel, typer.Option(help="Log level of program", case_sensitive=True)] = LogLevel.WARNING,
 ):
     command_args["utility"] = "generate"
