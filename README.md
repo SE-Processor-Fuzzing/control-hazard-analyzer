@@ -96,6 +96,15 @@ python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --debug
 ```bash
 python3 cha.py summarize --src-dirs="perf_result" --out-dir="summarize_result" --debug
 ```
+
+### Multi-command Execution
+You can pass multiple commands in a single run. This allows you to combine multiple steps into one command sequence
+
+**Usage example:**
+```bash
+python3 cha.py generate --out-dir="tests" analyze --test-dir="tests" --out-dir="results" summarize --src-dirs="results" --out-dir="summarize_result"
+```
+
 ## Development
 
 ### Requirements
