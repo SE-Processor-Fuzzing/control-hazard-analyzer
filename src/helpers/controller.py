@@ -15,7 +15,7 @@ command_args = {}
 configurator = Configurator()
 
 
-@app.command("generate")
+@app.command("generate", help="Generate tests")
 def init_generator(
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
@@ -32,7 +32,7 @@ def init_generator(
     run_utility()
 
 
-@app.command("analyze")
+@app.command("analyze", help="Build, run tests, and subsequent analysis of test execution")
 def init_analyzer(
     config_file: Annotated[
         str, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
@@ -81,7 +81,10 @@ def init_analyzer(
     run_utility()
 
 
-@app.command("summarize")
+@app.command(
+    "summarize",
+    help='Summarize the results of "analyze", and display the results by generating an interactive diagram',
+)
 def init_summarizer(
     src_dirs: Annotated[
         List[str], typer.Option(help="Path to source dirs", metavar="SRC_DIRS", show_default=False)
@@ -107,7 +110,7 @@ def init_summarizer(
     run_utility()
 
 
-@app.command("aggregate", help="aggregate is shell above: analyze (code generator + profiler), summarize")
+@app.command("aggregate", help="Run generate, analyze and summarize in sequence")
 def init_aggregator(
     config_file: Annotated[
         str, typer.Option(help="Path to .cfg file", metavar="CONFIG_FILE", show_default=False)
