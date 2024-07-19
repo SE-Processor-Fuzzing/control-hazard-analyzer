@@ -105,12 +105,6 @@ def init_aggregator(
         async_analyze: Annotated[bool, typer.Option("--async-analyze", help="Run analyze steps simultaneously "
                                                                             "(not recommended with perf)",
                                                     metavar="ASYNC_ANALYZE", show_default=False)] = True,
-        generate_arg: Annotated[str, typer.Option("--Wg", help="Pass arguments to generate", metavar="WG",
-                                                  show_default=False)] = "",
-        analyze_arg: Annotated[str, typer.Option("--Wz", help="Pass arguments to analyze", metavar="WZ",
-                                                 show_default=False)] = "",
-        summarize_arg: Annotated[str, typer.Option("--Ws", help="Pass arguments to summarize", metavar="WZ",
-                                                   show_default=False)] = "",
         log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
 ):
     command_args["utility"] = "aggregate"
@@ -118,9 +112,6 @@ def init_aggregator(
     command_args["section_in_config"] = section_in_config
     command_args["dest_dir"] = dest_dir
     command_args["async_analyze"] = async_analyze
-    command_args["Wg"] = generate_arg
-    command_args["Wz"] = analyze_arg
-    command_args["Ws"] = summarize_arg
     command_args["log_level"] = log_level.value
     configurator.configurate(command_args)
     run_utility()
