@@ -23,10 +23,10 @@ Configure and build gem5 for selected ISA with VARIANT optimization configuratio
 You can read more about the gem5 build at https://www.gem5.org/documentation/general_docs/building.
 
 ISA available values:
-{"\n".join([f"    - {isa}" for isa in isa_options])}
+{os.linesep.join([f"    - {isa}" for isa in isa_options])}
 
 VARIANT available values:
-{"\n".join([f"    - {var}" for var in variant_options])}
+{os.linesep.join([f"    - {var}" for var in variant_options])}
 
 Examples:
     python3 {sys.argv[0]} X86 opt ./gem5_build_cache
