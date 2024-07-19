@@ -8,3 +8,7 @@ updates:
       pip-dependencies:
         patterns:
           - "*" # All dependabot updates are grouped
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "monthly"
