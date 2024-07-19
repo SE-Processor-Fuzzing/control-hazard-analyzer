@@ -73,19 +73,3 @@ class Analyze(Utility):
     def pack(self, analyze_dir: Path, analyzed_data: Dict[str, DictSI]) -> None:
         print(f"[+]: Save analysis' results to {analyze_dir.absolute().as_posix()}")
         self.packer.pack(analyze_dir, analyzed_data)
-
-    default_params = {
-        "utility": "analyze",
-        "config_file": None,
-        "out_dir": "analyze",
-        "test_dir": "tests",
-        "timeout": 10,
-        "compiler": "gcc",
-        "compiler_args": "",
-        "profiler": "perf",
-        "gem5_home": "./",
-        "gem5_bin": "./",
-        "target_isa": "",
-        "sim_script": "./",
-        "log_level": "WARNING",
-    }
