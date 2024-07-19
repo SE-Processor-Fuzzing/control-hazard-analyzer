@@ -36,7 +36,7 @@ class Aggregate(Utility):
             "utility": "generate",
             "out_dir": "tests",
             "repeats": 1,
-            "log_level": "WARNING"
+            "log_level": "WARNING",
         }
 
         self.default_summarize_settings = {
@@ -75,9 +75,9 @@ class Aggregate(Utility):
         if os.access(full_conf_path, mode=os.R_OK):
             cfg_settings = self.settings["configurator"].read_cfg_file(full_conf_path)
             self.default_analyze_settings = self.settings["configurator"].get_true_settings(
-                    cfg_settings,
-                    self.default_analyze_settings,
-                )
+                cfg_settings,
+                self.default_analyze_settings,
+            )
             # if user set absolute path in config, we will save by it
             if not Path(self.default_analyze_settings["out_dir"]).is_absolute():
                 name = full_conf_path.name.split(".")[0]
@@ -111,8 +111,9 @@ class Aggregate(Utility):
         # configure and run summarizer
         self.default_summarize_settings["src_dirs"] = self.output_analyze_dirs
         self.default_summarize_settings["log_level"] = self.settings["log_level"]
-        self.default_summarize_settings["out_dir"] = str(Path(self.settings["dest_dir"])
-                                                         .joinpath(self.default_summarize_settings["out_dir"]))
+        self.default_summarize_settings["out_dir"] = str(
+            Path(self.settings["dest_dir"]).joinpath(self.default_summarize_settings["out_dir"])
+        )
 
         self.settings["summarize"].configurate(self.default_summarize_settings)
         self.settings["summarize"].run()

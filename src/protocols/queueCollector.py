@@ -5,5 +5,4 @@ from src.helpers.backGroundBuilder import ChanSignal
 
 
 class QueueCollector(Protocol):
-    def collect(self, build_channel: Queue[ChanSignal]) -> Dict[str, Dict]:
-        ...
+    def collect(self, build_channel: Queue[ChanSignal]) -> Dict[str, Dict]: ...

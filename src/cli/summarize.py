@@ -84,7 +84,10 @@ class Summarize(Utility):
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
                 sim_ticks = src_data.get("simTicks", np.nan)
-                bp_lookups = src_data.get("branchPred.lookups", src_data.get("branchPred.btb.lookups::total", np.nan),)
+                bp_lookups = src_data.get(
+                    "branchPred.lookups",
+                    src_data.get("branchPred.btb.lookups::total", np.nan),
+                )
                 bp_incorrect = src_data.get("branchPred.condIncorrect", np.nan)
                 is_full = bool(src_data.get("isFull", False))
                 result[src_dir][Path(src_file).stem] = {
