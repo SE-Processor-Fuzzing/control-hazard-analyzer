@@ -16,17 +16,37 @@ three steps: test generation in C, test profiling using a profiler (perf, gem5 s
 ## Requirements
 
 - Python 3.10+
-- gem5
+- gem5 (optional)
 
 ## Installation
+
+Clone the repository
+
+```bash
+git clone --recurse-submodules https://github.com/SE-Processor-Fuzzing/control-hazard-analyzer.git
+```
+
+### gem5
+
+For using gemProofiler one needs to have gem5 and library M5ops:
+- [gem5 installation](https://www.gem5.org/getting_started/)
+- [M5ops installation](https://www.gem5.org/documentation/general_docs/m5ops/)
+
+They can be installed manually or using `thirdparty/gem5` submodule.
+
+```bash
+python3 ./scripts/install_gem5.py X86 opt ./thirdparty/gem5/build_cache
+```
+
+> [!TIP]
+> It is possible to configure ISA, build variant and build cache directory for gem5 installation.
+> For more information run `python ./scripts/install_gem5.py --help`
+
+### cha.py dependencies
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
-
-For using gemProofiler you need to have gem5 and library M5ops:
-- [gem5 installation](https://www.gem5.org/getting_started/)
-- [M5ops installation](https://www.gem5.org/documentation/general_docs/m5ops/)
 
 ## Toolchain structure
 
