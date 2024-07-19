@@ -19,13 +19,12 @@ jobs:
           submodules: recursive
       - name: Install gem5 dependencies
         run: |
-          apt update
-          apt install -y build-essential scons pre-commit zlib1g zlib1g-dev \
-            libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+          sudo apt update
+          sudo apt install -y build-essential scons pre-commit zlib1g zlib1g-dev \
+            libprotobuf-dev protobuf-compiler libprotoc-dev \
             libboost-all-dev  libhdf5-serial-dev \
             m4 libcapstone-dev libpng-dev libelf-dev pkg-config
-      - name: Restore gem5 build cache
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: ${{ env.gem5_build_cache }}
           key: ${{ runner.os }}-gem5-build
