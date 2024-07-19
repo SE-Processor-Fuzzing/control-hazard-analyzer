@@ -18,6 +18,7 @@ class ProfilerType(str, Enum):
 
 class Configurator:
     """Class for handling configuration files and argument parsing"""
+
     def configurate(self, args: Dict[str, Any]):
         """Update the provided arguments with configuration file contents if specified
 

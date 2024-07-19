@@ -17,12 +17,11 @@ configurator = Configurator()
 
 @app.command("generate")
 def init_generator(
-        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
-                                             show_default=False)] = "tests",
-        repeats: Annotated[int, typer.Option(help="Path to output directory", metavar="REPEATS",
-                                             show_default=False)] = 1,
-        log_level: Annotated[LogLevel, typer.Option(help="Log level of program",
-                                                    case_sensitive=True)] = LogLevel.WARNING
+    out_dir: Annotated[
+        str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
+    ] = "tests",
+    repeats: Annotated[int, typer.Option(help="Path to output directory", metavar="REPEATS", show_default=False)] = 1,
+    log_level: Annotated[LogLevel, typer.Option(help="Log level of program", case_sensitive=True)] = LogLevel.WARNING,
 ):
     command_args["utility"] = "generate"
     command_args["out_dir"] = out_dir
@@ -33,27 +32,35 @@ def init_generator(
 
 @app.command("analyze")
 def init_analyzer(
-        config_file: Annotated[str, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE",
-                                                 show_default=False)] = None,
-        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
-                                             show_default=False)] = "analyze",
-        test_dir: Annotated[str, typer.Option(help="Path to directory with tests", metavar="TEST_DIR",
-                                              show_default=False)] = "tests",
-        timeout: Annotated[int, typer.Option(help="Number of seconds after which the test will be stopped",
-                                             metavar="TIMEOUT", show_default=False)] = 10,
-        compiler: Annotated[str, typer.Option(help="Path to compiler", metavar="COMPILER", show_default=False)] = "gcc",
-        compiler_args: Annotated[str, typer.Option(help="Pass arguments on to the compiler", metavar="COMPILER_ARGS",
-                                                   show_default=False)] = "",
-        profiler: Annotated[ProfilerType, typer.Option(help="Type of profiler")] = ProfilerType.PERF,
-        gem5_home: Annotated[str, typer.Option(help="Path to home gem5", metavar="GEM5_HOME",
-                                               show_default=False)] = "./",
-        gem5_bin: Annotated[str, typer.Option(help="Path to execute gem5", metavar="GEM5_BIN",
-                                              show_default=False)] = "./",
-        target_isa: Annotated[str, typer.Option(help="Type of architecture being simulated",
-                                                metavar="TARGET_ISA", show_default=False)] = "",
-        sim_script: Annotated[str, typer.Option(help="Path to simulation Script", metavar="SIM_SCRIPT",
-                                                show_default=False)] = "./",
-        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+    config_file: Annotated[
+        str, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
+    ] = None,
+    out_dir: Annotated[
+        str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
+    ] = "analyze",
+    test_dir: Annotated[
+        str, typer.Option(help="Path to directory with tests", metavar="TEST_DIR", show_default=False)
+    ] = "tests",
+    timeout: Annotated[
+        int,
+        typer.Option(
+            help="Number of seconds after which the test will be stopped", metavar="TIMEOUT", show_default=False
+        ),
+    ] = 10,
+    compiler: Annotated[str, typer.Option(help="Path to compiler", metavar="COMPILER", show_default=False)] = "gcc",
+    compiler_args: Annotated[
+        str, typer.Option(help="Pass arguments on to the compiler", metavar="COMPILER_ARGS", show_default=False)
+    ] = "",
+    profiler: Annotated[ProfilerType, typer.Option(help="Type of profiler")] = ProfilerType.PERF,
+    gem5_home: Annotated[str, typer.Option(help="Path to home gem5", metavar="GEM5_HOME", show_default=False)] = "./",
+    gem5_bin: Annotated[str, typer.Option(help="Path to execute gem5", metavar="GEM5_BIN", show_default=False)] = "./",
+    target_isa: Annotated[
+        str, typer.Option(help="Type of architecture being simulated", metavar="TARGET_ISA", show_default=False)
+    ] = "",
+    sim_script: Annotated[
+        str, typer.Option(help="Path to simulation Script", metavar="SIM_SCRIPT", show_default=False)
+    ] = "./",
+    log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING,
 ):
     command_args["utility"] = "analyze"
     command_args["config_file"] = config_file
@@ -74,15 +81,20 @@ def init_analyzer(
 
 @app.command("summarize")
 def init_summarizer(
-        src_dirs: Annotated[List[str], typer.Option(help="Path to source dirs", metavar="SRC_DIRS",
-                                                    show_default=False)] = None,
-        out_dir: Annotated[str, typer.Option(help="Path to output directory", metavar="OUT_DIR",
-                                             show_default=False)] = "summarize",
-        no_show_graph: Annotated[bool, typer.Option("--no-show-graph", help="Shows a graph of BP incorrect %%",
-                                                    show_default=False)] = False,
-        no_save_graph: Annotated[bool, typer.Option("--no-save-graph", help="Saves a graph of BP incorrect %% "
-                                                                            "in graph.png", show_default=False)] = False,
-        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+    src_dirs: Annotated[
+        List[str], typer.Option(help="Path to source dirs", metavar="SRC_DIRS", show_default=False)
+    ] = None,
+    out_dir: Annotated[
+        str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
+    ] = "summarize",
+    no_show_graph: Annotated[
+        bool, typer.Option("--no-show-graph", help="Shows a graph of BP incorrect %%", show_default=False)
+    ] = False,
+    no_save_graph: Annotated[
+        bool,
+        typer.Option("--no-save-graph", help="Saves a graph of BP incorrect %% " "in graph.png", show_default=False),
+    ] = False,
+    log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING,
 ):
     command_args["utility"] = "summarize"
     command_args["src_dirs"] = src_dirs
@@ -95,17 +107,31 @@ def init_summarizer(
 
 @app.command("aggregate", help="aggregate is shell above: analyze (code generator + profiler), summarize")
 def init_aggregator(
-        config_file: Annotated[str, typer.Option(help="Path to .cfg file", metavar="CONFIG_FILE",
-                                                 show_default=False)] = "config.json",
-        section_in_config: Annotated[str, typer.Option(help="Set the custom section "
-                                                            "in config file (DEFAULT by default)",
-                                                       metavar="SECTION_IN_CONFIG", show_default=False)] = "DEFAULT",
-        dest_dir: Annotated[str, typer.Option(help="Path to dist dir, if not exit it will be created",
-                                              metavar="OUT_DIR", show_default=False)] = "out",
-        async_analyze: Annotated[bool, typer.Option("--async-analyze", help="Run analyze steps simultaneously "
-                                                                            "(not recommended with perf)",
-                                                    metavar="ASYNC_ANALYZE", show_default=False)] = True,
-        log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING
+    config_file: Annotated[
+        str, typer.Option(help="Path to .cfg file", metavar="CONFIG_FILE", show_default=False)
+    ] = "config.json",
+    section_in_config: Annotated[
+        str,
+        typer.Option(
+            help="Set the custom section " "in config file (DEFAULT by default)",
+            metavar="SECTION_IN_CONFIG",
+            show_default=False,
+        ),
+    ] = "DEFAULT",
+    dest_dir: Annotated[
+        str,
+        typer.Option(help="Path to dist dir, if not exit it will be created", metavar="OUT_DIR", show_default=False),
+    ] = "out",
+    async_analyze: Annotated[
+        bool,
+        typer.Option(
+            "--async-analyze",
+            help="Run analyze steps simultaneously " "(not recommended with perf)",
+            metavar="ASYNC_ANALYZE",
+            show_default=False,
+        ),
+    ] = True,
+    log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING,
 ):
     command_args["utility"] = "aggregate"
     command_args["config_file"] = config_file
@@ -132,7 +158,7 @@ class Controller:
             "generate": Generate(),
             "analyze": Analyze(),
             "summarize": Summarize(),
-            "aggregate": Aggregate()
+            "aggregate": Aggregate(),
         }
 
         for command in self.utilities:
