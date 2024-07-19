@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 class LogLevel(str, Enum):
@@ -58,18 +58,3 @@ class Configurator:
             else:
                 settings[arg] = args[arg]
         return result
-
-    def parse_args(self, args: List[str], default_params: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse command line arguments and update the default parameters
-
-       :param args: List of command line arguments
-       :param default_params: Default parameters to update
-       :return: Updated parameters
-       """
-        for i in range(0, len(args), 2):
-            key = args[i].lstrip("--").replace("-", "_")
-            value = args[i + 1]
-            if key in default_params:
-                default_params[key] = value
-
-        return default_params

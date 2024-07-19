@@ -1,6 +1,5 @@
 import logging
 import os
-import shlex
 import shutil
 import threading
 from datetime import datetime
@@ -42,7 +41,7 @@ class Aggregate(Utility):
 
         self.default_summarize_settings = {
             "utility": "summarize",
-            "src_dirs": None,
+            "src_dirs": [],
             "out_dir": "summarize",
             "no_show_graph": False,
             "no_save_graph": False,
@@ -70,27 +69,27 @@ class Aggregate(Utility):
 
         return output_analyze_dirs
 
-    def create_analyzer(self, config_file: Path, settings_analyze: Dict[str, Any]) -> Analyze:
+    def create_analyzer(self, config_file: Path) -> Analyze:
         analyze = Analyze()
         full_conf_path = Path(self.settings["path_to_configs"]).joinpath(config_file)
         if os.access(full_conf_path, mode=os.R_OK):
             cfg_settings = self.settings["configurator"].read_cfg_file(full_conf_path)
-            settings_analyze = self.settings["configurator"].get_true_settings(
+            self.default_analyze_settings = self.settings["configurator"].get_true_settings(
                     cfg_settings,
-                    settings_analyze,
+                    self.default_analyze_settings,
                 )
             # if user set absolute path in config, we will save by it
-            if not Path(settings_analyze["out_dir"]).is_absolute():
+            if not Path(self.default_analyze_settings["out_dir"]).is_absolute():
                 name = full_conf_path.name.split(".")[0]
                 sub_dir_name = f"{name}-{datetime.now().strftime('%y-%m-%d-%H-%M-%S-%f')}"
                 sub_dir = Path(self.settings["dest_dir"]).joinpath(sub_dir_name)
                 while sub_dir.exists():
                     sub_dir_name = sub_dir_name + "_new"
                     sub_dir = sub_dir.with_name(sub_dir_name)
-                settings_analyze["out_dir"] = sub_dir.joinpath(settings_analyze["out_dir"])
+                self.default_analyze_settings["out_dir"] = sub_dir.joinpath(self.default_analyze_settings["out_dir"])
 
-            settings_analyze["log_level"] = self.settings["log_level"]
-            analyze.configurate(settings_analyze)
+            self.default_analyze_settings["log_level"] = self.settings["log_level"]
+            analyze.configurate(self.default_analyze_settings)
 
         return analyze
 
@@ -101,34 +100,24 @@ class Aggregate(Utility):
         self.logger.info("Aggregate is running. Settings:")
         self.logger.info(pformat(self.settings))
 
-        # configure and run generator
-        args_generate = shlex.split(self.settings["Wg"])
-        configurator = self.settings["configurator"]
-        settings_generate = configurator.parse_args(args_generate, self.settings["generate"].default_params)
-        settings_generate["log_level"] = self.settings["log_level"]
-
-        self.settings["generate"].configurate(settings_generate)
+        # # configure and run generator
+        self.default_generate_settings["log_level"] = self.settings["log_level"]
+        self.settings["generate"].configurate(self.default_generate_settings)
         self.settings["generate"].run()
 
         # configure and run analyzer
         self.output_analyze_dirs = self.run_analyzers()
 
         # configure and run summarizer
-        args_summarize = shlex.split(self.settings["Ws"])
-        settings_summarize = configurator.parse_args(args_summarize, self.settings["summarize"].default_params)
-        settings_summarize["src_dirs"] = self.output_analyze_dirs
-        settings_summarize["log_level"] = self.settings["log_level"]
-        settings_summarize["out_dir"] = Path(self.settings["dest_dir"]).joinpath(settings_summarize["out_dir"])
+        self.default_summarize_settings["src_dirs"] = self.output_analyze_dirs
+        self.default_summarize_settings["log_level"] = self.settings["log_level"]
+        self.default_summarize_settings["out_dir"] = str(Path(self.settings["dest_dir"])
+                                                         .joinpath(self.default_summarize_settings["out_dir"]))
 
-        self.settings["summarize"].configurate(settings_summarize)
+        self.settings["summarize"].configurate(self.default_summarize_settings)
         self.settings["summarize"].run()
 
     def configurate(self, settings: Dict[str, Any]) -> None:
         self.settings = {**self.settings, **settings}
         self.logger.setLevel(self.settings["log_level"])
-
-        # TODO: this is draft and should be rewritted
-        args_analyze = shlex.split(self.settings["Wz"])
-        configurator = self.settings["configurator"]
-        settings_analyze = configurator.parse_args(args_analyze, self.settings["analyze"].default_params)
-        self.analyzes = [self.create_analyzer(cfg, settings_analyze) for cfg in self.settings["configs"]]
+        self.analyzes = [self.create_analyzer(cfg) for cfg in self.settings["configs"]]
