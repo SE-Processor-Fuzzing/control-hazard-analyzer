@@ -242,12 +242,3 @@ class Summarize(Utility):
     def save_plot(self, out_dir: Path) -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         plt.savefig(out_dir.joinpath(self.filename_out_grapg))
-
-    default_params = {
-        "utility": "summarize",
-        "src_dirs": None,
-        "out_dir": "summarize",
-        "no_show_graph": False,
-        "no_save_graph": False,
-        "log_level": "WARNING",
-    }

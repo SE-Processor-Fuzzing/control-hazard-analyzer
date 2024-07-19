@@ -17,6 +17,37 @@ class Aggregate(Utility):
     def __init__(self) -> None:
         self.settings: Dict[str, Any] = {}
         self.logger = logging.getLogger(__name__)
+        self.default_analyze_settings = {
+            "utility": "analyze",
+            "config_file": None,
+            "out_dir": "analyze",
+            "test_dir": "tests",
+            "timeout": 10,
+            "compiler": "gcc",
+            "compiler_args": "",
+            "profiler": "perf",
+            "gem5_home": "./",
+            "gem5_bin": "./",
+            "target_isa": "",
+            "sim_script": "./",
+            "log_level": "WARNING",
+        }
+
+        self.default_generate_settings = {
+            "utility": "generate",
+            "out_dir": "tests",
+            "repeats": 1,
+            "log_level": "WARNING"
+        }
+
+        self.default_summarize_settings = {
+            "utility": "summarize",
+            "src_dirs": None,
+            "out_dir": "summarize",
+            "no_show_graph": False,
+            "no_save_graph": False,
+            "log_level": "WARNING",
+        }
 
     def _run_analyzer(self, analyze: Analyze, chan: Queue):
         analyze.run()

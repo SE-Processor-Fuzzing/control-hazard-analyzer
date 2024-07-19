@@ -52,10 +52,3 @@ class Generate(Utility):
             return
         self.create_empty_dir(self.out_dir)
         self.generate_tests(self.out_dir, self.repeats)
-
-    default_params = {
-        "utility": "generate",
-        "out_dir": "tests",
-        "repeats": 1,
-        "log_level": "WARNING"
-    }
