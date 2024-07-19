@@ -44,7 +44,7 @@ class Configurator:
         return config if section is None else {**config["DEFAULT"], **config[section]}
 
     def get_true_settings(self, settings: Dict[str, Any], args: Dict[str, Any]) -> Dict[str, Any]:
-        """Get the final settings by updating the default settings with the provided arguments
+        """Get the final settings by updating the default settings with the configs settings
 
         :param settings: Default settings
         :param args: Provided arguments to override the default settings
