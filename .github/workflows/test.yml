@@ -1,0 +1,35 @@
+name: Run tests
+
+on: [ push ]
+
+jobs:
+  gem5:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.10", "3.11" ]
+    env:
+      gem5_isa: X86
+      gem5_variant: opt
+      gem5_build_cache: ${{ github.workspace }}/thirdparty/gem5_build_cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+      - name: Install gem5 dependencies
+        run: |
+          apt update
+          apt install -y build-essential scons pre-commit zlib1g zlib1g-dev \
+            libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+            libboost-all-dev  libhdf5-serial-dev \
+            m4 libcapstone-dev libpng-dev libelf-dev pkg-config
+      - name: Restore gem5 build cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.gem5_build_cache }}
+          key: ${{ runner.os }}-gem5-build
+      - name: Build gem5
+        run: |
+          python3 ./scripts/install_gem5.py ${{ env.gem5_isa }} ${{ env.gem5_variant }} ${{ env.gem5_build_cache }}
+      # TODO: run tests
