@@ -31,4 +31,15 @@ jobs:
       - name: Build gem5
         run: |
           python3 ./scripts/install_gem5.py ${{ env.gem5_isa }} ${{ env.gem5_variant }} ${{ env.gem5_build_cache }}
-      # TODO: run tests
+      - name: Install cha.py dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.dev.txt ]; then pip install -r requirements.dev.txt; fi
+      - name: Basic check
+        run: |
+          python3 cha.py \
+            generate --repeats=1 --out-dir="tests" \
+            analyze --test-dir="tests" --out-dir="gem_result" --config-file ./configs/gem5.json \
+            summarize --src-dirs="gem_result" --out-dir="summarize_result" --no-show-graph

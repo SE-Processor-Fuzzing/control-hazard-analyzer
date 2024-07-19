@@ -1,6 +1,6 @@
 {
   "profiler": "gem5",
   "target_isa": "X86",
-  "gem5_home": "/path/to/your/gem5/dir",
+  "gem5_home": "./thirdparty/gem5",
   "timeout": 50
 }
