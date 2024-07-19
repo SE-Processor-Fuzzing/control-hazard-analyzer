@@ -19,7 +19,7 @@ help = f"""Usage:
     python3 {sys.argv[0]} ISA VARIANT CACHE_PATH
     python3 {sys.argv[0]} {{help|-h|--help}}
 
-Configure and build gem5 for selected ISA with VARIANT optimization configuration and save build cache to CACHE PATH.
+Configure and build gem5 for selected ISA with VARIANT optimization configuration and save build cache to CACHE_PATH.
 You can read more about the gem5 build at https://www.gem5.org/documentation/general_docs/building.
 
 ISA available values:
