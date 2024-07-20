@@ -9,7 +9,7 @@ pandas==2.2.2
 paramiko==3.4.0
 Pillow==10.4.0
 pyparsing==3.1.2
-PyQt5==5.15.10
+PyQt5==5.15.11
 python-dateutil==2.9.0.post0
 pytz==2024.1
 six==1.16.0
