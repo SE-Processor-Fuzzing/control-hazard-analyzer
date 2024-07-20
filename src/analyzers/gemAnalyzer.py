@@ -17,7 +17,7 @@ class GemAnalyzer:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.settings["log_level"])
 
-        self.gem5_home = Path(self.settings.get("gem5_home", ""))
+        self.gem5_home = Path(self.settings.get("gem5_home", "./thirdparty/gem5"))
         self.target_isa = self.settings.get("target_isa", "").lower()
 
         self.build_additional_flags = [
