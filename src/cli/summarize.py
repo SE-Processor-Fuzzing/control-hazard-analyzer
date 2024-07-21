@@ -26,10 +26,17 @@ class Summarize(Utility):
         self.logger = logging.getLogger(__name__)
 
     def configurate(self, settings: Dict[str, Any]) -> None:
+        """Initialize local variables with passed parameters
+
+        :param settings: Passed parameters to the command
+        """
         self.settings = settings
         self.logger.setLevel(self.settings["log_level"])
 
     def run(self) -> None:
+        """Print log info, then perform analyze data collection, summarization, and plotting
+        The results are saved to files and optionally displayed
+        """
         self.logger.info("Summarize is running. Settings:")
         self.logger.info(pformat(self.settings))
 
@@ -61,6 +68,11 @@ class Summarize(Utility):
             self.show_plot()
 
     def get_data_from_sources(self, src_dirs: List[Path]) -> DataType[int]:
+        """Collect data from the specified source directories
+
+        :param src_dirs: A list of directories containing source analyze data files
+        :return: A dictionary containing the collected data
+        """
         data: Dict[str, Dict[str, DictSI]] = {}
 
         for src_dir in src_dirs:
@@ -79,7 +91,14 @@ class Summarize(Utility):
         return data
 
     def prepare_data(self, data: DataType[int]) -> DataType[int | float | bool]:
+        """Prepare and transform the collected data by extracting and calculating specific metrics
 
+        Extracts simulation ticks, branch predictor lookups, incorrect predictions, and full launch flags,
+        then calculates ticks per branch prediction and the percentage of incorrect predictions
+
+        :param data: The collected data
+        :return: The prepared data with additional calculated metrics
+        """
         result: DataType[int | float | bool] = {Path(src_dir).as_posix(): {} for src_dir in data}
         for src_dir, src_files in data.items():
             for src_file, src_data in src_files.items():
@@ -112,6 +131,11 @@ class Summarize(Utility):
         return result
 
     def calculate_mean_of_dir(self, data: DataFrame) -> DataFrame:
+        """Calculate the mean percentage of BP incorrect for each directory
+
+        :param data: The prepared data in a pandas DataFrame
+        :return: A DataFrame containing the mean percentage of BP incorrect for each directory
+        """
         mean_of_dir: Dict[str, Dict[str, Any]] = {}
         for src_dir in data.index.unique(level="dir"):
             mean_of_dir[src_dir] = {}
@@ -122,10 +146,21 @@ class Summarize(Utility):
         return DataFrame(mean_of_dir)
 
     def convert_to_pandas(self, data: Dict[str, Dict[Any, Any]]) -> DataFrame:
+        """Convert the prepared data to a pandas DataFrame
+
+        :param data: The prepared data
+        :return: The data in a pandas DataFrame
+        """
         df = pd.concat({key: DataFrame(value).T for key, value in data.items()})
         return df.rename_axis(["dir", "test"])
 
     def save_mean_data(self, mean_of_dir: DataFrame, src_dirs: List[Path], out_dir: Path) -> None:
+        """Save the mean percentage of BP incorrect for each directory to a file
+
+        :param mean_of_dir: The DataFrame containing the mean percentage of BP incorrect for each directory
+        :param src_dirs: A list of directories containing source analyze data files
+        :param out_dir: The directory where the results will be saved
+        """
         out_dir.mkdir(parents=True, exist_ok=True)
         with open(out_dir.joinpath(self.filename_out_data), "w") as f:
             # Use pandas to print data to file
@@ -144,7 +179,13 @@ class Summarize(Utility):
         src_dirs: List[Path],
         out_dir: Path,
     ) -> None:
+        """Save the data for each source directory to a file
 
+        :param data: The prepared data in a pandas DataFrame
+        :param mean_of_dir: The DataFrame containing the mean percentage of BP incorrect for each directory
+        :param src_dirs: A list of directories containing source analyze data files
+        :param out_dir: The directory where the results will be saved
+        """
         for src_dir in src_dirs:
             if not src_dir.exists():
                 print(f"[-]: Directory {src_dir} does not exist")
@@ -165,6 +206,11 @@ class Summarize(Utility):
                 f.write(str(bp_incorrect))
 
     def filter_summarize_data(self, data: DataFrame) -> DataFrame:
+        """Filter and summarize the data for plotting
+
+        :param data: The prepared data in a pandas DataFrame
+        :return: The filtered and summarized data
+        """
         result = data.copy()
         for key in data.index:
             if not (0 <= data.loc[key, "BP incorrect %"] <= 100):
@@ -176,10 +222,20 @@ class Summarize(Utility):
         return result
 
     def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
+        """Construct the data for plotting
+
+        :param data: The filtered and summarized data in a pandas DataFrame
+        :return: The data prepared for plotting
+        """
         return data.loc[:, ["BP incorrect %", "BP lookups", "Full launch"]]
 
     def sort_data(self, data: DataFrame) -> DataFrame:
+        """Sort the data for plotting by directory and the maximum 'BP incorrect %' within each test
 
+        :param data: The data prepared for plotting in a pandas DataFrame
+        :return: The sorted data with the index reset and sorted by 'dir' and the maximum 'BP incorrect %' within
+        each test
+        """
         data = data.reset_index(level=["dir", "test"])
         max_values = data.groupby("test")["BP incorrect %"].max()
 
@@ -190,6 +246,11 @@ class Summarize(Utility):
         return data
 
     def construct_plot(self, data: DataFrame, hovers: DataFrame) -> None:
+        """Construct the plot for the summarized data
+
+        :param data: The data to be plotted in a pandas DataFrame
+        :param hovers: The data for hover annotations in the plot
+        """
         ax = data.plot(kind="bar", rot=90)
 
         fig = ax.figure
@@ -210,10 +271,19 @@ class Summarize(Utility):
         annot.set_visible(False)
 
         def get_hover(bar: Patch) -> Any:
+            """Get the hover text for a specific bar in the plot
+
+            :param bar: The bar for which to get the hover text
+            :return: The hover text corresponding to the bar, or "N/A" if the index is out of range
+            """
             index = bars.index(bar)
             return hovers.iloc[index].to_string(name=False) if index < len(hovers) else "N/A"
 
         def update_annot(bar: Any) -> None:
+            """Update the annotation position and text based on the given bar
+
+            :param bar: The bar for which to update the annotation
+            """
             x = bar.get_x() + bar.get_width() / 2.0
             y = bar.get_y() + bar.get_height()
             annot.xy = (x, y)
@@ -224,6 +294,10 @@ class Summarize(Utility):
             #     bbox.set_alpha(0.3)
 
         def show_annotation(event: Event) -> Any:
+            """Show the annotation if the mouse is over a bar, otherwise hide it
+
+            :param event: The event triggering the annotation display
+            """
             vis = annot.get_visible()
             for bar in bars:
                 cont, _ = bar.contains(event)  # type: ignore
@@ -240,8 +314,13 @@ class Summarize(Utility):
         fig.canvas.mpl_connect("motion_notify_event", show_annotation)
 
     def show_plot(self) -> None:
+        """Display the plot"""
         plt.show()
 
     def save_plot(self, out_dir: Path) -> None:
+        """Save the plot to a file in the given directory
+
+        :param out_dir: The directory where the plot will be saved
+        """
         out_dir.mkdir(parents=True, exist_ok=True)
         plt.savefig(out_dir.joinpath(self.filename_out_grapg))
