@@ -13,7 +13,14 @@ from src.protocols.utility import Utility
 
 
 class Aggregate(Utility):
+    """Class manages and sequentially calls generate, analyze, and summarize commands
+
+    It configures and runs instances of the Generate, Analyze, and Summarize classes in sequence to perform a
+    complete data processing pipeline
+    """
+
     def __init__(self) -> None:
+        """Initialize the Aggregate class with default settings for sub-commands and logger"""
         self.settings: Dict[str, Any] = {}
         self.logger = logging.getLogger(__name__)
         self.default_analyze_settings = {
@@ -49,6 +56,11 @@ class Aggregate(Utility):
         }
 
     def _run_analyzer(self, analyze: Analyze, chan: Queue):
+        """Run the analyzer and put the output directory in the queue
+
+        :param analyze: The Analyze instance to run
+        :param chan: The queue to store the output directory
+        """
         analyze.run()
         if analyze.settings is None:
             raise LookupError("Didn't find settings for analyze")
@@ -56,6 +68,10 @@ class Aggregate(Utility):
 
     # TODO: this is a draft method and should be removed or rewritted with asincio
     def run_analyzers(self) -> List[str]:
+        """Run all analyzers, either asynchronously or synchronously, and collect their output directories
+
+        :return: A list of output directories from the analyzers
+        """
         output_analyze_dirs: List[str] = []
         chan = Queue()
         for analyze in self.analyzes:
@@ -70,6 +86,11 @@ class Aggregate(Utility):
         return output_analyze_dirs
 
     def create_analyzer(self, config_file: Path) -> Analyze:
+        """Create and configure an Analyze instance based on the provided configuration file
+
+        :param config_file: The path to the configuration file.
+        :return: The configured Analyze instance
+        """
         analyze = Analyze()
         full_conf_path = Path(self.settings["path_to_configs"]).joinpath(config_file)
         if os.access(full_conf_path, mode=os.R_OK):
@@ -94,9 +115,13 @@ class Aggregate(Utility):
         return analyze
 
     def clean_output_dir(self) -> None:
+        """Clean the output directory by removing it"""
+
         shutil.rmtree(self.settings["dest_dir"])
 
     def run(self) -> None:
+        """Print log info, then execute the complete workflow: generate tests, run analyzer, and summarize results"""
+
         self.logger.info("Aggregate is running. Settings:")
         self.logger.info(pformat(self.settings))
 
@@ -119,6 +144,10 @@ class Aggregate(Utility):
         self.settings["summarize"].run()
 
     def configurate(self, settings: Dict[str, Any]) -> None:
+        """Initialize local variables with passed parameters
+
+        :param settings: Passed parameters to the command
+        """
         self.settings = {**self.settings, **settings}
         self.logger.setLevel(self.settings["log_level"])
         self.analyzes = [self.create_analyzer(cfg) for cfg in self.settings["configs"]]
