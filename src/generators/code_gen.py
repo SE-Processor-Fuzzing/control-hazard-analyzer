@@ -199,12 +199,24 @@ class EntryPointBlock(Block):
 
 
 class DefineFunctionBlock(Block):
+    """Class of representation function block
+
+    :param func: name of function
+    :param args: names of function's variables
+    """
+
     def __init__(self, func: str, args: List[str], next_blocks: List[Block]) -> None:
+        """Constructor method"""
         self.name = func
         self.args = args
         self.next_blocks = next_blocks
 
     def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
         visitor.send(f"void {self.name}(")
         for i in range(len(self.args)):
             visitor.send(f"int {self.args[i]}")
@@ -217,11 +229,23 @@ class DefineFunctionBlock(Block):
 
 
 class FuncBlock(Block):
+    """Class of representation function call by name block
+
+    :param func: name of function
+    :param args: names of variables that we pass to the function
+    """
+
     def __init__(self, func: str, args: List[str]) -> None:
+        """Constructor method"""
         self.name = func
         self.args = args
 
     def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
         visitor.send(f"{self.name}(")
         for i in range(len(self.args)):
             visitor.send(f"{self.args[i]}")
@@ -305,6 +329,11 @@ class Generator:
         self.entry_point = EntryPointBlock(funcs_blocks, next_blocks)
 
     def __gen_def_funcs(self, env: Scope) -> List[Block]:
+        """Method that function's call by name block
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: new block of code with function
+        """
         funcs_number = rd.randint(1, 3)
         func_blocks: List[Block] = []
 
@@ -324,6 +353,12 @@ class Generator:
         return func_blocks
 
     def __gen_func_call(self, env: Scope, curr_func_num: int) -> FuncBlock:
+        """Method that function's call by name block
+
+        :param env: environment that keeps all for creating new lines of code
+        :param curr_func_num: number of the function in which creation occurs
+        :return: new block of code with function's call by name
+        """
         func = env.get_random_func(rule=lambda x: int(x[4:]) < curr_func_num)
         args = env.get_random_vars(count=env.funcs_args_number[func])
 
@@ -397,7 +432,8 @@ class Generator:
         """Method that generate switch-case block
 
         :param env: environment that keeps all for creating new lines of code
-        :return: new block of code witch switch-case
+        :param curr_func_num: number of the function in which creation occurs
+        :return: new block of code with switch-case
         """
         env_copy = env.copy()
 
