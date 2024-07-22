@@ -168,11 +168,11 @@ class Summarize(Utility):
         result = data.copy()
         for key in data.index:
             if not (0 <= data.loc[key, "BP incorrect %"] <= 100):
-                result.loc[key, "BP incorrect %"] = np.NaN
+                result.loc[key, "BP incorrect %"] = np.nan
             if data.loc[key, "BP lookups"] < 50:
-                result.loc[key, "BP incorrect %"] = np.NaN
+                result.loc[key, "BP incorrect %"] = np.nan
             # if not data.loc[key, "Full launch"]:
-            #     result.loc[key, "BP incorrect %"] = np.NaN
+            #     result.loc[key, "BP incorrect %"] = np.nan
         return result
 
     def construct_data_for_plot(self, data: DataFrame) -> DataFrame:
