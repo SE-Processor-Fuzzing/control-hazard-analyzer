@@ -23,7 +23,7 @@ class Analyze(Utility):
 
     def __init__(self) -> None:
         self.analyzer: Analyzer | None = None
-        self.packer = Packer()
+        self.packer: Packer | None = None
         self.builder: Builder | None = None
         self.test_dir: Path | None = None
         self.analyze_dir: Path | None = None
@@ -35,6 +35,8 @@ class Analyze(Utility):
 
         :param settings: Passed parameters to the command
         """
+        # packer is not passed with command line arguments because there is currently only one implementation of packer
+        self.packer = Packer()
         self.settings = settings
         self.logger.setLevel(self.settings["log_level"])
         self.test_dir = Path(settings["test_dir"])
