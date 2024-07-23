@@ -78,7 +78,7 @@ python3 cha.py aggregate --help
 **Usage example:**
 
 ```bash
-python3 cha.py generate --repeats=10 --out-dir="out" --debug
+python3 cha.py generate --repeats=10 --out-dir="out" --log-level DEBUG
 ```
 
 ### analyze
@@ -86,7 +86,7 @@ python3 cha.py generate --repeats=10 --out-dir="out" --debug
 **Usage example:**
 
 ```bash
-python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --debug
+python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --log-level DEBUG
 ```
 
 ### summarize
@@ -94,7 +94,7 @@ python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --debug
 **Usage example:**
 
 ```bash
-python3 cha.py summarize --src-dirs="perf_result" --out-dir="summarize_result" --debug
+python3 cha.py summarize --src-dirs="perf_result" --out-dir="summarize_result" --log-level DEBUG
 ```
 
 ### Multi-command Execution
