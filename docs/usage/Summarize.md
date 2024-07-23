@@ -1,5 +1,7 @@
 <h1 align="center"> Summarize</h1>
 
+**Read analysis results and create interactive diagram, saving it as image for easy visualization.**
+
 ## Options
 - [Help](#help)
 - [Source directories](#source-directories)

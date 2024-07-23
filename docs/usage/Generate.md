@@ -1,5 +1,7 @@
 <h1 align="center"> Generate</h1>
 
+**Configure and create test files based on specified parameters, and store them in a specific directory.**
+
 ## Options
 - [Help](#help)
 - [Output directory](#output-directory)
