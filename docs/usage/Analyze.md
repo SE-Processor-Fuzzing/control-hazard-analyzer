@@ -1,5 +1,7 @@
 <h1 align="center"> Analyze</h1>
 
+**Execute test analyses, generate results, and save them in specific directory.**
+
 ## Options
 - [Help](#help)
 - [Config file](#config-file)

@@ -1,5 +1,7 @@
 <h1 align="center"> Aggregate</h1>
 
+**Manage and sequentially execute the Generate, Analyze, and Summarize commands to perform a complete data processing pipeline.**
+
 ## Options
 - [Help](#help)
 - [Configuration file](#configuration-file)
