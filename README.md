@@ -69,6 +69,8 @@ Example result:
 
 Also, you can pass many options to utilities, see help for more details
 
+To read more about `aggreagte` visit [Docs](docs/usage/Aggregate.md)
+
 ```bash
 python3 cha.py aggregate --help
 ```
@@ -81,6 +83,8 @@ python3 cha.py aggregate --help
 python3 cha.py generate --repeats=10 --out-dir="out" --log-level DEBUG
 ```
 
+To read more about `generate` visit [Docs](docs/usage/Generate.md)
+
 ### analyze
 
 **Usage example:**
@@ -89,6 +93,8 @@ python3 cha.py generate --repeats=10 --out-dir="out" --log-level DEBUG
 python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --log-level DEBUG
 ```
 
+To read more about `analyze` visit [Docs](docs/usage/Analyze.md)
+
 ### summarize
 
 **Usage example:**
@@ -96,6 +102,8 @@ python3 cha.py analyze --test-dir="out" --out-dir="perf_result" --log-level DEBU
 ```bash
 python3 cha.py summarize --src-dirs="perf_result" --out-dir="summarize_result" --log-level DEBUG
 ```
+
+To read more about `summarize` visit [Docs](docs/usage/Summarize.md)
 
 ### Multi-command Execution
 You can pass multiple commands in a single run. This allows you to combine multiple steps into one command sequence
