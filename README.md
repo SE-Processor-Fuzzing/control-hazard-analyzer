@@ -1,7 +1,8 @@
 # Control hazard analyzer
 
 <p align="center">
-<a href="https://github.com/osogi/control-hazard-analyzer/actions"><img alt="Actions Status" src="https://github.com/SE-Processor-Fuzzing/control-hazard-analyzer/actions/workflows/checks.yml/badge.svg"></a>
+<a href="https://github.com/osogi/control-hazard-analyzer/actions"><img alt="Lint" src="https://github.com/SE-Processor-Fuzzing/control-hazard-analyzer/actions/workflows/checks.yml/badge.svg"></a>
+<a href="https://github.com/osogi/control-hazard-analyzer/actions"><img alt="Test" src="https://github.com/SE-Processor-Fuzzing/control-hazard-analyzer/actions/workflows/test.yml/badge.svg"></a>
 <a href="https://github.com/osogi/control-hazard-analyzer/blob/main/LICENSE.md"><img alt="License: MIT" src="https://black.readthedocs.io/en/stable/_static/license.svg"></a>
 <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/osogi/control-hazard-analyzer/total">
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
