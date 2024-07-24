@@ -24,7 +24,8 @@ python3 cha.py analyze --help
 ```
 
 ### Config file
-Specify the path to the configuration file.
+Specify the path to the configuration file. By default, there is no configuration file specified.\
+**Note**: Configuration file is a `JSON` file that contains all the necessary parameters for the analysis.
 #### Usage example:
 ```shell
 # Use a specific configuration file
@@ -32,7 +33,8 @@ python3 cha.py analyze --config-file "path/to/config_file"
 ```
 
 ### Output directory
-Specify a custom directory to save the analysis results. By default, results will be saved in the `analyze` directory.
+Specify a custom directory to save the analysis results. By default, results will be saved in the `analyze` directory. Specified directory will contain analysis results in the form of `.data` file.\
+**Note**: If the specified directory does not exist, it will be created. And, if the directory is not empty, the existing files will be removed, and overwritten with the new analysis results.
 #### Usage example:
 ```shell
 # Save analysis results in "outputDir" directory
@@ -40,14 +42,14 @@ python3 cha.py analyze --out-dir "outputDir"
 ```
 
 ### Tests directory
-Specify the path to the directory containing the tests. By default, tests are expected in the `tests` directory.
+Specify the path to the directory containing the tests. By default, tests are expected in the `tests` directory. Directory should contain one or more test files written in `C language`.
 #### Usage example:
 ```shell
 # Use tests from "testsDir" directory
 python3 cha.py analyze --test-dir "testsDir"
 ```
 ### Timeout
-Set the number of seconds after which the test will be stopped. The default is 10 seconds.
+Set the number of seconds after which the test will be stopped. The default is `10` seconds.
 #### Usage example:
 ```shell
 # Set timeout to 30 seconds
@@ -62,7 +64,7 @@ python3 cha.py analyze --compiler "path/to/compiler"
 ```
 
 ### Compiler Arguments
-Pass additional arguments to the compiler.
+Pass additional arguments to the compiler. By default, no arguments are passed.
 #### Usage example:
 ```shell
 # Pass arguments to the compiler
@@ -77,28 +79,28 @@ python3 cha.py analyze --profiler otherProfiler
 ```
 
 ### Path to gem5 Home
-Specify the path to the gem5 home directory.
+Specify the path to the gem5 home directory. By default, the gem5 home directory is not specified.
 #### Usage example:
 ```shell
 # Set gem5 home directory
 python3 cha.py analyze --gem5-home "path/to/gem5_home"
 ```
 ### Path to gem5 Binary
-Specify the path to the gem5 binary.
+Specify the path to the gem5 binary. By default, the gem5 binary path is not specified.
 #### Usage example:
 ```shell
 # Set gem5 binary path
 python3 cha.py analyze --gem5-bin "path/to/gem5_bin"
 ```
 ### Target ISA
-Specify the type of architecture being simulated.
+Specify the type of architecture being simulated. By default, the target ISA is not specified.
 #### Usage example:
 ```shell
 # Set target ISA
 python3 cha.py analyze --target-isa "x86"
 ```
 ### Path to simulation script
-Specify the path to the simulation script.
+Specify the path to the simulation script. By default, the simulation script path is root directory `./`.
 #### Usage example:
 ```shell
 # Set simulation script path

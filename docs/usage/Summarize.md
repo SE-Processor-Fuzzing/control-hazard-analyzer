@@ -17,7 +17,8 @@ python3 cha.py summarize --help
 ```
 
 ### Source directories
-Specify one or more paths to source directories.
+**Required:** Specify one or more paths to source directories. Directories should contain analysis results in the form of `.data` files.\
+By default, the there is no source directory specified, that is why this option is `required`.
 #### Usage example:
 ```shell
 # Use specific source directories
@@ -25,7 +26,8 @@ python3 cha.py summarize --src-dirs "dir1" "dir2"
 ```
 
 ### Output directory
-Specify a custom directory to save the summary results. By default, results will be saved in the `summarize` directory.
+Specify a custom directory to save the summary results. By default, results will be saved in the `summarize` directory. If the specified directory does not exist, it will be created. And, if the directory is not empty, the existing files will be removed, and overwritten with the new summary results.\
+Specified directory will contain summary results in the form of `.data` file and a graph as `graph.png`.
 #### Usage example:
 ```shell
 # Save summary results in "outputDir" directory

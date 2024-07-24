@@ -17,7 +17,8 @@ python3 cha.py aggregate --help
 ```
 
 ### Configuration file
-Specify the path to your configuration file. The default is `config.json`.
+Specify the path to your configuration file. The default is `config.json`.\
+**Note**: Configuration file is a `JSON` file.
 #### Usage example:
 ```shell
 # Use a specific configuration file
@@ -33,7 +34,7 @@ python3 cha.py aggregate --section-in-config "customSection"
 ```
 
 ### Destination directory
-Specify the path to the destination directory. If the directory does not exist, it will be created. The default is `out`.
+Specify the path to the destination directory. If the directory does not exist, it will be created. If the directory is not empty, the existing files will be removed, and overwritten with the new results. The default is `out`.
 #### Usage example:
 ```shell
 # Set the destination directory

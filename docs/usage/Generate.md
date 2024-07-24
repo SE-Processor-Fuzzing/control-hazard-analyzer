@@ -15,7 +15,8 @@ python3 cha.py generate --help
 ```
 
 ### Output directory
-Specify a custom directory to save the generated tests. By default, tests will be saved in the tests directory.
+Specify a custom directory to save the generated tests. By default, tests will be saved in the `tests` directory. Specified directory will contain test files written in `C language`.\
+**Note**: If the specified directory does not exist, it will be created. And, if the directory is not empty, the existing files will be removed, and overwritten with the new test files.
 #### Usage example:
 ```shell
 # Save generated tests in "myDir" directory
