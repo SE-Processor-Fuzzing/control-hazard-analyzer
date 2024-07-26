@@ -3,7 +3,7 @@ from typing import Dict, List
 import typer
 from typing_extensions import Annotated
 
-from src.cli.aggregate import Aggregate
+from src.cli.aggregate import Aggregate, DEFAULT_GENERATE_SETTINGS
 from src.cli.analyze import Analyze
 from src.cli.generate import Generate
 from src.cli.summarize import Summarize
@@ -19,7 +19,7 @@ configurator = Configurator()
 def init_generator(
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
-    ] = "tests",
+    ] = DEFAULT_GENERATE_SETTINGS["out_dir"],
     repeats: Annotated[
         int, typer.Option(help="Count of repeats to generated test", metavar="REPEATS", show_default=False)
     ] = 1,
@@ -35,14 +35,14 @@ def init_generator(
 @app.command("analyze", help="Build, run tests, and subsequent analysis of test execution")
 def init_analyzer(
     config_file: Annotated[
-        str, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
+        str | None, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
     ] = None,
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
     ] = "analyze",
     test_dir: Annotated[
         str, typer.Option(help="Path to directory with tests", metavar="TEST_DIR", show_default=False)
-    ] = "tests",
+    ] = DEFAULT_GENERATE_SETTINGS["out_dir"],
     timeout: Annotated[
         int,
         typer.Option(
@@ -87,7 +87,7 @@ def init_analyzer(
 )
 def init_summarizer(
     src_dirs: Annotated[
-        List[str], typer.Option(help="Path to source dirs", metavar="SRC_DIRS", show_default=False)
+        List[str] | None, typer.Option(help="Path to source dirs", metavar="SRC_DIRS", show_default=False)
     ] = None,
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
