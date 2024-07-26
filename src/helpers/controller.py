@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import typer
 from typing_extensions import Annotated
@@ -35,7 +35,7 @@ def init_generator(
 @app.command("analyze", help="Build, run tests, and subsequent analysis of test execution")
 def init_analyzer(
     config_file: Annotated[
-        str | None, typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
+        Optional[str], typer.Option(help="Path to configuration file", metavar="CONFIG_FILE", show_default=False)
     ] = None,
     out_dir: Annotated[
         str, typer.Option(help="Path to output directory", metavar="OUT_DIR", show_default=False)
