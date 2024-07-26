@@ -1,14 +1,12 @@
-import pytest
-from src.cli.analyze import *
 import logging
+from pathlib import Path
 
+import pytest
+
+from src.cli.analyze import Analyze
 from src.analyzers.gemAnalyzer import GemAnalyzer
 from src.analyzers.perfAnalyzer import PerfAnalyzer
-from src.analyzers.sshAnalyzer import SshAnalyzer
-from src.helpers.backGroundBuilder import BGBuilder
-from src.helpers.builder import Builder
 from src.helpers.packer import Packer
-from src.protocols.analyzer import Analyzer
 
 
 def test_init_sets_attributes_to_none():
