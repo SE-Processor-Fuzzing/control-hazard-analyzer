@@ -461,6 +461,7 @@ class Accum:
 
 def gen_test(
     max_depth: int = 3,
+    seed: int = 42,
     operators: List[str] | None = None,
     cond_operators: List[str] | None = None,
     **kwargs: int,
@@ -478,8 +479,6 @@ def gen_test(
 
     if cond_operators is None:
         cond_operators = ["<", "<=", ">", ">=", "==", "!="]
-
-    seed = rd.randint(1, 1000)
 
     probs = Probabilities(
         blocks_chanses={
