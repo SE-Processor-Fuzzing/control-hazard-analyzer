@@ -1,7 +1,9 @@
+import logging
+
 import pytest
 from hypothesis import settings, HealthCheck, given, strategies as st
-from src.cli.generate import *
-import logging
+
+from src.cli.generate import Generate
 
 
 def test_init_sets_attributes_to_none():
@@ -26,21 +28,5 @@ def test_configurate_with_different_repeats_type(tmp_path, rep):
 def test_configurate_with_missing_settings():
     generator_instance = Generate()
     settings = {"log_level": "INFO"}  # missing out_dir, and repeats
-    with pytest.raises(KeyError):
-        generator_instance.configurate(settings)
-
-
-"""
-def test_configurate_with_no_utility_setting(tmp_path):
-    generator_instance = Generate()
-    settings = {"out_dir": tmp_path , "repeats": 1 , "log_level": logging.INFO}
-    with pytest.raises(Error):
-        generator_instance.configurate(settings)
-"""
-
-
-def test_configurate_with_empty_settings(generator):
-    generator_instance = Generate()
-    settings = {}
     with pytest.raises(KeyError):
         generator_instance.configurate(settings)
