@@ -236,13 +236,14 @@ class DefineFunctionArrayBlock(Block):
 
 
 class CallFunctionArrayBlock(Block):
-    def __init__(self, arr: str, args: List[str], index: int) -> None:
+    def __init__(self, arr: str, args: List[str], index: str, arr_len: int) -> None:
         self.name = arr
         self.args = args
         self.index = index
+        self.arr_len = arr_len
 
     def render(self, visitor: Visitor) -> None:
-        visitor.send(f"{self.name}[{self.index}](")
+        visitor.send(f"{self.name}[{self.index} % {self.arr_len}](")
 
         for i in range(len(self.args) - 1):
             visitor.send(f"{self.args[i]}, ")
@@ -395,10 +396,10 @@ class Generator:
         arr = env.get_random_arr()
         args_num = env.arrs_args_number[arr]
         funcs_num = env.arrs_funcs_number[arr]
-        index = rd.randint(0, funcs_num - 1)
+        index = env.get_random_var()
         args = env.get_random_vars(count=args_num)
 
-        return CallFunctionArrayBlock(arr, args, index)
+        return CallFunctionArrayBlock(arr, args, index, funcs_num)
 
     def __gen_def_funcs(self, env: Scope) -> List[Block]:
         """Method that function's call by name block
