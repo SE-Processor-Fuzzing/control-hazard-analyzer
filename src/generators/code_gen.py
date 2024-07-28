@@ -218,12 +218,25 @@ class EntryPointBlock(Block):
 
 
 class DefineFunctionArrayBlock(Block):
+    """Class of representation array of functions block
+
+    :param arr: name of array
+    :param args_num: number of function's arguments
+    :param func_names: names of functions in array
+    """
+
     def __init__(self, arr: str, args_num: int, func_names: List[str]) -> None:
+        """Constructor method"""
         self.args_num = args_num
         self.name = arr
         self.funcs = func_names
 
     def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
         visitor.send(f"void (*{self.name}[])(")
 
         for _ in range(self.args_num - 1):
@@ -236,13 +249,27 @@ class DefineFunctionArrayBlock(Block):
 
 
 class CallFunctionArrayBlock(Block):
+    """Class of representation function call by pointer from array block
+
+    :param arr: name of array
+    :param args: names of variables that we pass to the function
+    :param index: index of function in array
+    :param arr_len: length of array
+    """
+
     def __init__(self, arr: str, args: List[str], index: str, arr_len: int) -> None:
+        """Constructor method"""
         self.name = arr
         self.args = args
         self.index = index
         self.arr_len = arr_len
 
     def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
         visitor.send(f"{self.name}[{self.index} % {self.arr_len}](")
 
         for i in range(len(self.args) - 1):
@@ -383,6 +410,11 @@ class Generator:
         self.entry_point = EntryPointBlock(funcs_blocks, func_arrs_blocks, next_blocks)
 
     def __gen_def_func_arrs(self, env: Scope) -> List[Block]:
+        """Method that generate arrays of functions in program
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: blocks of code with definition of arrays of functions
+        """
         arrs_blocks: List[Block] = []
         for args_num, funcs in env.funcs_by_args_number.items():
             arr = env.create_random_arr()
@@ -393,6 +425,11 @@ class Generator:
         return arrs_blocks
 
     def __gen_func_arr_call(self, env: Scope) -> CallFunctionArrayBlock:
+        """Method that generate function's call by pointer from array block
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: new block of code with function's call by pointer
+        """
         arr = env.get_random_arr()
         args_num = env.arrs_args_number[arr]
         funcs_num = env.arrs_funcs_number[arr]
@@ -402,7 +439,7 @@ class Generator:
         return CallFunctionArrayBlock(arr, args, index, funcs_num)
 
     def __gen_def_funcs(self, env: Scope) -> List[Block]:
-        """Method that function's call by name block
+        """Method that generate functions in program
 
         :param env: environment that keeps all for creating new lines of code
         :return: new block of code with function
@@ -427,7 +464,7 @@ class Generator:
         return func_blocks
 
     def __gen_func_call(self, env: Scope, curr_func_num: int) -> FuncBlock:
-        """Method that function's call by name block
+        """Method that generate function's call by name block
 
         :param env: environment that keeps all for creating new lines of code
         :param curr_func_num: number of the function in which creation occurs
