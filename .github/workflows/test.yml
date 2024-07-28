@@ -44,9 +44,9 @@ jobs:
       - name: Basic check
         run: |
           python3 cha.py \
-            generate --repeats=1 --out-dir="tests" \
-            analyze --test-dir="tests" --out-dir="gem_result" --config-file ./configs/gem5.json \
-            summarize --src-dirs="gem_result" --out-dir="summarize_result" --no-show-graph
+            generate --repeats=1 --out-dir="chapy-tests" \
+            analyze --test-dir="chapy-tests" --out-dir="chapy-gem-analysis" --config-file ./configs/gem5.json \
+            summarize --src-dirs="chapy-gem-analysis" --out-dir="chapy-result" --no-show-graph
       - name: Run tests
         run: |
           pytest ./tests
