@@ -39,7 +39,6 @@ class Summarize(Utility):
         """
         self.logger.info("Summarize is running. Settings:")
         self.logger.info(pformat(self.settings))
-
         src_dirs: List[Path] = [Path(s) for s in self.settings["src_dirs"]]
         data = self.get_data_from_sources(src_dirs)
         if len(data) == 0:
@@ -77,12 +76,16 @@ class Summarize(Utility):
 
         for src_dir in src_dirs:
             if not src_dir.exists():
-                print(f"[-]: Directory {src_dir} does not exist")
+                self.logger.warn(f"[-]: Directory {src_dir} does not exist")
+                continue
+
+            if not list(src_dir.glob("*.data")):
+                self.logger.warn(f"[-]: Directory {src_dir} does not contain any .data files")
                 continue
 
             posix_dir_path = src_dir.as_posix()
             data[posix_dir_path] = {}
-            for src_file in src_dir.glob("*"):
+            for src_file in src_dir.glob("*.data"):
                 with open(src_file, "r") as f:
                     data[posix_dir_path][src_file.stem] = json.loads(f.read())
                 for key, val in data[posix_dir_path][src_file.stem].items():
@@ -193,7 +196,10 @@ class Summarize(Utility):
         """
         for src_dir in src_dirs:
             if not src_dir.exists():
-                print(f"[-]: Directory {src_dir} does not exist")
+                self.logger.warn(f"[-]: Directory {src_dir} does not exist")
+                continue
+            if not list(src_dir.glob("*.data")):
+                self.logger.warn(f"[-]: Directory {src_dir} does not contain any .data files")
                 continue
 
             out_file = src_dir.parent.joinpath(os.path.basename(out_dir), self.filename_out_data)
