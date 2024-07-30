@@ -1,4 +1,7 @@
 import logging
+import shutil
+import tempfile
+from pathlib import Path
 
 import pytest
 from hypothesis import settings, HealthCheck, given, strategies as st
@@ -30,3 +33,42 @@ def test_configurate_with_missing_settings():
     settings = {"log_level": "INFO"}  # missing out_dir, and repeats
     with pytest.raises(KeyError):
         generator_instance.configurate(settings)
+
+
+@st.composite
+def temp_path_strategy(draw):
+    temp_dir = tempfile.mkdtemp()
+    path_name = draw(
+        st.text(min_size=1, alphabet=st.characters(blacklist_characters="/", blacklist_categories={"Cc", "Cs"}))
+    )
+    return Path(temp_dir) / path_name
+
+
+@given(temp_path_strategy())
+def test_create_empty_dir_when_not_exist(temp_path):
+    generator_instance = Generate()
+
+    if temp_path.exists():
+        shutil.rmtree(temp_path)
+
+    generator_instance.create_empty_dir(temp_path)
+
+    assert temp_path.exists()
+    assert temp_path.is_dir()
+    assert not any(temp_path.iterdir())
+
+
+@given(temp_path_strategy())
+def test_create_empty_dir_when_exist(temp_path):
+    generator_instance = Generate()
+
+    temp_path.mkdir(parents=True, exist_ok=True)
+
+    (temp_path / "test_file.txt").touch()
+    (temp_path / "sub_dir").mkdir()
+
+    generator_instance.create_empty_dir(temp_path)
+
+    assert temp_path.exists()
+    assert temp_path.is_dir()
+    assert not any(temp_path.iterdir())  # Directory should be empty
