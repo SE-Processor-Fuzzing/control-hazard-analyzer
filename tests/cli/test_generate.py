@@ -94,3 +94,24 @@ def test_generate_tests(params):
 
         expected_calls = [call(target_dir.joinpath(f"test_{i}.c"), max_depth) for i in range(count)]
         mock_generate_test.assert_has_calls(expected_calls, any_order=False)
+
+
+def test_generate_test_not_a_file(caplog):
+    generator = Generate()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        generator._generate_test(temp_path, 6)
+
+        assert f"Provided path {temp_path} is not a file. Skipping this test." in caplog.text
+
+
+def test_generate_test_is_a_file(caplog):
+    generator = Generate()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir) / "test_file.c"
+        temp_path.touch()
+
+        generator._generate_test(temp_path, 6)
+        assert f"Write test into {temp_path}" in caplog.text
+        with open(temp_path, "r") as f:
+            assert f.read() != ""
