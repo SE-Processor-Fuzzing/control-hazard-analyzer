@@ -2,7 +2,7 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-
+from unittest.mock import patch, call
 import pytest
 from hypothesis import settings, HealthCheck, given, strategies as st
 
@@ -72,3 +72,25 @@ def test_create_empty_dir_when_exist(temp_path):
     assert temp_path.exists()
     assert temp_path.is_dir()
     assert not any(temp_path.iterdir())  # Directory should be empty
+
+
+@st.composite
+def generate_params_strategy(draw):
+    target_dir = draw(st.builds(Path, st.text(min_size=1)))
+    count = draw(st.integers(min_value=1, max_value=10))
+    return target_dir, count
+
+
+@given(generate_params_strategy())
+def test_generate_tests(params):
+    target_dir, count = params
+    max_depth = 6  # constant value
+    generator = Generate()
+
+    with patch.object(generator, "_generate_test") as mock_generate_test, patch("builtins.print") as mock_print:
+        generator.generate_tests(target_dir, count)
+
+        mock_print.assert_called_once_with(f"[+]: Generate tests to '{target_dir.absolute()}'")
+
+        expected_calls = [call(target_dir.joinpath(f"test_{i}.c"), max_depth) for i in range(count)]
+        mock_generate_test.assert_has_calls(expected_calls, any_order=False)
