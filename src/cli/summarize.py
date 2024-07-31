@@ -139,6 +139,11 @@ class Summarize(Utility):
         mean_of_dir: Dict[str, Dict[str, Any]] = {}
         for src_dir in data.index.unique(level="dir"):
             mean_of_dir[src_dir] = {}
+            if data.loc[src_dir, "BP lookups"].sum() == 0 or data.loc[src_dir, "BP lookups"].sum() is np.nan:
+                self.logger.warn(f"[-]: Issue: data from {src_dir} might be corrupted")
+                mean_of_dir[src_dir]["BP incorrect %"] = 0
+                continue
+
             mean_of_dir[src_dir]["BP incorrect %"] = round(
                 data.loc[src_dir, "BP incorrect"].sum() / data.loc[src_dir, "BP lookups"].sum() * 100,
                 2,
