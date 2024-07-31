@@ -115,3 +115,25 @@ def test_generate_test_is_a_file(caplog):
         assert f"Write test into {temp_path}" in caplog.text
         with open(temp_path, "r") as f:
             assert f.read() != ""
+
+
+def test_run_without_outdir_and_repeats(caplog):
+    generator = Generate()  # out_dir and repeats are not configured
+
+    generator.run()
+    assert "Out dir or repeats values are not provided. Exiting..." in caplog.text
+
+
+def test_run_with_correct_params(caplog):
+    generator = Generate()
+    generator.out_dir = Path("/tmp/test_out_dir")
+    generator.repeats = 10
+
+    with patch.object(generator, "create_empty_dir") as mock_create_empty_dir, patch.object(
+        generator, "generate_tests"
+    ) as mock_generate_tests:
+
+        generator.run()
+
+        mock_create_empty_dir.assert_called_once_with(generator.out_dir)
+        mock_generate_tests.assert_called_once_with(generator.out_dir, generator.repeats)
