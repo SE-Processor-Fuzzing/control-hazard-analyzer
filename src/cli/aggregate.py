@@ -6,10 +6,43 @@ from datetime import datetime
 from pathlib import Path
 from pprint import pformat
 from queue import Queue
-from typing import List, Dict, Any
+from typing import Final, List, Dict, Any
 
 from src.cli.analyze import Analyze
 from src.protocols.utility import Utility
+
+
+DEFAULT_GENERATE_SETTINGS: Final[dict] = {
+    "utility": "generate",
+    "out_dir": "chapy-tests",
+    "repeats": 1,
+    "log_level": "WARNING",
+}
+
+DEFAULT_ANALYZE_SETTINGS: Final[dict] = {
+    "utility": "analyze",
+    "config_file": None,
+    "out_dir": "chapy-analyze",
+    "test_dir": DEFAULT_GENERATE_SETTINGS["out_dir"],
+    "timeout": 10,
+    "compiler": "gcc",
+    "compiler_args": "",
+    "profiler": "perf",
+    "gem5_home": "./thirdparty/gem5/",
+    "gem5_bin": "./",
+    "target_isa": "",
+    "sim_script": "./",
+    "log_level": "WARNING",
+}
+
+DEFAULT_SUMMARIZE_SETTINGS: Final[dict] = {
+    "utility": "summarize",
+    "src_dirs": [DEFAULT_ANALYZE_SETTINGS["out_dir"]],
+    "out_dir": "summarize",
+    "no_show_graph": False,
+    "no_save_graph": False,
+    "log_level": "WARNING",
+}
 
 
 class Aggregate(Utility):
@@ -23,37 +56,9 @@ class Aggregate(Utility):
         """Initialize the Aggregate class with default settings for sub-commands and logger"""
         self.settings: Dict[str, Any] = {}
         self.logger = logging.getLogger(__name__)
-        self.default_analyze_settings = {
-            "utility": "analyze",
-            "config_file": None,
-            "out_dir": "analyze",
-            "test_dir": "tests",
-            "timeout": 10,
-            "compiler": "gcc",
-            "compiler_args": "",
-            "profiler": "perf",
-            "gem5_home": "./",
-            "gem5_bin": "./",
-            "target_isa": "",
-            "sim_script": "./",
-            "log_level": "WARNING",
-        }
-
-        self.default_generate_settings = {
-            "utility": "generate",
-            "out_dir": "tests",
-            "repeats": 1,
-            "log_level": "WARNING",
-        }
-
-        self.default_summarize_settings = {
-            "utility": "summarize",
-            "src_dirs": [],
-            "out_dir": "summarize",
-            "no_show_graph": False,
-            "no_save_graph": False,
-            "log_level": "WARNING",
-        }
+        self.default_generate_settings = DEFAULT_GENERATE_SETTINGS
+        self.default_analyze_settings = DEFAULT_ANALYZE_SETTINGS
+        self.default_summarize_settings = DEFAULT_SUMMARIZE_SETTINGS
 
     def _run_analyzer(self, analyze: Analyze, chan: Queue):
         """Run the analyzer and put the output directory in the queue

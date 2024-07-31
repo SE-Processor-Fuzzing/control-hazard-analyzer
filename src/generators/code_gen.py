@@ -47,9 +47,14 @@ class Scope:
         self.current_depth = max_depth
         self.vars: List[str] = []
         self.funcs: List[str] = []
+        self.arrs: List[str] = []
         self.vars_count = 0
         self.funcs_count = 0
+        self.arrs_count = 0
         self.funcs_args_number: Dict[str, int] = {}
+        self.funcs_by_args_number: Dict[int, List[str]] = {}
+        self.arrs_args_number: Dict[str, int] = {}
+        self.arrs_funcs_number: Dict[str, int] = {}
 
     def create_new_var(self, prefix: str = "a") -> str:
         self.vars.append(var := f"{prefix}{self.vars_count}")
@@ -70,6 +75,16 @@ class Scope:
         if rule is None:
             return rd.choice(self.funcs)
         return rd.choice(list(filter(rule, self.funcs)))
+
+    def create_random_arr(self, prefix: str = "arr") -> str:
+        self.arrs.append(arr := f"{prefix}{self.arrs_count}")
+        self.arrs_count += 1
+        return arr
+
+    def get_random_arr(self, rule: Optional[Callable[[str], bool]] = None) -> str:
+        if rule is None:
+            return rd.choice(self.arrs)
+        return rd.choice(list(filter(rule, self.arrs)))
 
     def get_random_vars(self, rule: Optional[Callable[[str], bool]] = None, count: int = 1) -> List[str]:
         _vars = self.vars
@@ -180,13 +195,23 @@ class ForBlock(Block):
 
 class EntryPointBlock(Block):
 
-    def __init__(self, func_blocks: List[Block], next_blocks: List[Block]) -> None:
+    def __init__(
+        self, func_sign_blocks, func_blocks: List[Block], func_arr_blocks: List[Block], next_blocks: List[Block]
+    ) -> None:
+        self.func_sign_blocks = func_sign_blocks
         self.func_blocks = func_blocks
+        self.func_arr_blocks = func_arr_blocks
         self.next_blocks = next_blocks
 
     def render(self, visitor: Visitor) -> None:
         string = "# define D0(x) (x==0) ? 1 : x\n\n"
         visitor.send(string)
+
+        for func in self.func_sign_blocks:
+            func.render(visitor)
+
+        for arr in self.func_arr_blocks:
+            arr.render(visitor)
 
         for func in self.func_blocks:
             func.render(visitor)
@@ -196,6 +221,80 @@ class EntryPointBlock(Block):
         for block in self.next_blocks:
             block.render(visitor)
         visitor.send("}")
+
+
+class DefineFunctionArrayBlock(Block):
+    """Class of representation array of functions block
+
+    :param arr: name of array
+    :param args_num: number of function's arguments
+    :param func_names: names of functions in array
+    """
+
+    def __init__(self, arr: str, args_num: int, func_names: List[str]) -> None:
+        """Constructor method"""
+        self.args_num = args_num
+        self.name = arr
+        self.funcs = func_names
+
+    def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
+        visitor.send(f"void (*{self.name}[])(")
+
+        for _ in range(self.args_num - 1):
+            visitor.send("int, ")
+        visitor.send("int) = { ")
+
+        for i in range(len(self.funcs) - 1):
+            visitor.send(f"{self.funcs[i]}, ")
+        visitor.send(f"{self.funcs[-1]} }};\n\n")
+
+
+class CallFunctionArrayBlock(Block):
+    """Class of representation function call by pointer from array block
+
+    :param arr: name of array
+    :param args: names of variables that we pass to the function
+    :param index: index of function in array
+    :param arr_len: length of array
+    """
+
+    def __init__(self, arr: str, args: List[str], index: str, arr_len: int) -> None:
+        """Constructor method"""
+        self.name = arr
+        self.args = args
+        self.index = index
+        self.arr_len = arr_len
+
+    def render(self, visitor: Visitor) -> None:
+        """Method for render block into code
+
+        :param visitor: object of Visitor that render block construction
+        :return: None
+        """
+        visitor.send(f"{self.name}[{self.index} % {self.arr_len}](")
+
+        for i in range(len(self.args) - 1):
+            visitor.send(f"{self.args[i]}, ")
+        visitor.send(f"{self.args[-1]}); ")
+
+
+class SignatureFunctionBlock(Block):
+    def __init__(self, func: str, args: List[str]) -> None:
+        self.name = func
+        self.args = args
+
+    def render(self, visitor: Visitor) -> None:
+        visitor.send(f"void {self.name}(")
+        for i in range(len(self.args)):
+            visitor.send(f"int {self.args[i]}")
+            if i != len(self.args) - 1:
+                visitor.send(", ")
+        visitor.send(");\n")
 
 
 class DefineFunctionBlock(Block):
@@ -308,6 +407,7 @@ class Generator:
             OperationBlock: self.__gen_operation,
             SwitchCaseBlock: self.__gen_switch,
             FuncBlock: self.__gen_func_call,
+            CallFunctionArrayBlock: self.__gen_func_arr_call,
         }
         self.gen_functions_probabilities = {
             self.block_generation_functions[block]: chanse for block, chanse in probs.blocks_chanses.items()
@@ -319,41 +419,87 @@ class Generator:
     def gen(self) -> None:
         env_copy = self.env.copy()
 
+        func_sign_blocks = self.__gen_sign_funcs(env_copy)
         funcs_blocks = self.__gen_def_funcs(env_copy)
         var = env_copy.create_new_var()
         value = rd.randint(0, DefineBlock.max_value)
         def_block: Block = DefineBlock(var, value)
+        func_arrs_blocks = self.__gen_def_func_arrs(env_copy)
 
         next_blocks: List[Block] = [def_block]
         next_blocks.extend(self.__gen_local(env_copy, env_copy.funcs_count))
-        self.entry_point = EntryPointBlock(funcs_blocks, next_blocks)
+        self.entry_point = EntryPointBlock(func_sign_blocks, funcs_blocks, func_arrs_blocks, next_blocks)
 
-    def __gen_def_funcs(self, env: Scope) -> List[Block]:
-        """Method that function's call by name block
+    def __gen_def_func_arrs(self, env: Scope) -> List[Block]:
+        """Method that generate arrays of functions in program
 
         :param env: environment that keeps all for creating new lines of code
-        :return: new block of code with function
+        :return: blocks of code with definition of arrays of functions
         """
-        funcs_number = rd.randint(1, 3)
-        func_blocks: List[Block] = []
+
+        arrs_blocks: List[Block] = []
+        for args_num, funcs in env.funcs_by_args_number.items():
+            arr = env.create_random_arr()
+            env.arrs_funcs_number[arr] = len(funcs)
+            env.arrs_args_number[arr] = args_num
+            arrs_blocks.append(DefineFunctionArrayBlock(arr, args_num, funcs))
+
+        return arrs_blocks
+
+    def __gen_func_arr_call(self, env: Scope) -> CallFunctionArrayBlock:
+        """Method that generate function's call by pointer from array block
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: new block of code with function's call by pointer
+        """
+        arr = env.get_random_arr()
+        args_num = env.arrs_args_number[arr]
+        funcs_num = env.arrs_funcs_number[arr]
+        index = env.get_random_var()
+        args = env.get_random_vars(count=args_num)
+
+        return CallFunctionArrayBlock(arr, args, index, funcs_num)
+
+    def __gen_sign_funcs(self, env: Scope) -> List[Block]:
+        funcs_number = rd.randint(10, 20)
+        func_sign_blocks: List[Block] = []
 
         for _ in range(funcs_number):
             func = env.create_new_func()
             func_args_number = rd.randint(1, 4)
             env.funcs_args_number[func] = func_args_number
+            env.funcs_by_args_number[func_args_number] = env.funcs_by_args_number.get(func_args_number, []) + [func]
 
             env_copy = env.copy()
             func_args: List[str] = []
             for __ in range(func_args_number):
                 func_args.append(env_copy.create_new_var(prefix="arg"))
+            func_sign_blocks.append(SignatureFunctionBlock(func, func_args))
 
-            func_content_block = self.__gen_local(env_copy, env_copy.funcs_count - 1)
+        return func_sign_blocks
+
+    def __gen_def_funcs(self, env: Scope) -> List[Block]:
+        """Method that generate functions in program
+
+        :param env: environment that keeps all for creating new lines of code
+        :return: new block of code with function
+        """
+        func_blocks: List[Block] = []
+
+        for i in range(env.funcs_count):
+            func = env.funcs[i]
+            env_copy = env.copy()
+            func_args: List[str] = []
+            for _ in range(env.funcs_args_number[func]):
+                func_args.append(env_copy.create_new_var(prefix="arg"))
+
+            func_content_block = self.__gen_local(env_copy, i)
             func_blocks.append(DefineFunctionBlock(func, func_args, func_content_block))
 
         return func_blocks
 
     def __gen_func_call(self, env: Scope, curr_func_num: int) -> FuncBlock:
-        """Method that function's call by name block
+        """Method that generate function's call by name block
 
         :param env: environment that keeps all for creating new lines of code
         :param curr_func_num: number of the function in which creation occurs
@@ -372,7 +518,12 @@ class Generator:
         number_of_blocks = rd.randint(*self.probs.blocks_cut)
         for _ in range(number_of_blocks):
             gen_func = get_random_key(self.gen_functions_probabilities)
-            while gen_func == self.__gen_func_call and curr_func_num == 0:
+            while (
+                gen_func == self.__gen_func_call
+                and curr_func_num == 0
+                or gen_func == self.__gen_func_arr_call
+                and env.arrs_count == 0
+            ):
                 gen_func = get_random_key(self.gen_functions_probabilities)
 
             next_block = (
@@ -383,6 +534,7 @@ class Generator:
                         self.__gen_def_funcs,
                         self.__gen_operation,
                         self.__gen_definition,
+                        self.__gen_func_arr_call,
                     ]
                 )
                 else gen_func(env, curr_func_num)
@@ -467,12 +619,13 @@ def gen_test(
     **kwargs: int,
 ) -> str:
 
-    ch_for = kwargs.get("ch_for", 12)
-    ch_if = kwargs.get("ch_if", 12)
+    ch_for = kwargs.get("ch_def", 12)
+    ch_if = kwargs.get("ch_def", 12)
     ch_state = kwargs.get("ch_state", 12)
     ch_def = kwargs.get("ch_def", 12)
-    ch_switch = kwargs.get("ch_switch", 12)
-    ch_func = kwargs.get("ch_func", 12)
+    ch_switch = kwargs.get("ch_def", 12)
+    ch_func = kwargs.get("ch_def", 12)
+    ch_arr = kwargs.get("ch_func", 12)
 
     if operators is None:
         operators = ["+", "-", "/", "*"]
@@ -488,6 +641,7 @@ def gen_test(
             OperationBlock: ch_state,
             SwitchCaseBlock: ch_switch,
             FuncBlock: ch_func,
+            CallFunctionArrayBlock: ch_arr,
         },
         blocks_cut=(2, 5),
     )
