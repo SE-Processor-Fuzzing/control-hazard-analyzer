@@ -23,11 +23,15 @@ def init_generator(
     repeats: Annotated[
         int, typer.Option(help="Count of repeats to generated test", metavar="REPEATS", show_default=False)
     ] = 1,
+    seed: Annotated[
+        int, typer.Option(help="Integer to use as seed to random test generation", metavar="SEED", show_default=False)
+    ] = None,
     log_level: Annotated[LogLevel, typer.Option(help="Log level of program", case_sensitive=True)] = LogLevel.WARNING,
 ):
     command_args["utility"] = "generate"
     command_args["out_dir"] = out_dir
     command_args["repeats"] = repeats
+    command_args["seed"] = seed
     command_args["log_level"] = log_level.value
     run_utility()
 
