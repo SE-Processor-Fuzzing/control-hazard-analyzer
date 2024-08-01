@@ -1,8 +1,9 @@
 import logging
 import shutil
 import tempfile
+import random as rd
 from pathlib import Path
-from unittest.mock import patch, call
+from unittest.mock import patch, call, ANY
 import pytest
 from hypothesis import settings, HealthCheck, given, strategies as st
 
@@ -20,17 +21,31 @@ def test_init_sets_attributes_to_none():
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test_configurate_with_different_repeats_type(tmp_path, rep):
     generator_instance = Generate()
-    settings = {"utility": "generate", "out_dir": tmp_path, "repeats": rep, "log_level": logging.INFO}
+    settings = {"utility": "generate", "out_dir": tmp_path, "repeats": rep, "seed": None, "log_level": logging.INFO}
     generator_instance.configurate(settings)
     assert generator_instance.settings == settings
     assert generator_instance.logger.level == logging.INFO
+    assert generator_instance.seed == None
     assert generator_instance.out_dir == tmp_path
     assert generator_instance.repeats == rep
 
 
+@given(seed=st.integers(min_value=0, max_value=10000))
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_configurate_with_different_seeds(tmp_path, seed):
+    generator_instance = Generate()
+    settings = {"utility": "generate", "out_dir": tmp_path, "repeats": 1, "seed": seed, "log_level": logging.INFO}
+    generator_instance.configurate(settings)
+    assert generator_instance.settings == settings
+    assert generator_instance.logger.level == logging.INFO
+    assert generator_instance.seed == seed
+    assert generator_instance.out_dir == tmp_path
+    assert generator_instance.repeats == 1
+
+
 def test_configurate_with_missing_settings():
     generator_instance = Generate()
-    settings = {"log_level": "INFO"}  # missing out_dir, and repeats
+    settings = {"log_level": "INFO"}  # missing out_dir, seed and repeats
     with pytest.raises(KeyError):
         generator_instance.configurate(settings)
 
@@ -78,21 +93,26 @@ def test_create_empty_dir_when_exist(temp_path):
 def generate_params_strategy(draw):
     target_dir = draw(st.builds(Path, st.text(min_size=1)))
     count = draw(st.integers(min_value=1, max_value=10))
-    return target_dir, count
+    seed = draw(st.integers(min_value=1, max_value=10000))
+    return target_dir, count, seed
 
 
 @given(generate_params_strategy())
 def test_generate_tests(params):
-    target_dir, count = params
+    target_dir, count, seed = params
     max_depth = 6  # constant value
     generator = Generate()
 
     with patch.object(generator, "_generate_test") as mock_generate_test, patch("builtins.print") as mock_print:
-        generator.generate_tests(target_dir, count)
+        generator.generate_tests(target_dir=target_dir, count=count, base_seed=seed)
 
-        mock_print.assert_called_once_with(f"[+]: Generate tests to '{target_dir.absolute()}'")
+        test_seeds = [seed] + [ANY for _ in range(count - 1)]
+        expected_print_calls = [call(f"[+]: Generate tests to '{target_dir.absolute()}'")] + [
+            call(ANY) for i in range(count)
+        ]
+        mock_print.assert_has_calls(expected_print_calls, any_order=False)
 
-        expected_calls = [call(target_dir.joinpath(f"test_{i}.c"), max_depth) for i in range(count)]
+        expected_calls = [call(target_dir.joinpath(f"test_{i}.c"), max_depth, test_seeds[i]) for i in range(count)]
         mock_generate_test.assert_has_calls(expected_calls, any_order=False)
 
 
@@ -100,7 +120,7 @@ def test_generate_test_not_a_file(caplog):
     generator = Generate()
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        generator._generate_test(temp_path, 6)
+        generator._generate_test(temp_path, 6, None)
 
         assert f"Provided path {temp_path} is not a file. Skipping this test." in caplog.text
 
@@ -111,7 +131,7 @@ def test_generate_test_is_a_file(caplog):
         temp_path = Path(temp_dir) / "test_file.c"
         temp_path.touch()
 
-        generator._generate_test(temp_path, 6)
+        generator._generate_test(temp_path, 6, 10)
         assert f"Write test into {temp_path}" in caplog.text
         with open(temp_path, "r") as f:
             assert f.read() != ""
@@ -128,6 +148,7 @@ def test_run_with_correct_params(caplog):
     generator = Generate()
     generator.out_dir = Path("/tmp/test_out_dir")
     generator.repeats = 10
+    generator.seed = 1
 
     with patch.object(generator, "create_empty_dir") as mock_create_empty_dir, patch.object(
         generator, "generate_tests"
@@ -136,4 +157,6 @@ def test_run_with_correct_params(caplog):
         generator.run()
 
         mock_create_empty_dir.assert_called_once_with(generator.out_dir)
-        mock_generate_tests.assert_called_once_with(generator.out_dir, generator.repeats)
+        mock_generate_tests.assert_called_once_with(
+            generator.out_dir, count=generator.repeats, base_seed=generator.seed
+        )
