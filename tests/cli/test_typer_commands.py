@@ -163,5 +163,5 @@ def test_run_aggregate_with_default_options():
     assert command_args["config_file"] == "config.json"
     assert command_args["section_in_config"] == "DEFAULT"
     assert command_args["dest_dir"] == "out"
-    assert command_args["async_analyze"] is True
+    assert command_args["async_analyze"] is False
     assert command_args["log_level"] == "WARNING"
