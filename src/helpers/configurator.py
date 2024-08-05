@@ -53,9 +53,6 @@ class Configurator:
         """
         result: Dict[str, Any] = settings
         for arg in args:
-            if arg in settings:
-                if args[arg] != settings[arg]:
-                    settings[arg] = args[arg]
-            else:
+            if arg not in settings:
                 settings[arg] = args[arg]
         return result
