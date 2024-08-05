@@ -139,7 +139,7 @@ def init_aggregator(
             metavar="ASYNC_ANALYZE",
             show_default=False,
         ),
-    ] = True,
+    ] = False,
     log_level: Annotated[LogLevel, typer.Option(help="Log level of program")] = LogLevel.WARNING,
 ):
     command_args["utility"] = "aggregate"
