@@ -90,7 +90,7 @@ class Aggregate(Utility):
 
         return output_analyze_dirs
 
-    def create_analyzer(self, config_file: Path) -> Analyze:
+    def create_analyzer(self, config_file: Path, settings_analyze: Dict[str, Any]) -> Analyze:
         """Create and configure an Analyze instance based on the provided configuration file
 
         :param config_file: The path to the configuration file.
@@ -100,22 +100,22 @@ class Aggregate(Utility):
         full_conf_path = Path(self.settings["path_to_configs"]).joinpath(config_file)
         if os.access(full_conf_path, mode=os.R_OK):
             cfg_settings = self.settings["configurator"].read_cfg_file(full_conf_path)
-            self.default_analyze_settings = self.settings["configurator"].get_true_settings(
+            settings_analyze = self.settings["configurator"].get_true_settings(
                 cfg_settings,
-                self.default_analyze_settings,
+                settings_analyze,
             )
             # if user set absolute path in config, we will save by it
-            if not Path(self.default_analyze_settings["out_dir"]).is_absolute():
+            if not Path(settings_analyze["out_dir"]).is_absolute():
                 name = full_conf_path.name.split(".")[0]
                 sub_dir_name = f"{name}-{datetime.now().strftime('%y-%m-%d-%H-%M-%S-%f')}"
                 sub_dir = Path(self.settings["dest_dir"]).joinpath(sub_dir_name)
                 while sub_dir.exists():
                     sub_dir_name = sub_dir_name + "_new"
                     sub_dir = sub_dir.with_name(sub_dir_name)
-                self.default_analyze_settings["out_dir"] = sub_dir.joinpath(self.default_analyze_settings["out_dir"])
+                settings_analyze["out_dir"] = sub_dir.joinpath(settings_analyze["out_dir"])
 
-            self.default_analyze_settings["log_level"] = self.settings["log_level"]
-            analyze.configurate(self.default_analyze_settings)
+            settings_analyze["log_level"] = self.settings["log_level"]
+            analyze.configurate(settings_analyze)
 
         return analyze
 
@@ -155,4 +155,4 @@ class Aggregate(Utility):
         """
         self.settings = {**self.settings, **settings}
         self.logger.setLevel(self.settings["log_level"])
-        self.analyzes = [self.create_analyzer(cfg) for cfg in self.settings["configs"]]
+        self.analyzes = [self.create_analyzer(cfg, self.default_analyze_settings) for cfg in self.settings["configs"]]
