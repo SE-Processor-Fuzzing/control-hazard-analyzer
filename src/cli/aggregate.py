@@ -10,13 +10,15 @@ from typing import Final, List, Dict, Any
 
 from src.cli.analyze import Analyze
 from src.protocols.utility import Utility
+from src.helpers.configurator import LogLevel
 
 
 DEFAULT_GENERATE_SETTINGS: Final[dict] = {
     "utility": "generate",
     "out_dir": "chapy-tests",
     "repeats": 1,
-    "log_level": "WARNING",
+    "seed": None,
+    "log_level": LogLevel.WARNING,
 }
 
 DEFAULT_ANALYZE_SETTINGS: Final[dict] = {
@@ -32,7 +34,7 @@ DEFAULT_ANALYZE_SETTINGS: Final[dict] = {
     "gem5_bin": "./",
     "target_isa": "",
     "sim_script": "./",
-    "log_level": "WARNING",
+    "log_level": LogLevel.WARNING,
 }
 
 DEFAULT_SUMMARIZE_SETTINGS: Final[dict] = {
@@ -41,7 +43,16 @@ DEFAULT_SUMMARIZE_SETTINGS: Final[dict] = {
     "out_dir": "summarize",
     "no_show_graph": False,
     "no_save_graph": False,
-    "log_level": "WARNING",
+    "log_level": LogLevel.WARNING,
+}
+
+DEFAULT_AGGREGATE_SETTINGS: Final[dict] = {
+    "utility": "aggregate",
+    "config_file": "config.json",
+    "section_in_config": "DEFAULT",
+    "dest_dir": "out",
+    "async_analyze": False,
+    "log_level": LogLevel.WARNING,
 }
 
 
