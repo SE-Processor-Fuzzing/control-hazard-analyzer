@@ -95,7 +95,7 @@ def init_analyzer(
     command_args["target_isa"] = target_isa
     command_args["sim_script"] = sim_script
     command_args["log_level"] = log_level.value
-    configurator.configurate(command_args)
+    configurator.configurate(command_args, DEFAULT_ANALYZE_SETTINGS)
     run_utility()
 
 
@@ -162,7 +162,7 @@ def init_aggregator(
     command_args["dest_dir"] = dest_dir
     command_args["async_analyze"] = async_analyze
     command_args["log_level"] = log_level.value
-    configurator.configurate(command_args)
+    configurator.configurate(command_args, DEFAULT_AGGREGATE_SETTINGS)
     run_utility()
 
 
