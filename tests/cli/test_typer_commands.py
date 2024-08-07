@@ -86,6 +86,7 @@ def test_run_generate_with_default_options():
     assert command_args["utility"] == "generate"
     assert command_args["out_dir"] == "chapy-tests"
     assert command_args["repeats"] == 1
+    assert command_args["seed"] is None
     assert command_args["log_level"] == "WARNING"
 
 
@@ -114,13 +115,13 @@ def test_run_analyze_with_default_options():
     runner.invoke(app, ["analyze"])
     assert command_args["utility"] == "analyze"
     assert command_args["config_file"] is None
-    assert command_args["out_dir"] == "analyze"
+    assert command_args["out_dir"] == "chapy-analyze"
     assert command_args["test_dir"] == "chapy-tests"
     assert command_args["timeout"] == 10
     assert command_args["compiler"] == "gcc"
     assert command_args["compiler_args"] == ""
     assert command_args["profiler"] == "perf"
-    assert command_args["gem5_home"] == "./"
+    assert command_args["gem5_home"] == "./thirdparty/gem5/"
     assert command_args["gem5_bin"] == "./"
     assert command_args["target_isa"] == ""
     assert command_args["sim_script"] == "./"

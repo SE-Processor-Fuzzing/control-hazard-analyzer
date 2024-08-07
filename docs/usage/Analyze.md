@@ -33,7 +33,7 @@ python3 cha.py analyze --config-file "path/to/config_file"
 ```
 
 ### Output directory
-Specify a custom directory to save the analysis results. By default, results will be saved in the `analyze` directory. Specified directory will contain analysis results in the form of `.data` file.\
+Specify a custom directory to save the analysis results. By default, results will be saved in the `chapy-analyze` directory. Specified directory will contain analysis results in the form of `.data` file.\
 **Note**: If the specified directory does not exist, it will be created. And, if the directory is not empty, the existing files will be removed, and overwritten with the new analysis results.
 #### Usage example:
 ```shell
@@ -42,7 +42,7 @@ python3 cha.py analyze --out-dir "outputDir"
 ```
 
 ### Tests directory
-Specify the path to the directory containing the tests. By default, tests are expected in the `tests` directory. Directory should contain one or more test files written in `C language`.
+Specify the path to the directory containing the tests. By default, tests are expected in the `chapy-tests` directory. Directory should contain one or more test files written in `C language`.
 #### Usage example:
 ```shell
 # Use tests from "testsDir" directory
@@ -79,14 +79,14 @@ python3 cha.py analyze --profiler otherProfiler
 ```
 
 ### Path to gem5 Home
-Specify the path to the gem5 home directory. By default, the gem5 home directory is not specified.
+Specify the path to the gem5 home directory. By default, the gem5 home directory is `./thirdparty/gem5/`.
 #### Usage example:
 ```shell
 # Set gem5 home directory
 python3 cha.py analyze --gem5-home "path/to/gem5_home"
 ```
 ### Path to gem5 Binary
-Specify the path to the gem5 binary. By default, the gem5 binary path is not specified.
+Specify the path to the gem5 binary. By default, the gem5 binary path is `./`.
 #### Usage example:
 ```shell
 # Set gem5 binary path
